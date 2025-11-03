@@ -1479,24 +1479,24 @@ const App = () => {
                         </span>
                       </div>
                     )}
-                    </>
-                  );
-                })()}
-                {useLocations && (
-                  <div
-                    style={{
-                      color: 'red',
-                      marginTop: '10px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    The cost of the locations is higher than the Freight and
-                    Parcel and thus the minimum that we need to hit is the
-                    locations cost.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </>
+                );
+              })()}
+              {useLocations && (
+                <div
+                  style={{
+                    color: 'red',
+                    marginTop: '10px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  The cost of the locations is higher than the Freight and
+                  Parcel and thus the minimum that we need to hit is the
+                  locations cost.
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
             {/* Input Table: Shipments, Volumes, & Other Counts */}
             <Card>
