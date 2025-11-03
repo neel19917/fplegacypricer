@@ -1122,286 +1122,175 @@ const App = () => {
         ) : (
           <>
             {/* Detailed Quote Summary Table */}
-            <Card>
+            <Card style={{ border: '3px solid #4088cf' }}>
               <CardHeader
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  background: 'linear-gradient(135deg, #4088cf 0%, #2563eb 100%)',
+                  padding: '20px 24px',
                 }}
               >
-                <CardTitle>Quote Summary</CardTitle>
+                <CardTitle style={{ fontSize: '24px' }}>📊 Quote Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
-                    Minimum Subscription (Annual):
-                  </label>
-                  {editPricingEnabled ? (
-                    <input
-                      type='number'
-                      value={minSubscription}
-                      onChange={e => setMinSubscription(Number(e.target.value))}
-                      style={{ width: '120px', ...inputStyle }}
-                    />
-                  ) : (
-                    <span>{minSubscription}</span>
-                  )}
+                {/* Settings Section */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gap: '16px',
+                  marginBottom: '32px',
+                  padding: '20px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                  borderRadius: '12px',
+                  border: '2px solid #cbd5e1',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <label style={{ 
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      color: '#1e293b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      💰 Minimum Subscription (Annual):
+                    </label>
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      border: '2px solid #e2e8f0',
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      color: '#4088cf',
+                    }}>
+                      {editPricingEnabled ? (
+                        <input
+                          type='number'
+                          value={minSubscription}
+                          onChange={e => setMinSubscription(Number(e.target.value))}
+                          style={{ 
+                            width: '100%',
+                            ...inputStyle,
+                            fontSize: '18px',
+                            fontWeight: '700',
+                          }}
+                        />
+                      ) : (
+                        formatCost(minSubscription)
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <label style={{ 
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      color: '#1e293b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      📈 Global Markup (%):
+                    </label>
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      border: '2px solid #e2e8f0',
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      color: '#059669',
+                    }}>
+                      {editingAllMarkups ? (
+                        <input
+                          type='number'
+                          value={globalMarkup}
+                          onChange={e => setGlobalMarkup(Number(e.target.value))}
+                          style={{ 
+                            width: '100%',
+                            ...inputStyle,
+                            fontSize: '18px',
+                            fontWeight: '700',
+                          }}
+                        />
+                      ) : (
+                        `${globalMarkup}%`
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <label style={{ 
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      color: '#1e293b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      💵 One-Time Cost Markup (%):
+                    </label>
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'white',
+                      borderRadius: '8px',
+                      border: '2px solid #e2e8f0',
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      color: '#f59e0b',
+                    }}>
+                      {editingAllMarkups ? (
+                        <input
+                          type='number'
+                          value={oneTimeMarkup}
+                          onChange={e => setOneTimeMarkup(Number(e.target.value))}
+                          style={{ 
+                            width: '100%',
+                            ...inputStyle,
+                            fontSize: '18px',
+                            fontWeight: '700',
+                          }}
+                        />
+                      ) : (
+                        `${oneTimeMarkup}%`
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
-                    Global Markup (%):
-                  </label>
-                  {editingAllMarkups ? (
-                    <input
-                      type='number'
-                      value={globalMarkup}
-                      onChange={e => setGlobalMarkup(Number(e.target.value))}
-                      style={{ width: '80px', marginLeft: '10px' }}
-                    />
-                  ) : (
-                    <span style={{ marginLeft: '10px' }}>{globalMarkup}%</span>
-                  )}
-                </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
-                    One-Time Cost Markup (%):
-                  </label>
-                  {editingAllMarkups ? (
-                    <input
-                      type='number'
-                      value={oneTimeMarkup}
-                      onChange={e => setOneTimeMarkup(Number(e.target.value))}
-                      style={{ width: '80px', marginLeft: '10px' }}
-                    />
-                  ) : (
-                    <span style={{ marginLeft: '10px' }}>{oneTimeMarkup}%</span>
-                  )}
-                </div>
-                {/* Detailed summary table (unchanged) */}
-                {(() => {
-                  const summaryRows = [
-                    {
-                      productName: 'Core TMS - Freight',
-                      volume: freightVolume,
-                      monthlyCost: freightAnnualCost / 12,
-                      annualCost: freightAnnualCost,
-                      planDetails: freightPlan
-                        ? `${freightPlan.tier} (Incl: ${freightPlan.shipmentsIncluded})`
-                        : 'N/A',
-                      tierDetails: freightPlan
-                        ? `Incl: ${freightPlan.shipmentsIncluded}, Over: $${freightPlan.costPerShipment}/shipment`
-                        : '',
-                      lineMarkup: freightMarkup,
-                      hideIfZero: true,
-                    },
-                    {
-                      productName: 'Core TMS - Parcel',
-                      volume: parcelVolume,
-                      monthlyCost: parcelAnnualCost / 12,
-                      annualCost: parcelAnnualCost,
-                      planDetails: parcelPlan
-                        ? `${parcelPlan.tier} (Incl: ${parcelPlan.shipmentsIncluded})`
-                        : 'N/A',
-                      tierDetails: parcelPlan
-                        ? `Incl: ${parcelPlan.shipmentsIncluded}, Over: $${parcelPlan.costPerShipment}/shipment`
-                        : '',
-                      lineMarkup: parcelMarkup,
-                      hideIfZero: true,
-                    },
-                    {
-                      productName: 'Ocean Tracking',
-                      volume: oceanTrackingVolume,
-                      monthlyCost: oceanTrackingAnnualCost / 12,
-                      annualCost: oceanTrackingAnnualCost,
-                      planDetails: oceanTrackingPlan
-                        ? `${oceanTrackingPlan.tier} (Incl: ${oceanTrackingPlan.shipmentsIncluded})`
-                        : 'N/A',
-                      tierDetails: oceanTrackingPlan
-                        ? `Incl: ${oceanTrackingPlan.shipmentsIncluded}, Over: $${oceanTrackingPlan.costPerShipment}/shipment`
-                        : '',
-                      lineMarkup: oceanTrackingMarkup,
-                      hideIfZero: true,
-                    },
-                    {
-                      productName: 'Locations',
-                      volume: locationsVolume,
-                      monthlyCost: locationsAnnualCost / 12,
-                      annualCost: locationsAnnualCost,
-                      planDetails: locationsPlan
-                        ? `${locationsPlan.tier} (Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd})`
-                        : 'N/A',
-                      tierDetails: locationsPlan
-                        ? `Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd}`
-                        : '',
-                      lineMarkup: locationsMarkup,
-                      hideIfZero: false,
-                    },
-                    {
-                      productName: 'Support Package',
-                      volume: supportPackageVolume,
-                      monthlyCost: supportPackageCostAnnual / 12,
-                      annualCost: supportPackageCostAnnual,
-                      planDetails: supportPackagePlan
-                        ? `${supportPackagePlan.tier} (Range: ${
-                            supportPackagePlan.rangeStart
-                          }–${
-                            supportPackagePlan.rangeEnd === Infinity
-                              ? '+'
-                              : supportPackagePlan.rangeEnd
-                          })`
-                        : 'N/A',
-                      tierDetails: supportPackagePlan
-                        ? `Range: ${supportPackagePlan.rangeStart}–${
-                            supportPackagePlan.rangeEnd === Infinity
-                              ? '+'
-                              : supportPackagePlan.rangeEnd
-                          }`
-                        : '',
-                      lineMarkup: supportPackageMarkup,
-                      hideIfZero: true,
-                    },
-                    ...(billPayYesNo === 'Yes'
-                      ? [
-                          {
-                            productName: 'Bill Pay',
-                            volume: billPayYesNo,
-                            monthlyCost: billPayMonthlyCost,
-                            annualCost: billPayAnnualCost,
-                            planDetails:
-                              subBilling === 'annual'
-                                ? '$500 base + $2/ LTL-FTL + $0.50/Parcel'
-                                : '$650 base + $2.6/ LTL-FTL + $0.65/Parcel',
-                            tierDetails: 'Billed if Yes',
-                            lineMarkup: billPayMarkup,
-                            hideIfZero: true,
-                          },
-                        ]
-                      : []),
-                    {
-                      productName: 'Vendor Portals',
-                      volume: vendorPortalCount,
-                      monthlyCost: vendorMonthlyCost,
-                      annualCost: vendorAnnualCost,
-                      planDetails:
-                        subBilling === 'annual'
-                          ? '$20/portal/month'
-                          : '$30/portal/month',
-                      tierDetails: '',
-                      lineMarkup: vendorPortalMarkup,
-                      hideIfZero: true,
-                    },
-                    {
-                      productName: 'Auditing Module',
-                      volume: auditingVolume,
-                      monthlyCost: auditingAnnualCost / 12,
-                      annualCost: auditingAnnualCost,
-                      planDetails: auditingPlan
-                        ? `${auditingPlan.tier} (Range: ${
-                            auditingPlan.range[0]
-                          }–${
-                            auditingPlan.range[1] === Infinity
-                              ? '+'
-                              : auditingPlan.range[1]
-                          })`
-                        : 'N/A',
-                      tierDetails: auditingPlan
-                        ? `Range: ${auditingPlan.range[0]}–${
-                            auditingPlan.range[1] === Infinity
-                              ? '+'
-                              : auditingPlan.range[1]
-                          }`
-                        : '',
-                      lineMarkup: auditingMarkup,
-                      hideIfZero: true,
-                    },
-                    {
-                      productName: 'Fleet Route Optimization',
-                      volume: fleetRouteVolume,
-                      monthlyCost: fleetRouteEffectiveAnnual / 12,
-                      annualCost: fleetRouteEffectiveAnnual,
-                      planDetails: fleetRoutePlan
-                        ? `${fleetRoutePlan.tier} (Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]})`
-                        : 'N/A',
-                      tierDetails: fleetRoutePlan
-                        ? `Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]}`
-                        : '',
-                      lineMarkup: fleetRouteMarkup,
-                      hideIfZero: true,
-                    },
-                    ...(assetManagementAnnualCost > 0
-                      ? [
-                          {
-                            productName: 'Yard Management',
-                            volume: `${assetManagementFacilities} facilities, ${assetManagementAssets} assets`,
-                            monthlyCost: assetManagementMonthlyCost,
-                            annualCost: assetManagementAnnualCost,
-                            planDetails: `Per facility: $${
-                              subBilling === 'annual' ? '100' : '130'
-                            }, per asset: $${
-                              subBilling === 'annual' ? '10' : '13'
-                            }`,
-                            tierDetails: '',
-                            lineMarkup: assetManagementMarkup,
-                            hideIfZero: true,
-                          },
-                        ]
-                      : []),
-                    {
-                      productName: 'Dock Scheduling',
-                      volume: dockSchedulingVolume,
-                      monthlyCost: dockSchedulingAnnualCost / 12,
-                      annualCost: dockSchedulingAnnualCost,
-                      planDetails: dockSchedulingPlan
-                        ? `${dockSchedulingPlan.tier} (Range: ${
-                            dockSchedulingPlan.rangeStart
-                          }–${
-                            dockSchedulingPlan.rangeEnd === Infinity
-                              ? '+'
-                              : dockSchedulingPlan.rangeEnd
-                          })`
-                        : 'N/A',
-                      tierDetails: dockSchedulingPlan
-                        ? `Range: ${dockSchedulingPlan.rangeStart}–${
-                            dockSchedulingPlan.rangeEnd === Infinity
-                              ? '+'
-                              : dockSchedulingPlan.rangeEnd
-                          }`
-                        : '',
-                      lineMarkup: dockSchedulingMarkup,
-                      hideIfZero: true,
-                    },
-                  ];
-                  const visibleSummaryRows = summaryRows.filter(row => {
-                    if (typeof row.volume === 'number') {
-                      return row.volume !== 0;
-                    }
-                    return true;
-                  });
-                  return (
-                    <>
-                      <table
-                        style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          fontSize: '16px',
-                        }}
-                      >
-                        <thead style={stickyHeaderStyle}>
-                          <tr style={{ background: '#f8f8f8' }}>
-                            <th
-                              style={{ ...tableThStyle, ...firstColumnStyle }}
-                            >
-                              Product Name
-                            </th>
-                            <th style={tableThStyle}>Monthly Volume/Count</th>
-                            <th style={tableThStyle}>Monthly Cost</th>
-                            <th style={tableThStyle}>Annual Cost</th>
-                            <th style={tableThStyle}>Plan Details</th>
-                            <th style={tableThStyle}>Tier Details</th>
-                            <th style={tableThStyle}>Line Markup (%)</th>
-                          </tr>
-                        </thead>
+
+                {/* Summary Table */}
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px',
+                      minWidth: '1000px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    }}
+                  >
+                    <thead style={stickyHeaderStyle}>
+                      <tr>
+                        <th style={{ ...tableThStyle, ...firstColumnStyle }}>
+                          PRODUCT NAME
+                        </th>
+                        <th style={tableThStyle}>MONTHLY VOLUME/COUNT</th>
+                        <th style={tableThStyle}>MONTHLY COST</th>
+                        <th style={tableThStyle}>ANNUAL COST</th>
+                        <th style={tableThStyle}>PLAN DETAILS</th>
+                        <th style={tableThStyle}>TIER DETAILS</th>
+                        <th style={tableThStyle}>LINE MARKUP (%)</th>
+                      </tr>
+                    </thead>
                         <tbody>
                           {visibleSummaryRows.map((row, idx) => (
                             <tr
@@ -1486,72 +1375,110 @@ const App = () => {
                               </td>
                             </tr>
                           ))}
-                          <tr
-                            style={{
-                              background: '#e0e0e0',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            <td style={tableTdStyle}>Subscription Total</td>
-                            <td style={tableTdStyle}></td>
-                            <td style={tableTdStyle}>
+                          <tr style={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            fontWeight: 'bold',
+                            color: 'white',
+                            fontSize: '16px',
+                          }}>
+                            <td style={{ ...tableTdStyle, color: 'white' }}>
+                              💰 Subscription Total
+                            </td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
+                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '16px' }}>
                               {formatCost(finalSubscriptionMonthly)}
                             </td>
-                            <td style={tableTdStyle}>
+                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '16px' }}>
                               {formatCost(finalSubscriptionAnnual)}
                             </td>
-                            <td style={tableTdStyle} colSpan={2}></td>
-                            <td style={tableTdStyle}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={2}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
                           </tr>
                           {neededToMinAnnual > 0 && (
-                            <tr>
+                            <tr style={{
+                              background: '#fee2e2',
+                            }}>
                               <td
-                                style={{ ...tableTdStyle, color: 'red' }}
+                                style={{ 
+                                  ...tableTdStyle, 
+                                  color: '#dc2626',
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                }}
                                 colSpan={7}
                               >
-                                Below Minimum: Need{' '}
+                                ⚠️ Below Minimum: Need{' '}
                                 {formatCost(neededToMinAnnual)} more annually (
                                 {formatCost(neededToMinMonthly)} monthly)
                               </td>
                             </tr>
                           )}
-                          <tr>
-                            <td style={tableTdStyle}>
-                              One-Time Costs (with markup)
+                          <tr style={{
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            fontWeight: '600',
+                            color: 'white',
+                          }}>
+                            <td style={{ ...tableTdStyle, color: 'white' }}>
+                              🏗️ One-Time Costs (with markup)
                             </td>
-                            <td style={tableTdStyle} colSpan={4}></td>
-                            <td style={tableTdStyle}></td>
-                            <td style={tableTdStyle}>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={4}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
+                            <td style={{ 
+                              ...tableTdStyle, 
+                              color: 'white',
+                              fontSize: '16px',
+                              fontWeight: 'bold',
+                            }}>
                               {formatCost(finalOneTimeCost)}
                             </td>
                           </tr>
-                          <tr
-                            style={{
-                              background: '#e0e0e0',
+                          <tr style={{
+                            background: 'linear-gradient(135deg, #4088cf 0%, #2563eb 100%)',
+                            fontWeight: 'bold',
+                            fontSize: '18px',
+                            color: 'white',
+                          }}>
+                            <td style={{ 
+                              ...tableTdStyle, 
+                              color: 'white',
+                              fontSize: '18px',
+                            }}>
+                              🎯 GRAND TOTAL
+                            </td>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={4}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
+                            <td style={{ 
+                              ...tableTdStyle, 
+                              color: 'white',
+                              fontSize: '20px',
                               fontWeight: 'bold',
-                            }}
-                          >
-                            <td style={tableTdStyle}>Grand Total</td>
-                            <td style={tableTdStyle} colSpan={4}></td>
-                            <td style={tableTdStyle}></td>
-                            <td style={tableTdStyle}>
+                              padding: '16px',
+                            }}>
                               {formatCost(finalGrandTotal)}
                             </td>
                           </tr>
                         </tbody>
                       </table>
-                      {customPricingPresent && (
-                        <div
-                          style={{
-                            color: 'red',
-                            marginTop: '10px',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          Please get management approval before sending quote to
-                          customer.
-                        </div>
-                      )}
+                    </div>
+                    {customPricingPresent && (
+                      <div style={{
+                        marginTop: '20px',
+                        padding: '16px',
+                        background: '#fee2e2',
+                        border: '2px solid #dc2626',
+                        borderRadius: '8px',
+                        color: '#991b1b',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                      }}>
+                        <span style={{ fontSize: '24px' }}>⚠️</span>
+                        <span>
+                          Please get management approval before sending quote to customer.
+                        </span>
+                      </div>
+                    )}
                     </>
                   );
                 })()}
