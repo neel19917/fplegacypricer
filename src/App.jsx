@@ -24,39 +24,58 @@ import {
    STYLE CONSTANTS
 ============================ */
 const inputStyle = {
-  marginRight: '20px',
-  padding: '8px',
-  width: '60px',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
+  marginRight: '12px',
+  padding: '10px 12px',
+  width: '70px',
+  border: '2px solid #e2e8f0',
+  borderRadius: '6px',
+  fontSize: '14px',
+  transition: 'all 0.2s ease',
 };
 
 const selectStyle = {
-  padding: '8px',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
+  padding: '10px 12px',
+  border: '2px solid #e2e8f0',
+  borderRadius: '6px',
+  fontSize: '14px',
+  backgroundColor: 'white',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
 };
 
 const stickyHeaderStyle = {
   position: 'sticky',
   top: 0,
-  background: '#f8f8f8',
-  zIndex: 1,
+  background: 'linear-gradient(135deg, #4088cf 0%, #3670b8 100%)',
+  zIndex: 10,
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
 };
 
 const tableThStyle = {
-  border: '1px solid #ccc',
-  padding: '10px',
+  border: '1px solid #e2e8f0',
+  padding: '14px 12px',
   textAlign: 'center',
+  fontWeight: '600',
+  fontSize: '12px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  color: 'white',
 };
 
 const tableTdStyle = {
-  border: '1px solid #ccc',
-  padding: '10px',
+  border: '1px solid #e2e8f0',
+  padding: '12px 10px',
   textAlign: 'center',
+  fontSize: '14px',
+  color: '#2c3e50',
 };
 
-const firstColumnStyle = { minWidth: '220px' };
+const firstColumnStyle = { 
+  minWidth: '220px',
+  fontWeight: '500',
+  textAlign: 'left',
+  paddingLeft: '16px',
+};
 
 /* ============================
    HELPER FUNCTIONS
@@ -114,29 +133,37 @@ const FixedHeader = () => (
       top: 0,
       left: 0,
       width: '100%',
-      height: '80px',
-      background: '#4088cf',
+      height: '70px',
+      background: 'linear-gradient(135deg, #4088cf 0%, #2563eb 100%)',
       color: '#fff',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
+      padding: '0 40px',
       zIndex: 1000,
-      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
     }}
   >
-    <h1 style={{ margin: 0, fontSize: '24px' }}>FreightPOP Quote Builder</h1>
+    <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600', letterSpacing: '0.5px' }}>
+      FreightPOP Quote Builder
+    </h1>
+    <div style={{ fontSize: '14px', opacity: 0.9 }}>
+      Professional Pricing Tool
+    </div>
   </div>
 );
 
-const Card = ({ children }) => (
+const Card = ({ children, className = '' }) => (
   <div
+    className={`card fade-in ${className}`}
     style={{
       width: '100%',
-      border: '1px solid #ccc',
-      borderRadius: '8px',
+      background: 'white',
+      border: 'none',
+      borderRadius: '12px',
       overflow: 'hidden',
-      margin: '20px 0',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      margin: '24px 0',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
     }}
   >
     {children}
@@ -145,15 +172,31 @@ const Card = ({ children }) => (
 
 const CardHeader = ({ children, style }) => (
   <div
-    style={{ background: '#4088cf', padding: '10px', color: '#fff', ...style }}
+    style={{ 
+      background: 'linear-gradient(135deg, #4088cf 0%, #3670b8 100%)', 
+      padding: '16px 24px', 
+      color: '#fff',
+      borderBottom: '3px solid #2563eb',
+      ...style 
+    }}
   >
     {children}
   </div>
 );
 
-const CardTitle = ({ children }) => <h2 style={{ margin: 0 }}>{children}</h2>;
+const CardTitle = ({ children }) => (
+  <h2 style={{ 
+    margin: 0, 
+    fontSize: '20px', 
+    fontWeight: '600',
+    letterSpacing: '0.3px'
+  }}>
+    {children}
+  </h2>
+);
+
 const CardContent = ({ children }) => (
-  <div style={{ padding: '20px' }}>{children}</div>
+  <div style={{ padding: '24px' }}>{children}</div>
 );
 
 /* ============================
@@ -847,7 +890,7 @@ const App = () => {
     setSubBilling('annual');
   };
 
-  const topSpacerHeight = '1700px';
+  const topSpacerHeight = '90px';
 
   return (
     <>
@@ -2030,72 +2073,93 @@ const App = () => {
         )}
       </div>
 
-      {/* Floating Pane for Admin & View Toggle Controls */}
+      {/* Floating Control Panel */}
       <div
+        className="no-print"
         style={{
           position: 'fixed',
           bottom: 0,
+          left: 0,
           width: '100%',
-          background: '#fff',
-          borderTop: '1px solid #ccc',
-          padding: '10px',
+          background: 'linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.95))',
+          borderTop: '2px solid #e2e8f0',
+          padding: '16px 24px',
           display: 'flex',
           justifyContent: 'center',
-          gap: '10px',
+          alignItems: 'center',
+          gap: '12px',
           zIndex: 1001,
+          boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.08)',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <button
           onClick={toggleEditPricing}
           style={{
-            padding: '10px',
-            background: editPricingEnabled ? '#f44336' : '#4caf50',
+            padding: '12px 24px',
+            background: editPricingEnabled 
+              ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
+              : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '8px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {editPricingEnabled ? 'Close Pricing Edit' : 'Edit Pricing'}
+          {editPricingEnabled ? '🔒 Lock Pricing' : '✏️ Edit Pricing'}
         </button>
         <button
           onClick={() => setEditingAllMarkups(!editingAllMarkups)}
           style={{
-            padding: '10px',
-            background: '#2196F3',
+            padding: '12px 24px',
+            background: editingAllMarkups
+              ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+              : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '8px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {editingAllMarkups ? 'Save Markups' : 'Edit All Markups'}
+          {editingAllMarkups ? '💾 Save Markups' : '📊 Edit Markups'}
         </button>
         <button
           onClick={handleReset}
           style={{
-            padding: '10px',
-            background: '#f44336',
+            padding: '12px 24px',
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '8px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           }}
         >
-          Reset
+          🔄 Reset All
         </button>
         <button
           onClick={() => setShowCustomerView(!showCustomerView)}
           style={{
-            padding: '10px',
-            background: '#9c27b0',
+            padding: '12px 24px',
+            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '8px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {showCustomerView ? 'Show Detailed Quote' : 'Show Customer Quote'}
+          {showCustomerView ? '📋 Show Detailed' : '👤 Customer View'}
         </button>
       </div>
     </>
