@@ -1268,6 +1268,209 @@ const App = () => {
                 </div>
 
                 {/* Summary Table */}
+                {(() => {
+                  const summaryRows = [
+                    {
+                      productName: 'Core TMS - Freight',
+                      volume: freightVolume,
+                      monthlyCost: freightAnnualCost / 12,
+                      annualCost: freightAnnualCost,
+                      planDetails: freightPlan
+                        ? `${freightPlan.tier} (Incl: ${freightPlan.shipmentsIncluded})`
+                        : 'N/A',
+                      tierDetails: freightPlan
+                        ? `Incl: ${freightPlan.shipmentsIncluded}, Over: $${freightPlan.costPerShipment}/shipment`
+                        : '',
+                      lineMarkup: freightMarkup,
+                      hideIfZero: true,
+                    },
+                    {
+                      productName: 'Core TMS - Parcel',
+                      volume: parcelVolume,
+                      monthlyCost: parcelAnnualCost / 12,
+                      annualCost: parcelAnnualCost,
+                      planDetails: parcelPlan
+                        ? `${parcelPlan.tier} (Incl: ${parcelPlan.shipmentsIncluded})`
+                        : 'N/A',
+                      tierDetails: parcelPlan
+                        ? `Incl: ${parcelPlan.shipmentsIncluded}, Over: $${parcelPlan.costPerShipment}/shipment`
+                        : '',
+                      lineMarkup: parcelMarkup,
+                      hideIfZero: true,
+                    },
+                    {
+                      productName: 'Ocean Tracking',
+                      volume: oceanTrackingVolume,
+                      monthlyCost: oceanTrackingAnnualCost / 12,
+                      annualCost: oceanTrackingAnnualCost,
+                      planDetails: oceanTrackingPlan
+                        ? `${oceanTrackingPlan.tier} (Incl: ${oceanTrackingPlan.shipmentsIncluded})`
+                        : 'N/A',
+                      tierDetails: oceanTrackingPlan
+                        ? `Incl: ${oceanTrackingPlan.shipmentsIncluded}, Over: $${oceanTrackingPlan.costPerShipment}/shipment`
+                        : '',
+                      lineMarkup: oceanTrackingMarkup,
+                      hideIfZero: true,
+                    },
+                    {
+                      productName: 'Locations',
+                      volume: locationsVolume,
+                      monthlyCost: locationsAnnualCost / 12,
+                      annualCost: locationsAnnualCost,
+                      planDetails: locationsPlan
+                        ? `${locationsPlan.tier} (Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd})`
+                        : 'N/A',
+                      tierDetails: locationsPlan
+                        ? `Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd}`
+                        : '',
+                      lineMarkup: locationsMarkup,
+                      hideIfZero: false,
+                    },
+                    {
+                      productName: 'Support Package',
+                      volume: supportPackageVolume,
+                      monthlyCost: supportPackageCostAnnual / 12,
+                      annualCost: supportPackageCostAnnual,
+                      planDetails: supportPackagePlan
+                        ? `${supportPackagePlan.tier} (Range: ${
+                            supportPackagePlan.rangeStart
+                          }–${
+                            supportPackagePlan.rangeEnd === Infinity
+                              ? '+'
+                              : supportPackagePlan.rangeEnd
+                          })`
+                        : 'N/A',
+                      tierDetails: supportPackagePlan
+                        ? `Range: ${supportPackagePlan.rangeStart}–${
+                            supportPackagePlan.rangeEnd === Infinity
+                              ? '+'
+                              : supportPackagePlan.rangeEnd
+                          }`
+                        : '',
+                      lineMarkup: supportPackageMarkup,
+                      hideIfZero: true,
+                    },
+                    ...(billPayYesNo === 'Yes'
+                      ? [
+                          {
+                            productName: 'Bill Pay',
+                            volume: billPayYesNo,
+                            monthlyCost: billPayMonthlyCost,
+                            annualCost: billPayAnnualCost,
+                            planDetails:
+                              subBilling === 'annual'
+                                ? '$500 base + $2/ LTL-FTL + $0.50/Parcel'
+                                : '$650 base + $2.6/ LTL-FTL + $0.65/Parcel',
+                            tierDetails: 'Billed if Yes',
+                            lineMarkup: billPayMarkup,
+                            hideIfZero: true,
+                          },
+                        ]
+                      : []),
+                    {
+                      productName: 'Vendor Portals',
+                      volume: vendorPortalCount,
+                      monthlyCost: vendorMonthlyCost,
+                      annualCost: vendorAnnualCost,
+                      planDetails:
+                        subBilling === 'annual'
+                          ? '$20/portal/month'
+                          : '$30/portal/month',
+                      tierDetails: '',
+                      lineMarkup: vendorPortalMarkup,
+                      hideIfZero: true,
+                    },
+                    {
+                      productName: 'Auditing Module',
+                      volume: auditingVolume,
+                      monthlyCost: auditingAnnualCost / 12,
+                      annualCost: auditingAnnualCost,
+                      planDetails: auditingPlan
+                        ? `${auditingPlan.tier} (Range: ${
+                            auditingPlan.range[0]
+                          }–${
+                            auditingPlan.range[1] === Infinity
+                              ? '+'
+                              : auditingPlan.range[1]
+                          })`
+                        : 'N/A',
+                      tierDetails: auditingPlan
+                        ? `Range: ${auditingPlan.range[0]}–${
+                            auditingPlan.range[1] === Infinity
+                              ? '+'
+                              : auditingPlan.range[1]
+                          }`
+                        : '',
+                      lineMarkup: auditingMarkup,
+                      hideIfZero: true,
+                    },
+                    {
+                      productName: 'Fleet Route Optimization',
+                      volume: fleetRouteVolume,
+                      monthlyCost: fleetRouteEffectiveAnnual / 12,
+                      annualCost: fleetRouteEffectiveAnnual,
+                      planDetails: fleetRoutePlan
+                        ? `${fleetRoutePlan.tier} (Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]})`
+                        : 'N/A',
+                      tierDetails: fleetRoutePlan
+                        ? `Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]}`
+                        : '',
+                      lineMarkup: fleetRouteMarkup,
+                      hideIfZero: true,
+                    },
+                    ...(assetManagementAnnualCost > 0
+                      ? [
+                          {
+                            productName: 'Yard Management',
+                            volume: `${assetManagementFacilities} facilities, ${assetManagementAssets} assets`,
+                            monthlyCost: assetManagementMonthlyCost,
+                            annualCost: assetManagementAnnualCost,
+                            planDetails: `Per facility: $${
+                              subBilling === 'annual' ? '100' : '130'
+                            }, per asset: $${
+                              subBilling === 'annual' ? '10' : '13'
+                            }`,
+                            tierDetails: '',
+                            lineMarkup: assetManagementMarkup,
+                            hideIfZero: true,
+                          },
+                        ]
+                      : []),
+                    {
+                      productName: 'Dock Scheduling',
+                      volume: dockSchedulingVolume,
+                      monthlyCost: dockSchedulingAnnualCost / 12,
+                      annualCost: dockSchedulingAnnualCost,
+                      planDetails: dockSchedulingPlan
+                        ? `${dockSchedulingPlan.tier} (Range: ${
+                            dockSchedulingPlan.rangeStart
+                          }–${
+                            dockSchedulingPlan.rangeEnd === Infinity
+                              ? '+'
+                              : dockSchedulingPlan.rangeEnd
+                          })`
+                        : 'N/A',
+                      tierDetails: dockSchedulingPlan
+                        ? `Range: ${dockSchedulingPlan.rangeStart}–${
+                            dockSchedulingPlan.rangeEnd === Infinity
+                              ? '+'
+                              : dockSchedulingPlan.rangeEnd
+                          }`
+                        : '',
+                      lineMarkup: dockSchedulingMarkup,
+                      hideIfZero: true,
+                    },
+                  ];
+
+                  const visibleSummaryRows = summaryRows.filter(row => {
+                    if (typeof row.volume === 'number') {
+                      return row.volume !== 0;
+                    }
+                    return true;
+                  });
+
+                  return (
+                    <>
                 <div style={{ overflowX: 'auto' }}>
                   <table
                     style={{
