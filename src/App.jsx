@@ -27,15 +27,16 @@ const inputStyle = {
   marginRight: '12px',
   padding: '10px 12px',
   width: '70px',
-  border: '2px solid #e2e8f0',
+  border: '1px solid #cbd5e1',
   borderRadius: '6px',
   fontSize: '14px',
   transition: 'all 0.2s ease',
+  backgroundColor: 'white',
 };
 
 const selectStyle = {
   padding: '10px 12px',
-  border: '2px solid #e2e8f0',
+  border: '1px solid #cbd5e1',
   borderRadius: '6px',
   fontSize: '14px',
   backgroundColor: 'white',
@@ -46,9 +47,9 @@ const selectStyle = {
 const stickyHeaderStyle = {
   position: 'sticky',
   top: 0,
-  background: 'linear-gradient(135deg, #4088cf 0%, #3670b8 100%)',
+  background: '#334155',
   zIndex: 10,
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
 };
 
 const tableThStyle = {
@@ -56,7 +57,7 @@ const tableThStyle = {
   padding: '14px 12px',
   textAlign: 'center',
   fontWeight: '600',
-  fontSize: '12px',
+  fontSize: '11px',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
   color: 'white',
@@ -67,7 +68,7 @@ const tableTdStyle = {
   padding: '12px 10px',
   textAlign: 'center',
   fontSize: '14px',
-  color: '#2c3e50',
+  color: '#334155',
 };
 
 const firstColumnStyle = { 
@@ -134,20 +135,20 @@ const FixedHeader = () => (
       left: 0,
       width: '100%',
       height: '70px',
-      background: 'linear-gradient(135deg, #4088cf 0%, #2563eb 100%)',
+      background: '#1e293b',
       color: '#fff',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 40px',
       zIndex: 1000,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     }}
   >
-    <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '600', letterSpacing: '0.5px' }}>
+    <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '600', letterSpacing: '0.3px' }}>
       FreightPOP Quote Builder
     </h1>
-    <div style={{ fontSize: '14px', opacity: 0.9 }}>
+    <div style={{ fontSize: '13px', opacity: 0.8 }}>
       Professional Pricing Tool
     </div>
   </div>
@@ -159,11 +160,11 @@ const Card = ({ children, className = '' }) => (
     style={{
       width: '100%',
       background: 'white',
-      border: 'none',
-      borderRadius: '12px',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
       overflow: 'hidden',
-      margin: '24px 0',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+      margin: '20px 0',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
     }}
   >
     {children}
@@ -173,10 +174,10 @@ const Card = ({ children, className = '' }) => (
 const CardHeader = ({ children, style }) => (
   <div
     style={{ 
-      background: 'linear-gradient(135deg, #4088cf 0%, #3670b8 100%)', 
+      background: '#334155', 
       padding: '16px 24px', 
       color: '#fff',
-      borderBottom: '3px solid #2563eb',
+      borderBottom: '1px solid #475569',
       ...style 
     }}
   >
@@ -187,7 +188,7 @@ const CardHeader = ({ children, style }) => (
 const CardTitle = ({ children }) => (
   <h2 style={{ 
     margin: 0, 
-    fontSize: '20px', 
+    fontSize: '18px', 
     fontWeight: '600',
     letterSpacing: '0.3px'
   }}>
@@ -1122,14 +1123,14 @@ const App = () => {
         ) : (
           <>
             {/* Detailed Quote Summary Table */}
-            <Card style={{ border: '3px solid #4088cf' }}>
+            <Card style={{ border: '2px solid #cbd5e1' }}>
               <CardHeader
                 style={{
-                  background: 'linear-gradient(135deg, #4088cf 0%, #2563eb 100%)',
-                  padding: '20px 24px',
+                  background: '#1e293b',
+                  padding: '18px 24px',
                 }}
               >
-                <CardTitle style={{ fontSize: '24px' }}>📊 Quote Summary</CardTitle>
+                <CardTitle style={{ fontSize: '20px' }}>📊 Quote Summary</CardTitle>
               </CardHeader>
               <CardContent>
                 {/* Settings Section */}
@@ -1137,11 +1138,11 @@ const App = () => {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '16px',
-                  marginBottom: '32px',
+                  marginBottom: '28px',
                   padding: '20px',
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                  borderRadius: '12px',
-                  border: '2px solid #cbd5e1',
+                  background: '#f8fafc',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
                 }}>
                   <div style={{
                     display: 'flex',
@@ -1150,8 +1151,8 @@ const App = () => {
                   }}>
                     <label style={{ 
                       fontWeight: '600',
-                      fontSize: '14px',
-                      color: '#1e293b',
+                      fontSize: '13px',
+                      color: '#475569',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}>
@@ -1160,11 +1161,11 @@ const App = () => {
                     <div style={{
                       padding: '12px 16px',
                       background: 'white',
-                      borderRadius: '8px',
-                      border: '2px solid #e2e8f0',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: '#4088cf',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '17px',
+                      fontWeight: '600',
+                      color: '#1e293b',
                     }}>
                       {editPricingEnabled ? (
                         <input
@@ -1174,8 +1175,8 @@ const App = () => {
                           style={{ 
                             width: '100%',
                             ...inputStyle,
-                            fontSize: '18px',
-                            fontWeight: '700',
+                            fontSize: '17px',
+                            fontWeight: '600',
                           }}
                         />
                       ) : (
@@ -1191,8 +1192,8 @@ const App = () => {
                   }}>
                     <label style={{ 
                       fontWeight: '600',
-                      fontSize: '14px',
-                      color: '#1e293b',
+                      fontSize: '13px',
+                      color: '#475569',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}>
@@ -1201,11 +1202,11 @@ const App = () => {
                     <div style={{
                       padding: '12px 16px',
                       background: 'white',
-                      borderRadius: '8px',
-                      border: '2px solid #e2e8f0',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: '#059669',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '17px',
+                      fontWeight: '600',
+                      color: '#1e293b',
                     }}>
                       {editingAllMarkups ? (
                         <input
@@ -1215,8 +1216,8 @@ const App = () => {
                           style={{ 
                             width: '100%',
                             ...inputStyle,
-                            fontSize: '18px',
-                            fontWeight: '700',
+                            fontSize: '17px',
+                            fontWeight: '600',
                           }}
                         />
                       ) : (
@@ -1232,8 +1233,8 @@ const App = () => {
                   }}>
                     <label style={{ 
                       fontWeight: '600',
-                      fontSize: '14px',
-                      color: '#1e293b',
+                      fontSize: '13px',
+                      color: '#475569',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                     }}>
@@ -1242,11 +1243,11 @@ const App = () => {
                     <div style={{
                       padding: '12px 16px',
                       background: 'white',
-                      borderRadius: '8px',
-                      border: '2px solid #e2e8f0',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      color: '#f59e0b',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '17px',
+                      fontWeight: '600',
+                      color: '#1e293b',
                     }}>
                       {editingAllMarkups ? (
                         <input
@@ -1256,8 +1257,8 @@ const App = () => {
                           style={{ 
                             width: '100%',
                             ...inputStyle,
-                            fontSize: '18px',
-                            fontWeight: '700',
+                            fontSize: '17px',
+                            fontWeight: '600',
                           }}
                         />
                       ) : (
@@ -1579,19 +1580,19 @@ const App = () => {
                             </tr>
                           ))}
                           <tr style={{
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                            fontWeight: 'bold',
+                            background: '#059669',
+                            fontWeight: '600',
                             color: 'white',
-                            fontSize: '16px',
+                            fontSize: '15px',
                           }}>
                             <td style={{ ...tableTdStyle, color: 'white' }}>
                               💰 Subscription Total
                             </td>
                             <td style={{ ...tableTdStyle, color: 'white' }}></td>
-                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '16px' }}>
+                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '15px', fontWeight: '600' }}>
                               {formatCost(finalSubscriptionMonthly)}
                             </td>
-                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '16px' }}>
+                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '15px', fontWeight: '600' }}>
                               {formatCost(finalSubscriptionAnnual)}
                             </td>
                             <td style={{ ...tableTdStyle, color: 'white' }} colSpan={2}></td>
@@ -1599,14 +1600,14 @@ const App = () => {
                           </tr>
                           {neededToMinAnnual > 0 && (
                             <tr style={{
-                              background: '#fee2e2',
+                              background: '#fef2f2',
                             }}>
                               <td
                                 style={{ 
                                   ...tableTdStyle, 
-                                  color: '#dc2626',
+                                  color: '#b91c1c',
                                   fontWeight: '600',
-                                  fontSize: '14px',
+                                  fontSize: '13px',
                                 }}
                                 colSpan={7}
                               >
@@ -1617,7 +1618,7 @@ const App = () => {
                             </tr>
                           )}
                           <tr style={{
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            background: '#f59e0b',
                             fontWeight: '600',
                             color: 'white',
                           }}>
@@ -1629,22 +1630,22 @@ const App = () => {
                             <td style={{ 
                               ...tableTdStyle, 
                               color: 'white',
-                              fontSize: '16px',
-                              fontWeight: 'bold',
+                              fontSize: '15px',
+                              fontWeight: '600',
                             }}>
                               {formatCost(finalOneTimeCost)}
                             </td>
                           </tr>
                           <tr style={{
-                            background: 'linear-gradient(135deg, #4088cf 0%, #2563eb 100%)',
+                            background: '#334155',
                             fontWeight: 'bold',
-                            fontSize: '18px',
+                            fontSize: '16px',
                             color: 'white',
                           }}>
                             <td style={{ 
                               ...tableTdStyle, 
                               color: 'white',
-                              fontSize: '18px',
+                              fontSize: '16px',
                             }}>
                               🎯 GRAND TOTAL
                             </td>
@@ -1653,7 +1654,7 @@ const App = () => {
                             <td style={{ 
                               ...tableTdStyle, 
                               color: 'white',
-                              fontSize: '20px',
+                              fontSize: '18px',
                               fontWeight: 'bold',
                               padding: '16px',
                             }}>
@@ -1665,18 +1666,19 @@ const App = () => {
                     </div>
                     {customPricingPresent && (
                       <div style={{
-                        marginTop: '20px',
-                        padding: '16px',
-                        background: '#fee2e2',
-                        border: '2px solid #dc2626',
-                        borderRadius: '8px',
+                        marginTop: '16px',
+                        padding: '14px 16px',
+                        background: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
                         color: '#991b1b',
-                        fontWeight: '600',
+                        fontWeight: '500',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '12px',
+                        gap: '10px',
+                        fontSize: '14px',
                       }}>
-                        <span style={{ fontSize: '24px' }}>⚠️</span>
+                        <span style={{ fontSize: '20px' }}>⚠️</span>
                         <span>
                           Please get management approval before sending quote to customer.
                         </span>
@@ -2074,21 +2076,21 @@ const App = () => {
             {/* One-Time Costs Table */}
             <Card>
               <CardHeader>
-                <CardTitle>💰 One-Time Implementation Costs</CardTitle>
+                <CardTitle>💰 Setup & Implementation Costs</CardTitle>
               </CardHeader>
               <CardContent>
                 <div style={{
                   marginBottom: '16px',
                   padding: '12px 16px',
-                  background: '#fef3c7',
-                  border: '2px solid #fbbf24',
-                  borderRadius: '8px',
+                  background: '#fffbeb',
+                  border: '1px solid #fcd34d',
+                  borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
                 }}>
-                  <span style={{ fontSize: '20px' }}>ℹ️</span>
-                  <span style={{ fontSize: '14px', color: '#78350f', fontWeight: '500' }}>
+                  <span style={{ fontSize: '18px' }}>ℹ️</span>
+                  <span style={{ fontSize: '13px', color: '#78350f', fontWeight: '500' }}>
                     Add custom one-time costs for implementation, setup, integration, or training
                   </span>
                 </div>
@@ -2171,7 +2173,7 @@ const App = () => {
                               }
                               style={{
                                 padding: '8px 16px',
-                                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                background: '#dc2626',
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -2190,9 +2192,10 @@ const App = () => {
                           <td colSpan={4} style={{
                             ...tableTdStyle,
                             textAlign: 'center',
-                            padding: '32px',
+                            padding: '28px',
                             color: '#64748b',
-                            fontStyle: 'italic'
+                            fontStyle: 'italic',
+                            fontSize: '13px',
                           }}>
                             No one-time costs added yet. Click the button below to add your first item.
                           </td>
@@ -2206,9 +2209,10 @@ const App = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '16px',
+                  padding: '14px 16px',
                   background: '#f8fafc',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
                 }}>
                   <button
                     onClick={() =>
@@ -2218,31 +2222,32 @@ const App = () => {
                       ])
                     }
                     style={{
-                      padding: '12px 24px',
+                      padding: '10px 20px',
                       border: 'none',
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      borderRadius: '6px',
+                      background: '#059669',
                       color: '#fff',
                       fontWeight: '600',
                       fontSize: '14px',
                       cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                      boxShadow: '0 1px 3px rgba(5, 150, 105, 0.3)',
                     }}
                   >
                     ➕ Add One-Time Cost
                   </button>
                   <div style={{
-                    fontSize: '16px',
+                    fontSize: '15px',
                     fontWeight: '600',
                     color: '#1e293b',
                   }}>
-                    <span style={{ marginRight: '12px', color: '#64748b' }}>Total One-Time:</span>
+                    <span style={{ marginRight: '10px', color: '#64748b' }}>Total One-Time:</span>
                     <span style={{ 
-                      fontSize: '20px',
-                      color: '#4088cf',
-                      background: '#dbeafe',
-                      padding: '6px 16px',
+                      fontSize: '18px',
+                      color: '#334155',
+                      background: '#e2e8f0',
+                      padding: '6px 14px',
                       borderRadius: '6px',
+                      fontWeight: '700',
                     }}>
                       {formatCost(finalOneTimeCost)}
                     </span>
@@ -2316,32 +2321,31 @@ const App = () => {
           bottom: 0,
           left: 0,
           width: '100%',
-          background: 'linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.95))',
-          borderTop: '2px solid #e2e8f0',
-          padding: '16px 24px',
+          background: 'rgba(255,255,255,0.98)',
+          borderTop: '1px solid #e2e8f0',
+          padding: '12px 24px',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: '12px',
+          gap: '10px',
           zIndex: 1001,
-          boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.08)',
-          backdropFilter: 'blur(8px)',
+          boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.05)',
         }}
       >
         <button
           onClick={toggleEditPricing}
           style={{
-            padding: '12px 24px',
+            padding: '10px 20px',
             background: editPricingEnabled 
-              ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
-              : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              ? '#dc2626' 
+              : '#059669',
             color: '#fff',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '6px',
             cursor: 'pointer',
             fontWeight: '500',
             fontSize: '14px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
           {editPricingEnabled ? '🔒 Lock Pricing' : '✏️ Edit Pricing'}
@@ -2349,17 +2353,17 @@ const App = () => {
         <button
           onClick={() => setEditingAllMarkups(!editingAllMarkups)}
           style={{
-            padding: '12px 24px',
+            padding: '10px 20px',
             background: editingAllMarkups
-              ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
-              : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              ? '#7c3aed'
+              : '#3b82f6',
             color: '#fff',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '6px',
             cursor: 'pointer',
             fontWeight: '500',
             fontSize: '14px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
           {editingAllMarkups ? '💾 Save Markups' : '📊 Edit Markups'}
@@ -2367,15 +2371,15 @@ const App = () => {
         <button
           onClick={handleReset}
           style={{
-            padding: '12px 24px',
-            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            padding: '10px 20px',
+            background: '#f59e0b',
             color: '#fff',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '6px',
             cursor: 'pointer',
             fontWeight: '500',
             fontSize: '14px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
           🔄 Reset All
@@ -2383,15 +2387,15 @@ const App = () => {
         <button
           onClick={() => setShowCustomerView(!showCustomerView)}
           style={{
-            padding: '12px 24px',
-            background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
+            padding: '10px 20px',
+            background: '#8b5cf6',
             color: '#fff',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '6px',
             cursor: 'pointer',
             fontWeight: '500',
             fontSize: '14px',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
           {showCustomerView ? '📋 Show Detailed' : '👤 Customer View'}
