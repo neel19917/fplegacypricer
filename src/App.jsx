@@ -1574,41 +1574,61 @@ const App = () => {
             {/* Input Table: Shipments, Volumes, & Other Counts */}
             <Card>
               <CardHeader>
-                <CardTitle>Shipments, Volumes, and Other Counts</CardTitle>
+                <CardTitle>📦 Product Configuration</CardTitle>
               </CardHeader>
               <CardContent>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
+                <div style={{ 
+                  marginBottom: '24px', 
+                  padding: '16px', 
+                  background: '#f8fafc',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <label style={{ 
+                    marginRight: '8px',
+                    fontWeight: '600',
+                    fontSize: '15px',
+                    color: '#1e293b'
+                  }}>
                     Billing Frequency:
                   </label>
                   <select
                     value={subBilling}
                     onChange={e => setSubBilling(e.target.value)}
-                    style={{ ...selectStyle, marginRight: '20px' }}
+                    style={{ 
+                      ...selectStyle, 
+                      fontWeight: '600',
+                      fontSize: '15px',
+                      minWidth: '140px'
+                    }}
                   >
-                    <option value='annual'>Annual</option>
-                    <option value='monthly'>Monthly</option>
+                    <option value='annual'>📅 Annual</option>
+                    <option value='monthly'>📆 Monthly</option>
                   </select>
                 </div>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '16px',
-                  }}
-                >
-                  <thead>
-                    <tr style={{ background: '#4088cf', color: '#fff' }}>
-                      <th style={{ ...tableThStyle, ...firstColumnStyle }}>
-                        Product Type
-                      </th>
-                      <th style={tableThStyle}>Product Plan Description</th>
-                      <th style={tableThStyle}>Tier Selection</th>
-                      <th style={tableThStyle}>Monthly Volume/Count</th>
-                      <th style={tableThStyle}>Monthly Cost</th>
-                      <th style={tableThStyle}>Annual Cost</th>
-                    </tr>
-                  </thead>
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px',
+                      minWidth: '1000px'
+                    }}
+                  >
+                    <thead style={stickyHeaderStyle}>
+                      <tr>
+                        <th style={{ ...tableThStyle, ...firstColumnStyle }}>
+                          PRODUCT TYPE
+                        </th>
+                        <th style={tableThStyle}>PRODUCT PLAN DESCRIPTION</th>
+                        <th style={tableThStyle}>TIER SELECTION</th>
+                        <th style={tableThStyle}>MONTHLY VOLUME/COUNT</th>
+                        <th style={tableThStyle}>MONTHLY COST</th>
+                        <th style={tableThStyle}>ANNUAL COST</th>
+                      </tr>
+                    </thead>
                   <tbody>
                     {[
                       {
@@ -1917,102 +1937,187 @@ const App = () => {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </CardContent>
             </Card>
 
             {/* One-Time Costs Table */}
             <Card>
               <CardHeader>
-                <CardTitle>One-Time Costs</CardTitle>
+                <CardTitle>💰 One-Time Implementation Costs</CardTitle>
               </CardHeader>
               <CardContent>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '16px',
-                  }}
-                >
-                  <thead style={stickyHeaderStyle}>
-                    <tr style={{ background: '#f8f8f8' }}>
-                      <th style={tableThStyle}>Name</th>
-                      <th style={tableThStyle}>Description</th>
-                      <th style={tableThStyle}>Amount</th>
-                      <th style={tableThStyle}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {oneTimeCosts.map((item, index) => (
-                      <tr key={index}>
-                        <td style={tableTdStyle}>
-                          <input
-                            type='text'
-                            value={item.name}
-                            onChange={e => {
-                              const clone = [...oneTimeCosts];
-                              clone[index].name = e.target.value;
-                              setOneTimeCosts(clone);
-                            }}
-                            style={{ width: '120px', padding: '6px' }}
-                          />
-                        </td>
-                        <td style={tableTdStyle}>
-                          <input
-                            type='text'
-                            value={item.description}
-                            onChange={e => {
-                              const clone = [...oneTimeCosts];
-                              clone[index].description = e.target.value;
-                              setOneTimeCosts(clone);
-                            }}
-                            style={{ width: '250px', padding: '6px' }}
-                          />
-                        </td>
-                        <td style={tableTdStyle}>
-                          <input
-                            type='number'
-                            value={item.amount}
-                            onChange={e => {
-                              const clone = [...oneTimeCosts];
-                              clone[index].amount = Number(e.target.value);
-                              setOneTimeCosts(clone);
-                            }}
-                            style={{ width: '100px', padding: '6px' }}
-                          />
-                        </td>
-                        <td style={tableTdStyle}>
-                          <button
-                            onClick={() =>
-                              setOneTimeCosts(
-                                oneTimeCosts.filter((_, i) => i !== index)
-                              )
-                            }
-                          >
-                            Remove
-                          </button>
-                        </td>
+                <div style={{
+                  marginBottom: '16px',
+                  padding: '12px 16px',
+                  background: '#fef3c7',
+                  border: '2px solid #fbbf24',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <span style={{ fontSize: '20px' }}>ℹ️</span>
+                  <span style={{ fontSize: '14px', color: '#78350f', fontWeight: '500' }}>
+                    Add custom one-time costs for implementation, setup, integration, or training
+                  </span>
+                </div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px',
+                    }}
+                  >
+                    <thead style={stickyHeaderStyle}>
+                      <tr>
+                        <th style={tableThStyle}>NAME</th>
+                        <th style={tableThStyle}>DESCRIPTION</th>
+                        <th style={tableThStyle}>AMOUNT</th>
+                        <th style={tableThStyle}>ACTION</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <button
-                  onClick={() =>
-                    setOneTimeCosts([
-                      ...oneTimeCosts,
-                      { name: '', description: '', amount: 0 },
-                    ])
-                  }
-                  style={{
-                    marginTop: '10px',
-                    padding: '8px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    background: '#4088cf',
-                    color: '#fff',
-                  }}
-                >
-                  Add Custom One-Time Cost
-                </button>
+                    </thead>
+                    <tbody>
+                      {oneTimeCosts.map((item, index) => (
+                        <tr key={index}>
+                          <td style={tableTdStyle}>
+                            <input
+                              type='text'
+                              value={item.name}
+                              onChange={e => {
+                                const clone = [...oneTimeCosts];
+                                clone[index].name = e.target.value;
+                                setOneTimeCosts(clone);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                maxWidth: '160px',
+                                ...inputStyle
+                              }}
+                              placeholder="e.g., Setup Fee"
+                            />
+                          </td>
+                          <td style={tableTdStyle}>
+                            <input
+                              type='text'
+                              value={item.description}
+                              onChange={e => {
+                                const clone = [...oneTimeCosts];
+                                clone[index].description = e.target.value;
+                                setOneTimeCosts(clone);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                maxWidth: '300px',
+                                ...inputStyle
+                              }}
+                              placeholder="Detailed description"
+                            />
+                          </td>
+                          <td style={tableTdStyle}>
+                            <input
+                              type='number'
+                              value={item.amount}
+                              onChange={e => {
+                                const clone = [...oneTimeCosts];
+                                clone[index].amount = Number(e.target.value);
+                                setOneTimeCosts(clone);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                maxWidth: '120px',
+                                ...inputStyle
+                              }}
+                              placeholder="0.00"
+                            />
+                          </td>
+                          <td style={tableTdStyle}>
+                            <button
+                              onClick={() =>
+                                setOneTimeCosts(
+                                  oneTimeCosts.filter((_, i) => i !== index)
+                                )
+                              }
+                              style={{
+                                padding: '8px 16px',
+                                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              🗑️ Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {oneTimeCosts.length === 0 && (
+                        <tr>
+                          <td colSpan={4} style={{
+                            ...tableTdStyle,
+                            textAlign: 'center',
+                            padding: '32px',
+                            color: '#64748b',
+                            fontStyle: 'italic'
+                          }}>
+                            No one-time costs added yet. Click the button below to add your first item.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ 
+                  marginTop: '16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '16px',
+                  background: '#f8fafc',
+                  borderRadius: '8px',
+                }}>
+                  <button
+                    onClick={() =>
+                      setOneTimeCosts([
+                        ...oneTimeCosts,
+                        { name: '', description: '', amount: 0 },
+                      ])
+                    }
+                    style={{
+                      padding: '12px 24px',
+                      border: 'none',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#fff',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    ➕ Add One-Time Cost
+                  </button>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#1e293b',
+                  }}>
+                    <span style={{ marginRight: '12px', color: '#64748b' }}>Total One-Time:</span>
+                    <span style={{ 
+                      fontSize: '20px',
+                      color: '#4088cf',
+                      background: '#dbeafe',
+                      padding: '6px 16px',
+                      borderRadius: '6px',
+                    }}>
+                      {formatCost(finalOneTimeCost)}
+                    </span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
