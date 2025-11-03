@@ -24,39 +24,59 @@ import {
    STYLE CONSTANTS
 ============================ */
 const inputStyle = {
-  marginRight: '20px',
-  padding: '8px',
-  width: '60px',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
+  marginRight: '12px',
+  padding: '10px 12px',
+  width: '70px',
+  border: '1px solid #cbd5e1',
+  borderRadius: '6px',
+  fontSize: '14px',
+  transition: 'all 0.2s ease',
+  backgroundColor: 'white',
 };
 
 const selectStyle = {
-  padding: '8px',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
+  padding: '10px 12px',
+  border: '1px solid #cbd5e1',
+  borderRadius: '6px',
+  fontSize: '14px',
+  backgroundColor: 'white',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
 };
 
 const stickyHeaderStyle = {
   position: 'sticky',
   top: 0,
-  background: '#f8f8f8',
-  zIndex: 1,
+  background: '#334155',
+  zIndex: 10,
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
 };
 
 const tableThStyle = {
-  border: '1px solid #ccc',
-  padding: '10px',
+  border: '1px solid #e2e8f0',
+  padding: '14px 12px',
   textAlign: 'center',
+  fontWeight: '600',
+  fontSize: '11px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  color: 'white',
 };
 
 const tableTdStyle = {
-  border: '1px solid #ccc',
-  padding: '10px',
+  border: '1px solid #e2e8f0',
+  padding: '12px 10px',
   textAlign: 'center',
+  fontSize: '14px',
+  color: '#334155',
 };
 
-const firstColumnStyle = { minWidth: '220px' };
+const firstColumnStyle = { 
+  minWidth: '220px',
+  fontWeight: '500',
+  textAlign: 'left',
+  paddingLeft: '16px',
+};
 
 /* ============================
    HELPER FUNCTIONS
@@ -114,29 +134,37 @@ const FixedHeader = () => (
       top: 0,
       left: 0,
       width: '100%',
-      height: '80px',
-      background: '#4088cf',
+      height: '70px',
+      background: '#1e293b',
       color: '#fff',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
+      padding: '0 40px',
       zIndex: 1000,
-      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     }}
   >
-    <h1 style={{ margin: 0, fontSize: '24px' }}>FreightPOP Quote Builder</h1>
+    <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '600', letterSpacing: '0.3px' }}>
+      FreightPOP Quote Builder
+    </h1>
+    <div style={{ fontSize: '13px', opacity: 0.8 }}>
+      Professional Pricing Tool
+    </div>
   </div>
 );
 
-const Card = ({ children }) => (
+const Card = ({ children, className = '' }) => (
   <div
+    className={`card fade-in ${className}`}
     style={{
       width: '100%',
-      border: '1px solid #ccc',
+      background: 'white',
+      border: '1px solid #e2e8f0',
       borderRadius: '8px',
       overflow: 'hidden',
       margin: '20px 0',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
     }}
   >
     {children}
@@ -145,15 +173,31 @@ const Card = ({ children }) => (
 
 const CardHeader = ({ children, style }) => (
   <div
-    style={{ background: '#4088cf', padding: '10px', color: '#fff', ...style }}
+    style={{ 
+      background: '#334155', 
+      padding: '16px 24px', 
+      color: '#fff',
+      borderBottom: '1px solid #475569',
+      ...style 
+    }}
   >
     {children}
   </div>
 );
 
-const CardTitle = ({ children }) => <h2 style={{ margin: 0 }}>{children}</h2>;
+const CardTitle = ({ children }) => (
+  <h2 style={{ 
+    margin: 0, 
+    fontSize: '18px', 
+    fontWeight: '600',
+    letterSpacing: '0.3px'
+  }}>
+    {children}
+  </h2>
+);
+
 const CardContent = ({ children }) => (
-  <div style={{ padding: '20px' }}>{children}</div>
+  <div style={{ padding: '24px' }}>{children}</div>
 );
 
 /* ============================
@@ -847,7 +891,7 @@ const App = () => {
     setSubBilling('annual');
   };
 
-  const topSpacerHeight = '1700px';
+  const topSpacerHeight = '90px';
 
   return (
     <>
@@ -1079,63 +1123,152 @@ const App = () => {
         ) : (
           <>
             {/* Detailed Quote Summary Table */}
-            <Card>
+            <Card style={{ border: '2px solid #cbd5e1' }}>
               <CardHeader
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  background: '#1e293b',
+                  padding: '18px 24px',
                 }}
               >
-                <CardTitle>Quote Summary</CardTitle>
+                <CardTitle style={{ fontSize: '20px' }}>📊 Quote Summary</CardTitle>
               </CardHeader>
               <CardContent>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
-                    Minimum Subscription (Annual):
-                  </label>
-                  {editPricingEnabled ? (
-                    <input
-                      type='number'
-                      value={minSubscription}
-                      onChange={e => setMinSubscription(Number(e.target.value))}
-                      style={{ width: '120px', ...inputStyle }}
-                    />
-                  ) : (
-                    <span>{minSubscription}</span>
-                  )}
+                {/* Settings Section */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gap: '16px',
+                  marginBottom: '28px',
+                  padding: '20px',
+                  background: '#f8fafc',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <label style={{ 
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      color: '#475569',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      💰 Minimum Subscription (Annual):
+                    </label>
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'white',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '17px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                    }}>
+                      {editPricingEnabled ? (
+                        <input
+                          type='number'
+                          value={minSubscription}
+                          onChange={e => setMinSubscription(Number(e.target.value))}
+                          style={{ 
+                            width: '100%',
+                            ...inputStyle,
+                            fontSize: '17px',
+                            fontWeight: '600',
+                          }}
+                        />
+                      ) : (
+                        formatCost(minSubscription)
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <label style={{ 
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      color: '#475569',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      📈 Global Markup (%):
+                    </label>
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'white',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '17px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                    }}>
+                      {editingAllMarkups ? (
+                        <input
+                          type='number'
+                          value={globalMarkup}
+                          onChange={e => setGlobalMarkup(Number(e.target.value))}
+                          style={{ 
+                            width: '100%',
+                            ...inputStyle,
+                            fontSize: '17px',
+                            fontWeight: '600',
+                          }}
+                        />
+                      ) : (
+                        `${globalMarkup}%`
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    <label style={{ 
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      color: '#475569',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      💵 One-Time Cost Markup (%):
+                    </label>
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'white',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '17px',
+                      fontWeight: '600',
+                      color: '#1e293b',
+                    }}>
+                      {editingAllMarkups ? (
+                        <input
+                          type='number'
+                          value={oneTimeMarkup}
+                          onChange={e => setOneTimeMarkup(Number(e.target.value))}
+                          style={{ 
+                            width: '100%',
+                            ...inputStyle,
+                            fontSize: '17px',
+                            fontWeight: '600',
+                          }}
+                        />
+                      ) : (
+                        `${oneTimeMarkup}%`
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
-                    Global Markup (%):
-                  </label>
-                  {editingAllMarkups ? (
-                    <input
-                      type='number'
-                      value={globalMarkup}
-                      onChange={e => setGlobalMarkup(Number(e.target.value))}
-                      style={{ width: '80px', marginLeft: '10px' }}
-                    />
-                  ) : (
-                    <span style={{ marginLeft: '10px' }}>{globalMarkup}%</span>
-                  )}
-                </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
-                    One-Time Cost Markup (%):
-                  </label>
-                  {editingAllMarkups ? (
-                    <input
-                      type='number'
-                      value={oneTimeMarkup}
-                      onChange={e => setOneTimeMarkup(Number(e.target.value))}
-                      style={{ width: '80px', marginLeft: '10px' }}
-                    />
-                  ) : (
-                    <span style={{ marginLeft: '10px' }}>{oneTimeMarkup}%</span>
-                  )}
-                </div>
-                {/* Detailed summary table (unchanged) */}
+
+                {/* Summary Table */}
                 {(() => {
                   const summaryRows = [
                     {
@@ -1329,36 +1462,39 @@ const App = () => {
                       hideIfZero: true,
                     },
                   ];
+
                   const visibleSummaryRows = summaryRows.filter(row => {
                     if (typeof row.volume === 'number') {
                       return row.volume !== 0;
                     }
                     return true;
                   });
+
                   return (
                     <>
-                      <table
-                        style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          fontSize: '16px',
-                        }}
-                      >
-                        <thead style={stickyHeaderStyle}>
-                          <tr style={{ background: '#f8f8f8' }}>
-                            <th
-                              style={{ ...tableThStyle, ...firstColumnStyle }}
-                            >
-                              Product Name
-                            </th>
-                            <th style={tableThStyle}>Monthly Volume/Count</th>
-                            <th style={tableThStyle}>Monthly Cost</th>
-                            <th style={tableThStyle}>Annual Cost</th>
-                            <th style={tableThStyle}>Plan Details</th>
-                            <th style={tableThStyle}>Tier Details</th>
-                            <th style={tableThStyle}>Line Markup (%)</th>
-                          </tr>
-                        </thead>
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px',
+                      minWidth: '1000px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    }}
+                  >
+                    <thead style={stickyHeaderStyle}>
+                      <tr>
+                        <th style={{ ...tableThStyle, ...firstColumnStyle }}>
+                          PRODUCT NAME
+                        </th>
+                        <th style={tableThStyle}>MONTHLY VOLUME/COUNT</th>
+                        <th style={tableThStyle}>MONTHLY COST</th>
+                        <th style={tableThStyle}>ANNUAL COST</th>
+                        <th style={tableThStyle}>PLAN DETAILS</th>
+                        <th style={tableThStyle}>TIER DETAILS</th>
+                        <th style={tableThStyle}>LINE MARKUP (%)</th>
+                      </tr>
+                    </thead>
                         <tbody>
                           {visibleSummaryRows.map((row, idx) => (
                             <tr
@@ -1443,129 +1579,188 @@ const App = () => {
                               </td>
                             </tr>
                           ))}
-                          <tr
-                            style={{
-                              background: '#e0e0e0',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            <td style={tableTdStyle}>Subscription Total</td>
-                            <td style={tableTdStyle}></td>
-                            <td style={tableTdStyle}>
+                          <tr style={{
+                            background: '#059669',
+                            fontWeight: '600',
+                            color: 'white',
+                            fontSize: '15px',
+                          }}>
+                            <td style={{ ...tableTdStyle, color: 'white' }}>
+                              💰 Subscription Total
+                            </td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
+                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '15px', fontWeight: '600' }}>
                               {formatCost(finalSubscriptionMonthly)}
                             </td>
-                            <td style={tableTdStyle}>
+                            <td style={{ ...tableTdStyle, color: 'white', fontSize: '15px', fontWeight: '600' }}>
                               {formatCost(finalSubscriptionAnnual)}
                             </td>
-                            <td style={tableTdStyle} colSpan={2}></td>
-                            <td style={tableTdStyle}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={2}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
                           </tr>
                           {neededToMinAnnual > 0 && (
-                            <tr>
+                            <tr style={{
+                              background: '#fef2f2',
+                            }}>
                               <td
-                                style={{ ...tableTdStyle, color: 'red' }}
+                                style={{ 
+                                  ...tableTdStyle, 
+                                  color: '#b91c1c',
+                                  fontWeight: '600',
+                                  fontSize: '13px',
+                                }}
                                 colSpan={7}
                               >
-                                Below Minimum: Need{' '}
+                                ⚠️ Below Minimum: Need{' '}
                                 {formatCost(neededToMinAnnual)} more annually (
                                 {formatCost(neededToMinMonthly)} monthly)
                               </td>
                             </tr>
                           )}
-                          <tr>
-                            <td style={tableTdStyle}>
-                              One-Time Costs (with markup)
+                          <tr style={{
+                            background: '#f59e0b',
+                            fontWeight: '600',
+                            color: 'white',
+                          }}>
+                            <td style={{ ...tableTdStyle, color: 'white' }}>
+                              🏗️ One-Time Costs (with markup)
                             </td>
-                            <td style={tableTdStyle} colSpan={4}></td>
-                            <td style={tableTdStyle}></td>
-                            <td style={tableTdStyle}>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={4}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
+                            <td style={{ 
+                              ...tableTdStyle, 
+                              color: 'white',
+                              fontSize: '15px',
+                              fontWeight: '600',
+                            }}>
                               {formatCost(finalOneTimeCost)}
                             </td>
                           </tr>
-                          <tr
-                            style={{
-                              background: '#e0e0e0',
+                          <tr style={{
+                            background: '#334155',
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            color: 'white',
+                          }}>
+                            <td style={{ 
+                              ...tableTdStyle, 
+                              color: 'white',
+                              fontSize: '16px',
+                            }}>
+                              🎯 GRAND TOTAL
+                            </td>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={4}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
+                            <td style={{ 
+                              ...tableTdStyle, 
+                              color: 'white',
+                              fontSize: '18px',
                               fontWeight: 'bold',
-                            }}
-                          >
-                            <td style={tableTdStyle}>Grand Total</td>
-                            <td style={tableTdStyle} colSpan={4}></td>
-                            <td style={tableTdStyle}></td>
-                            <td style={tableTdStyle}>
+                              padding: '16px',
+                            }}>
                               {formatCost(finalGrandTotal)}
                             </td>
                           </tr>
                         </tbody>
                       </table>
-                      {customPricingPresent && (
-                        <div
-                          style={{
-                            color: 'red',
-                            marginTop: '10px',
-                            fontWeight: 'bold',
-                          }}
-                        >
-                          Please get management approval before sending quote to
-                          customer.
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-                {useLocations && (
-                  <div
-                    style={{
-                      color: 'red',
-                      marginTop: '10px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    The cost of the locations is higher than the Freight and
-                    Parcel and thus the minimum that we need to hit is the
-                    locations cost.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+                    {customPricingPresent && (
+                      <div style={{
+                        marginTop: '16px',
+                        padding: '14px 16px',
+                        background: '#fef2f2',
+                        border: '1px solid #fca5a5',
+                        borderRadius: '6px',
+                        color: '#991b1b',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontSize: '14px',
+                      }}>
+                        <span style={{ fontSize: '20px' }}>⚠️</span>
+                        <span>
+                          Please get management approval before sending quote to customer.
+                        </span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+              {useLocations && (
+                <div
+                  style={{
+                    color: 'red',
+                    marginTop: '10px',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  The cost of the locations is higher than the Freight and
+                  Parcel and thus the minimum that we need to hit is the
+                  locations cost.
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
             {/* Input Table: Shipments, Volumes, & Other Counts */}
             <Card>
               <CardHeader>
-                <CardTitle>Shipments, Volumes, and Other Counts</CardTitle>
+                <CardTitle>📦 Product Configuration</CardTitle>
               </CardHeader>
               <CardContent>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ marginRight: '10px' }}>
+                <div style={{ 
+                  marginBottom: '24px', 
+                  padding: '16px', 
+                  background: '#f8fafc',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px'
+                }}>
+                  <label style={{ 
+                    marginRight: '8px',
+                    fontWeight: '600',
+                    fontSize: '15px',
+                    color: '#1e293b'
+                  }}>
                     Billing Frequency:
                   </label>
                   <select
                     value={subBilling}
                     onChange={e => setSubBilling(e.target.value)}
-                    style={{ ...selectStyle, marginRight: '20px' }}
+                    style={{ 
+                      ...selectStyle, 
+                      fontWeight: '600',
+                      fontSize: '15px',
+                      minWidth: '140px'
+                    }}
                   >
-                    <option value='annual'>Annual</option>
-                    <option value='monthly'>Monthly</option>
+                    <option value='annual'>📅 Annual</option>
+                    <option value='monthly'>📆 Monthly</option>
                   </select>
                 </div>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '16px',
-                  }}
-                >
-                  <thead>
-                    <tr style={{ background: '#4088cf', color: '#fff' }}>
-                      <th style={{ ...tableThStyle, ...firstColumnStyle }}>
-                        Product Type
-                      </th>
-                      <th style={tableThStyle}>Product Plan Description</th>
-                      <th style={tableThStyle}>Tier Selection</th>
-                      <th style={tableThStyle}>Monthly Volume/Count</th>
-                      <th style={tableThStyle}>Monthly Cost</th>
-                      <th style={tableThStyle}>Annual Cost</th>
-                    </tr>
-                  </thead>
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px',
+                      minWidth: '1000px'
+                    }}
+                  >
+                    <thead style={stickyHeaderStyle}>
+                      <tr>
+                        <th style={{ ...tableThStyle, ...firstColumnStyle }}>
+                          PRODUCT TYPE
+                        </th>
+                        <th style={tableThStyle}>PRODUCT PLAN DESCRIPTION</th>
+                        <th style={tableThStyle}>TIER SELECTION</th>
+                        <th style={tableThStyle}>MONTHLY VOLUME/COUNT</th>
+                        <th style={tableThStyle}>MONTHLY COST</th>
+                        <th style={tableThStyle}>ANNUAL COST</th>
+                      </tr>
+                    </thead>
                   <tbody>
                     {[
                       {
@@ -1874,102 +2069,190 @@ const App = () => {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </CardContent>
             </Card>
 
             {/* One-Time Costs Table */}
             <Card>
               <CardHeader>
-                <CardTitle>One-Time Costs</CardTitle>
+                <CardTitle>💰 Setup & Implementation Costs</CardTitle>
               </CardHeader>
               <CardContent>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    fontSize: '16px',
-                  }}
-                >
-                  <thead style={stickyHeaderStyle}>
-                    <tr style={{ background: '#f8f8f8' }}>
-                      <th style={tableThStyle}>Name</th>
-                      <th style={tableThStyle}>Description</th>
-                      <th style={tableThStyle}>Amount</th>
-                      <th style={tableThStyle}>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {oneTimeCosts.map((item, index) => (
-                      <tr key={index}>
-                        <td style={tableTdStyle}>
-                          <input
-                            type='text'
-                            value={item.name}
-                            onChange={e => {
-                              const clone = [...oneTimeCosts];
-                              clone[index].name = e.target.value;
-                              setOneTimeCosts(clone);
-                            }}
-                            style={{ width: '120px', padding: '6px' }}
-                          />
-                        </td>
-                        <td style={tableTdStyle}>
-                          <input
-                            type='text'
-                            value={item.description}
-                            onChange={e => {
-                              const clone = [...oneTimeCosts];
-                              clone[index].description = e.target.value;
-                              setOneTimeCosts(clone);
-                            }}
-                            style={{ width: '250px', padding: '6px' }}
-                          />
-                        </td>
-                        <td style={tableTdStyle}>
-                          <input
-                            type='number'
-                            value={item.amount}
-                            onChange={e => {
-                              const clone = [...oneTimeCosts];
-                              clone[index].amount = Number(e.target.value);
-                              setOneTimeCosts(clone);
-                            }}
-                            style={{ width: '100px', padding: '6px' }}
-                          />
-                        </td>
-                        <td style={tableTdStyle}>
-                          <button
-                            onClick={() =>
-                              setOneTimeCosts(
-                                oneTimeCosts.filter((_, i) => i !== index)
-                              )
-                            }
-                          >
-                            Remove
-                          </button>
-                        </td>
+                <div style={{
+                  marginBottom: '16px',
+                  padding: '12px 16px',
+                  background: '#fffbeb',
+                  border: '1px solid #fcd34d',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}>
+                  <span style={{ fontSize: '18px' }}>ℹ️</span>
+                  <span style={{ fontSize: '13px', color: '#78350f', fontWeight: '500' }}>
+                    Add custom one-time costs for implementation, setup, integration, or training
+                  </span>
+                </div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      fontSize: '14px',
+                    }}
+                  >
+                    <thead style={stickyHeaderStyle}>
+                      <tr>
+                        <th style={tableThStyle}>NAME</th>
+                        <th style={tableThStyle}>DESCRIPTION</th>
+                        <th style={tableThStyle}>AMOUNT</th>
+                        <th style={tableThStyle}>ACTION</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <button
-                  onClick={() =>
-                    setOneTimeCosts([
-                      ...oneTimeCosts,
-                      { name: '', description: '', amount: 0 },
-                    ])
-                  }
-                  style={{
-                    marginTop: '10px',
-                    padding: '8px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    background: '#4088cf',
-                    color: '#fff',
-                  }}
-                >
-                  Add Custom One-Time Cost
-                </button>
+                    </thead>
+                    <tbody>
+                      {oneTimeCosts.map((item, index) => (
+                        <tr key={index}>
+                          <td style={tableTdStyle}>
+                            <input
+                              type='text'
+                              value={item.name}
+                              onChange={e => {
+                                const clone = [...oneTimeCosts];
+                                clone[index].name = e.target.value;
+                                setOneTimeCosts(clone);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                maxWidth: '160px',
+                                ...inputStyle
+                              }}
+                              placeholder="e.g., Setup Fee"
+                            />
+                          </td>
+                          <td style={tableTdStyle}>
+                            <input
+                              type='text'
+                              value={item.description}
+                              onChange={e => {
+                                const clone = [...oneTimeCosts];
+                                clone[index].description = e.target.value;
+                                setOneTimeCosts(clone);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                maxWidth: '300px',
+                                ...inputStyle
+                              }}
+                              placeholder="Detailed description"
+                            />
+                          </td>
+                          <td style={tableTdStyle}>
+                            <input
+                              type='number'
+                              value={item.amount}
+                              onChange={e => {
+                                const clone = [...oneTimeCosts];
+                                clone[index].amount = Number(e.target.value);
+                                setOneTimeCosts(clone);
+                              }}
+                              style={{ 
+                                width: '100%',
+                                maxWidth: '120px',
+                                ...inputStyle
+                              }}
+                              placeholder="0.00"
+                            />
+                          </td>
+                          <td style={tableTdStyle}>
+                            <button
+                              onClick={() =>
+                                setOneTimeCosts(
+                                  oneTimeCosts.filter((_, i) => i !== index)
+                                )
+                              }
+                              style={{
+                                padding: '8px 16px',
+                                background: '#dc2626',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                              }}
+                            >
+                              🗑️ Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {oneTimeCosts.length === 0 && (
+                        <tr>
+                          <td colSpan={4} style={{
+                            ...tableTdStyle,
+                            textAlign: 'center',
+                            padding: '28px',
+                            color: '#64748b',
+                            fontStyle: 'italic',
+                            fontSize: '13px',
+                          }}>
+                            No one-time costs added yet. Click the button below to add your first item.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ 
+                  marginTop: '16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '14px 16px',
+                  background: '#f8fafc',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                }}>
+                  <button
+                    onClick={() =>
+                      setOneTimeCosts([
+                        ...oneTimeCosts,
+                        { name: '', description: '', amount: 0 },
+                      ])
+                    }
+                    style={{
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      background: '#059669',
+                      color: '#fff',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      boxShadow: '0 1px 3px rgba(5, 150, 105, 0.3)',
+                    }}
+                  >
+                    ➕ Add One-Time Cost
+                  </button>
+                  <div style={{
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    color: '#1e293b',
+                  }}>
+                    <span style={{ marginRight: '10px', color: '#64748b' }}>Total One-Time:</span>
+                    <span style={{ 
+                      fontSize: '18px',
+                      color: '#334155',
+                      background: '#e2e8f0',
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontWeight: '700',
+                    }}>
+                      {formatCost(finalOneTimeCost)}
+                    </span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -2030,72 +2313,92 @@ const App = () => {
         )}
       </div>
 
-      {/* Floating Pane for Admin & View Toggle Controls */}
+      {/* Floating Control Panel */}
       <div
+        className="no-print"
         style={{
           position: 'fixed',
           bottom: 0,
+          left: 0,
           width: '100%',
-          background: '#fff',
-          borderTop: '1px solid #ccc',
-          padding: '10px',
+          background: 'rgba(255,255,255,0.98)',
+          borderTop: '1px solid #e2e8f0',
+          padding: '12px 24px',
           display: 'flex',
           justifyContent: 'center',
+          alignItems: 'center',
           gap: '10px',
           zIndex: 1001,
+          boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.05)',
         }}
       >
         <button
           onClick={toggleEditPricing}
           style={{
-            padding: '10px',
-            background: editPricingEnabled ? '#f44336' : '#4caf50',
+            padding: '10px 20px',
+            background: editPricingEnabled 
+              ? '#dc2626' 
+              : '#059669',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {editPricingEnabled ? 'Close Pricing Edit' : 'Edit Pricing'}
+          {editPricingEnabled ? '🔒 Lock Pricing' : '✏️ Edit Pricing'}
         </button>
         <button
           onClick={() => setEditingAllMarkups(!editingAllMarkups)}
           style={{
-            padding: '10px',
-            background: '#2196F3',
+            padding: '10px 20px',
+            background: editingAllMarkups
+              ? '#7c3aed'
+              : '#3b82f6',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {editingAllMarkups ? 'Save Markups' : 'Edit All Markups'}
+          {editingAllMarkups ? '💾 Save Markups' : '📊 Edit Markups'}
         </button>
         <button
           onClick={handleReset}
           style={{
-            padding: '10px',
-            background: '#f44336',
+            padding: '10px 20px',
+            background: '#f59e0b',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
-          Reset
+          🔄 Reset All
         </button>
         <button
           onClick={() => setShowCustomerView(!showCustomerView)}
           style={{
-            padding: '10px',
-            background: '#9c27b0',
+            padding: '10px 20px',
+            background: '#8b5cf6',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {showCustomerView ? 'Show Detailed Quote' : 'Show Customer Quote'}
+          {showCustomerView ? '📋 Show Detailed' : '👤 Customer View'}
         </button>
       </div>
     </>
