@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
+import { productConfig } from './productConfig';
 import {
   freightAnnualSKUs,
   freightMonthlySKUs,
@@ -125,6 +126,42 @@ const formatCost = cost =>
   });
 
 /* ============================
+   PRODUCT STATE INITIALIZER
+============================ */
+const initializeProductState = () => {
+  const state = {};
+  
+  productConfig.forEach(product => {
+    if (product.pricingType === 'custom' && product.customInputs) {
+      // Yard Management: facilities + assets
+      state[product.id] = {
+        inputs: product.customInputs.reduce((acc, input) => ({
+          ...acc,
+          [input.id]: input.defaultValue
+        }), {}),
+        markup: 0
+      };
+    } else if (product.inputType === 'yesNo') {
+      // Bill Pay: Yes/No instead of volume
+      state[product.id] = {
+        value: product.defaultValue || 'No',
+        markup: 0
+      };
+    } else {
+      // Standard products: volume, sku, override, markup
+      state[product.id] = {
+        volume: product.defaultVolume || 0,
+        sku: '',
+        override: false,
+        markup: 0
+      };
+    }
+  });
+  
+  return state;
+};
+
+/* ============================
    REUSABLE COMPONENTS
 ============================ */
 const FixedHeader = () => (
@@ -219,23 +256,35 @@ const App = () => {
       setGlobalMarkup(Number(params.get('globalMarkup')));
     if (params.has('oneTimeMarkup'))
       setOneTimeMarkup(Number(params.get('oneTimeMarkup')));
+    
+    // Load product volumes from URL
     if (params.has('freightVolume'))
       setFreightVolume(Number(params.get('freightVolume')) || 0);
     if (params.has('parcelVolume'))
       setParcelVolume(Number(params.get('parcelVolume')) || 0);
     if (params.has('locationsVolume'))
       setLocationsVolume(Number(params.get('locationsVolume')) || 0);
-    if (params.has('billPayYesNo')) setBillPayYesNo(params.get('billPayYesNo'));
+    if (params.has('oceanTrackingVolume'))
+      setOceanTrackingVolume(Number(params.get('oceanTrackingVolume')) || 0);
+    if (params.has('supportPackageVolume'))
+      setSupportPackageVolume(Number(params.get('supportPackageVolume')) || 0);
     if (params.has('vendorPortalCount'))
       setVendorPortalCount(Number(params.get('vendorPortalCount')) || 0);
     if (params.has('auditingVolume'))
       setAuditingVolume(Number(params.get('auditingVolume')) || 0);
     if (params.has('fleetRouteVolume'))
       setFleetRouteVolume(Number(params.get('fleetRouteVolume')) || 0);
-    if (params.has('oceanTrackingVolume'))
-      setOceanTrackingVolume(Number(params.get('oceanTrackingVolume')) || 0);
-    if (params.has('supportPackageVolume'))
-      setSupportPackageVolume(Number(params.get('supportPackageVolume')) || 0);
+    if (params.has('dockSchedulingVolume'))
+      setDockSchedulingVolume(Number(params.get('dockSchedulingVolume')) || 0);
+    
+    // Special cases
+    if (params.has('billPayYesNo')) 
+      setBillPayYesNo(params.get('billPayYesNo'));
+    if (params.has('assetManagementFacilities'))
+      setAssetManagementFacilities(Number(params.get('assetManagementFacilities')) || 0);
+    if (params.has('assetManagementAssets'))
+      setAssetManagementAssets(Number(params.get('assetManagementAssets')) || 0);
+    
     if (params.has('oneTimeCosts')) {
       try {
         const costs = JSON.parse(params.get('oneTimeCosts'));
@@ -261,58 +310,150 @@ const App = () => {
   const [showCustomerView, setShowCustomerView] = useState(false);
   const [oneTimeCosts, setOneTimeCosts] = useState([]);
 
-  // MODULE STATES
-  const [freightVolume, setFreightVolume] = useState(0);
-  const [freightMarkup, setFreightMarkup] = useState(0);
-  const [freightSKU, setFreightSKU] = useState('');
-  const [freightOverride, setFreightOverride] = useState(false);
+  // MODULE STATES - Centralized product state
+  const [products, setProducts] = useState(initializeProductState);
 
-  const [parcelVolume, setParcelVolume] = useState(0);
-  const [parcelMarkup, setParcelMarkup] = useState(0);
-  const [parcelSKU, setParcelSKU] = useState('');
-  const [parcelOverride, setParcelOverride] = useState(false);
+  // Helper functions for product state access
+  const getProductValue = (productId, field) => {
+    const product = products[productId];
+    if (!product) return field === 'inputs' ? {} : (field === 'sku' ? '' : 0);
+    
+    // Handle different product types
+    if (field === 'volume' || field === 'value') {
+      return product.volume !== undefined ? product.volume : product.value;
+    }
+    if (field === 'markup') return product.markup || 0;
+    if (field === 'sku') return product.sku || '';
+    if (field === 'override') return product.override || false;
+    if (field === 'inputs') return product.inputs || {};
+    
+    return 0;
+  };
 
-  const [billPayYesNo, setBillPayYesNo] = useState('No');
-  const [billPayMarkup, setBillPayMarkup] = useState(0);
+  const setProductValue = (productId, field, value) => {
+    setProducts(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        [field]: value
+      }
+    }));
+  };
 
-  const [locationsVolume, setLocationsVolume] = useState(0);
-  const [locationsMarkup, setLocationsMarkup] = useState(0);
-  const [locationsSKU, setLocationsSKU] = useState('');
-  const [locationsOverride, setLocationsOverride] = useState(false);
+  const setProductInput = (productId, inputId, value) => {
+    setProducts(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        inputs: {
+          ...prev[productId].inputs,
+          [inputId]: value
+        }
+      }
+    }));
+  };
 
-  const [supportPackageVolume, setSupportPackageVolume] = useState(0);
-  const [supportPackageMarkup, setSupportPackageMarkup] = useState(0);
-  const [supportPackageSKU, setSupportPackageSKU] = useState('');
-  const [supportPackageOverride, setSupportPackageOverride] = useState(false);
+  // Backward-compatible getters (temporary during refactor)
+  const freightVolume = getProductValue('freight', 'volume');
+  const freightMarkup = getProductValue('freight', 'markup');
+  const freightSKU = getProductValue('freight', 'sku');
+  const freightOverride = getProductValue('freight', 'override');
 
-  const [vendorPortalCount, setVendorPortalCount] = useState(0);
-  const [vendorPortalMarkup, setVendorPortalMarkup] = useState(0);
+  const parcelVolume = getProductValue('parcel', 'volume');
+  const parcelMarkup = getProductValue('parcel', 'markup');
+  const parcelSKU = getProductValue('parcel', 'sku');
+  const parcelOverride = getProductValue('parcel', 'override');
 
-  const [auditingVolume, setAuditingVolume] = useState(0);
-  const [auditingMarkup, setAuditingMarkup] = useState(0);
-  const [auditingSKU, setAuditingSKU] = useState('');
-  const [auditingOverride, setAuditingOverride] = useState(false);
+  const oceanTrackingVolume = getProductValue('oceanTracking', 'volume');
+  const oceanTrackingMarkup = getProductValue('oceanTracking', 'markup');
+  const oceanTrackingSKU = getProductValue('oceanTracking', 'sku');
+  const oceanTrackingOverride = getProductValue('oceanTracking', 'override');
 
-  const [fleetRouteVolume, setFleetRouteVolume] = useState(0);
-  const [fleetRouteMarkup, setFleetRouteMarkup] = useState(0);
-  const [fleetRouteSKU, setFleetRouteSKU] = useState('');
-  const [fleetRouteOverride, setFleetRouteOverride] = useState(false);
+  const billPayYesNo = getProductValue('billPay', 'value');
+  const billPayMarkup = getProductValue('billPay', 'markup');
 
-  const [oceanTrackingVolume, setOceanTrackingVolume] = useState(0);
-  const [oceanTrackingMarkup, setOceanTrackingMarkup] = useState(0);
-  const [oceanTrackingSKU, setOceanTrackingSKU] = useState('');
-  const [oceanTrackingOverride, setOceanTrackingOverride] = useState(false);
+  const locationsVolume = getProductValue('locations', 'volume');
+  const locationsMarkup = getProductValue('locations', 'markup');
+  const locationsSKU = getProductValue('locations', 'sku');
+  const locationsOverride = getProductValue('locations', 'override');
 
-  // NEW: Rename Asset Management to Yard Management
-  const [assetManagementFacilities, setAssetManagementFacilities] = useState(0);
-  const [assetManagementAssets, setAssetManagementAssets] = useState(0);
-  const [assetManagementMarkup, setAssetManagementMarkup] = useState(0);
+  const supportPackageVolume = getProductValue('supportPackage', 'volume');
+  const supportPackageMarkup = getProductValue('supportPackage', 'markup');
+  const supportPackageSKU = getProductValue('supportPackage', 'sku');
+  const supportPackageOverride = getProductValue('supportPackage', 'override');
 
-  // DOCK SCHEDULING STATES (NEW)
-  const [dockSchedulingVolume, setDockSchedulingVolume] = useState(0);
-  const [dockSchedulingMarkup, setDockSchedulingMarkup] = useState(0);
-  const [dockSchedulingSKU, setDockSchedulingSKU] = useState('');
-  const [dockSchedulingOverride, setDockSchedulingOverride] = useState(false);
+  const vendorPortalCount = getProductValue('vendorPortals', 'volume');
+  const vendorPortalMarkup = getProductValue('vendorPortals', 'markup');
+
+  const auditingVolume = getProductValue('auditing', 'volume');
+  const auditingMarkup = getProductValue('auditing', 'markup');
+  const auditingSKU = getProductValue('auditing', 'sku');
+  const auditingOverride = getProductValue('auditing', 'override');
+
+  const fleetRouteVolume = getProductValue('fleetRouteOptimization', 'volume');
+  const fleetRouteMarkup = getProductValue('fleetRouteOptimization', 'markup');
+  const fleetRouteSKU = getProductValue('fleetRouteOptimization', 'sku');
+  const fleetRouteOverride = getProductValue('fleetRouteOptimization', 'override');
+
+  const assetManagementFacilities = getProductValue('yardManagement', 'inputs').facilities || 0;
+  const assetManagementAssets = getProductValue('yardManagement', 'inputs').assets || 0;
+  const assetManagementMarkup = getProductValue('yardManagement', 'markup');
+
+  const dockSchedulingVolume = getProductValue('dockScheduling', 'volume');
+  const dockSchedulingMarkup = getProductValue('dockScheduling', 'markup');
+  const dockSchedulingSKU = getProductValue('dockScheduling', 'sku');
+  const dockSchedulingOverride = getProductValue('dockScheduling', 'override');
+
+  // Backward-compatible setters (temporary during refactor)
+  const setFreightVolume = (val) => setProductValue('freight', 'volume', val);
+  const setFreightMarkup = (val) => setProductValue('freight', 'markup', val);
+  const setFreightSKU = (val) => setProductValue('freight', 'sku', val);
+  const setFreightOverride = (val) => setProductValue('freight', 'override', val);
+
+  const setParcelVolume = (val) => setProductValue('parcel', 'volume', val);
+  const setParcelMarkup = (val) => setProductValue('parcel', 'markup', val);
+  const setParcelSKU = (val) => setProductValue('parcel', 'sku', val);
+  const setParcelOverride = (val) => setProductValue('parcel', 'override', val);
+
+  const setOceanTrackingVolume = (val) => setProductValue('oceanTracking', 'volume', val);
+  const setOceanTrackingMarkup = (val) => setProductValue('oceanTracking', 'markup', val);
+  const setOceanTrackingSKU = (val) => setProductValue('oceanTracking', 'sku', val);
+  const setOceanTrackingOverride = (val) => setProductValue('oceanTracking', 'override', val);
+
+  const setBillPayYesNo = (val) => setProductValue('billPay', 'value', val);
+  const setBillPayMarkup = (val) => setProductValue('billPay', 'markup', val);
+
+  const setLocationsVolume = (val) => setProductValue('locations', 'volume', val);
+  const setLocationsMarkup = (val) => setProductValue('locations', 'markup', val);
+  const setLocationsSKU = (val) => setProductValue('locations', 'sku', val);
+  const setLocationsOverride = (val) => setProductValue('locations', 'override', val);
+
+  const setSupportPackageVolume = (val) => setProductValue('supportPackage', 'volume', val);
+  const setSupportPackageMarkup = (val) => setProductValue('supportPackage', 'markup', val);
+  const setSupportPackageSKU = (val) => setProductValue('supportPackage', 'sku', val);
+  const setSupportPackageOverride = (val) => setProductValue('supportPackage', 'override', val);
+
+  const setVendorPortalCount = (val) => setProductValue('vendorPortals', 'volume', val);
+  const setVendorPortalMarkup = (val) => setProductValue('vendorPortals', 'markup', val);
+
+  const setAuditingVolume = (val) => setProductValue('auditing', 'volume', val);
+  const setAuditingMarkup = (val) => setProductValue('auditing', 'markup', val);
+  const setAuditingSKU = (val) => setProductValue('auditing', 'sku', val);
+  const setAuditingOverride = (val) => setProductValue('auditing', 'override', val);
+
+  const setFleetRouteVolume = (val) => setProductValue('fleetRouteOptimization', 'volume', val);
+  const setFleetRouteMarkup = (val) => setProductValue('fleetRouteOptimization', 'markup', val);
+  const setFleetRouteSKU = (val) => setProductValue('fleetRouteOptimization', 'sku', val);
+  const setFleetRouteOverride = (val) => setProductValue('fleetRouteOptimization', 'override', val);
+
+  const setAssetManagementFacilities = (val) => setProductInput('yardManagement', 'facilities', val);
+  const setAssetManagementAssets = (val) => setProductInput('yardManagement', 'assets', val);
+  const setAssetManagementMarkup = (val) => setProductValue('yardManagement', 'markup', val);
+
+  const setDockSchedulingVolume = (val) => setProductValue('dockScheduling', 'volume', val);
+  const setDockSchedulingMarkup = (val) => setProductValue('dockScheduling', 'markup', val);
+  const setDockSchedulingSKU = (val) => setProductValue('dockScheduling', 'sku', val);
+  const setDockSchedulingOverride = (val) => setProductValue('dockScheduling', 'override', val);
 
   // === AUTO-SELECTION EFFECTS ===
   useEffect(() => {
@@ -834,56 +975,7 @@ const App = () => {
 
   // === Handle Reset ===
   const handleReset = () => {
-    setFreightVolume(0);
-    setFreightMarkup(0);
-    setFreightSKU('');
-    setFreightOverride(false);
-
-    setParcelVolume(0);
-    setParcelMarkup(0);
-    setParcelSKU('');
-    setParcelOverride(false);
-
-    setBillPayYesNo('No');
-    setBillPayMarkup(0);
-
-    setLocationsVolume(0);
-    setLocationsMarkup(0);
-    setLocationsSKU('');
-    setLocationsOverride(false);
-
-    setSupportPackageVolume(0);
-    setSupportPackageMarkup(0);
-    setSupportPackageSKU('');
-    setSupportPackageOverride(false);
-
-    setVendorPortalCount(0);
-    setVendorPortalMarkup(0);
-
-    setAuditingVolume(0);
-    setAuditingMarkup(0);
-    setAuditingSKU('');
-    setAuditingOverride(false);
-
-    setOceanTrackingVolume(0);
-    setOceanTrackingMarkup(0);
-    setOceanTrackingSKU('');
-    setOceanTrackingOverride(false);
-
-    setFleetRouteVolume(0);
-    setFleetRouteMarkup(0);
-    setFleetRouteSKU('');
-    setFleetRouteOverride(false);
-
-    setAssetManagementFacilities(0);
-    setAssetManagementAssets(0);
-    setAssetManagementMarkup(0);
-
-    setDockSchedulingVolume(0);
-    setDockSchedulingMarkup(0);
-    setDockSchedulingSKU('');
-    setDockSchedulingOverride(false);
-
+    setProducts(initializeProductState());
     setGlobalMarkup(0);
     setMinSubscription(20000);
     setOneTimeMarkup(0);
