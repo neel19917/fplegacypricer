@@ -455,283 +455,51 @@ const App = () => {
   const setDockSchedulingSKU = (val) => setProductValue('dockScheduling', 'sku', val);
   const setDockSchedulingOverride = (val) => setProductValue('dockScheduling', 'override', val);
 
+  // === GENERIC SKU SELECTION HELPER ===
+  const findSKUForProduct = (product, volume, billing) => {
+    if (!product.skus || volume < 1) return '';
+    
+    const skuArray = billing === 'annual' ? product.skus.annual : product.skus.monthly;
+    if (!skuArray || skuArray.length === 0) return '';
+    
+    // Handle different range formats
+    let selected;
+    if (product.pricingType === 'tiered' || product.pricingType === 'perUnit') {
+      // Products with rangeStart/rangeEnd (freight, parcel, locations, ocean, support, dock)
+      selected = skuArray.find(
+        plan => volume >= plan.rangeStart && volume <= plan.rangeEnd
+      );
+    } else if (product.pricingType === 'range') {
+      // Products with range array (auditing, FRM)
+      selected = skuArray.find(
+        plan => plan.range && volume >= plan.range[0] && volume <= plan.range[1]
+      );
+    }
+    
+    // Fallback to highest tier if volume exceeds all ranges
+    return selected ? selected.sku : skuArray[skuArray.length - 1].sku;
+  };
+
   // === AUTO-SELECTION EFFECTS ===
+  // Unified auto-tier selection for all products
   useEffect(() => {
-    if (!freightOverride && freightVolume >= 1) {
-      const arr =
-        subBilling === 'annual' ? freightAnnualSKUs : freightMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            freightVolume >= plan.rangeStart && freightVolume <= plan.rangeEnd
-        ) || arr[arr.length - 1];
-      setFreightSKU(selected.sku);
-    } else if (freightVolume < 1) {
-      setFreightSKU('');
-    }
-  }, [freightVolume, subBilling, freightOverride]);
-
-  useEffect(() => {
-    if (!parcelOverride && parcelVolume >= 1) {
-      const arr =
-        subBilling === 'annual' ? parcelAnnualSKUs : parcelMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            parcelVolume >= plan.rangeStart && parcelVolume <= plan.rangeEnd
-        ) || arr[arr.length - 1];
-      setParcelSKU(selected.sku);
-    } else if (parcelVolume < 1) {
-      setParcelSKU('');
-    }
-  }, [parcelVolume, subBilling, parcelOverride]);
-
-  useEffect(() => {
-    if (!auditingOverride && auditingVolume >= 1) {
-      const arr =
-        subBilling === 'annual' ? auditingAnnualSKUs : auditingMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            auditingVolume >= plan.range[0] && auditingVolume <= plan.range[1]
-        ) || arr[arr.length - 1];
-      setAuditingSKU(selected.sku);
-    } else if (auditingVolume < 1) {
-      setAuditingSKU('');
-    }
-  }, [auditingVolume, subBilling, auditingOverride]);
-
-  useEffect(() => {
-    if (!locationsOverride && locationsVolume >= 1) {
-      const arr =
-        subBilling === 'annual' ? locationsAnnualSKUs : locationsMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            locationsVolume >= plan.rangeStart &&
-            locationsVolume <= plan.rangeEnd
-        ) || arr[arr.length - 1];
-      setLocationsSKU(selected.sku);
-    } else if (locationsVolume < 1) {
-      setLocationsSKU('');
-    }
-  }, [locationsVolume, subBilling, locationsOverride]);
-
-  useEffect(() => {
-    if (!fleetRouteOverride && fleetRouteVolume >= 1) {
-      const arr =
-        subBilling === 'annual'
-          ? fleetRouteOptimizationAnnualSKUs
-          : fleetRouteOptimizationMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            fleetRouteVolume >= plan.range[0] &&
-            fleetRouteVolume <= plan.range[1]
-        ) || arr[arr.length - 1];
-      setFleetRouteSKU(selected.sku);
-    } else if (fleetRouteVolume < 1) {
-      setFleetRouteSKU('');
-    }
-  }, [fleetRouteVolume, subBilling, fleetRouteOverride]);
-
-  useEffect(() => {
-    if (!oceanTrackingOverride && oceanTrackingVolume >= 1) {
-      const arr =
-        subBilling === 'annual'
-          ? oceanTrackingAnnualSKUs
-          : oceanTrackingMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            oceanTrackingVolume >= plan.rangeStart &&
-            oceanTrackingVolume <= plan.rangeEnd
-        ) || arr[arr.length - 1];
-      setOceanTrackingSKU(selected.sku);
-    } else if (oceanTrackingVolume < 1) {
-      setOceanTrackingSKU('');
-    }
-  }, [oceanTrackingVolume, subBilling, oceanTrackingOverride]);
-
-  useEffect(() => {
-    if (!supportPackageOverride && supportPackageVolume >= 1) {
-      const arr =
-        subBilling === 'annual'
-          ? supportPackageAnnualSKUs
-          : supportPackageMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            supportPackageVolume >= plan.rangeStart &&
-            supportPackageVolume <= plan.rangeEnd
-        ) || arr[arr.length - 1];
-      setSupportPackageSKU(selected.sku);
-    } else if (supportPackageVolume < 1) {
-      setSupportPackageSKU('');
-    }
-  }, [supportPackageVolume, subBilling, supportPackageOverride]);
-
-  // NEW: Dock Scheduling auto-select
-  useEffect(() => {
-    if (!dockSchedulingOverride && dockSchedulingVolume >= 1) {
-      const arr =
-        subBilling === 'annual'
-          ? dockSchedulingAnnualSKUs
-          : dockSchedulingMonthlySKUs;
-      const selected =
-        arr.find(
-          plan =>
-            dockSchedulingVolume >= plan.rangeStart &&
-            dockSchedulingVolume <= plan.rangeEnd
-        ) || arr[arr.length - 1];
-      setDockSchedulingSKU(selected.sku);
-    } else if (dockSchedulingVolume < 1) {
-      setDockSchedulingSKU('');
-    }
-  }, [dockSchedulingVolume, subBilling, dockSchedulingOverride]);
-
-  // === UPDATE SKU ON BILLING FREQUENCY CHANGE ===
-  useEffect(() => {
-    if (freightSKU && !freightOverride) {
-      const arr =
-        subBilling === 'annual' ? freightAnnualSKUs : freightMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === freightSKU);
-      if (!currentPlan && freightVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              freightVolume >= plan.rangeStart && freightVolume <= plan.rangeEnd
-          ) || arr[arr.length - 1];
-        setFreightSKU(selected.sku);
+    productConfig.forEach(product => {
+      // Skip products without SKU-based pricing
+      if (!product.skus || product.inputType === 'yesNo' || product.pricingType === 'custom') {
+        return;
       }
-    }
-  }, [subBilling]);
-
-  useEffect(() => {
-    if (parcelSKU && !parcelOverride) {
-      const arr =
-        subBilling === 'annual' ? parcelAnnualSKUs : parcelMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === parcelSKU);
-      if (!currentPlan && parcelVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              parcelVolume >= plan.rangeStart && parcelVolume <= plan.rangeEnd
-          ) || arr[arr.length - 1];
-        setParcelSKU(selected.sku);
+      
+      const volume = getProductValue(product.id, 'volume');
+      const override = getProductValue(product.id, 'override');
+      
+      if (!override && volume >= 1) {
+        const selectedSKU = findSKUForProduct(product, volume, subBilling);
+        setProductValue(product.id, 'sku', selectedSKU);
+      } else if (volume < 1) {
+        setProductValue(product.id, 'sku', '');
       }
-    }
-  }, [subBilling]);
-
-  useEffect(() => {
-    if (auditingSKU && !auditingOverride) {
-      const arr =
-        subBilling === 'annual' ? auditingAnnualSKUs : auditingMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === auditingSKU);
-      if (!currentPlan && auditingVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              auditingVolume >= plan.range[0] && auditingVolume <= plan.range[1]
-          ) || arr[arr.length - 1];
-        setAuditingSKU(selected.sku);
-      }
-    }
-  }, [subBilling]);
-
-  useEffect(() => {
-    if (locationsSKU && !locationsOverride) {
-      const arr =
-        subBilling === 'annual' ? locationsAnnualSKUs : locationsMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === locationsSKU);
-      if (!currentPlan && locationsVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              locationsVolume >= plan.rangeStart &&
-              locationsVolume <= plan.rangeEnd
-          ) || arr[arr.length - 1];
-        setLocationsSKU(selected.sku);
-      }
-    }
-  }, [subBilling]);
-
-  useEffect(() => {
-    if (fleetRouteSKU && !fleetRouteOverride) {
-      const arr =
-        subBilling === 'annual'
-          ? fleetRouteOptimizationAnnualSKUs
-          : fleetRouteOptimizationMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === fleetRouteSKU);
-      if (!currentPlan && fleetRouteVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              fleetRouteVolume >= plan.range[0] &&
-              fleetRouteVolume <= plan.range[1]
-          ) || arr[arr.length - 1];
-        setFleetRouteSKU(selected.sku);
-      }
-    }
-  }, [subBilling]);
-
-  useEffect(() => {
-    if (oceanTrackingSKU && !oceanTrackingOverride) {
-      const arr =
-        subBilling === 'annual'
-          ? oceanTrackingAnnualSKUs
-          : oceanTrackingMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === oceanTrackingSKU);
-      if (!currentPlan && oceanTrackingVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              oceanTrackingVolume >= plan.rangeStart &&
-              oceanTrackingVolume <= plan.rangeEnd
-          ) || arr[arr.length - 1];
-        setOceanTrackingSKU(selected.sku);
-      }
-    }
-  }, [subBilling]);
-
-  useEffect(() => {
-    if (supportPackageSKU && !supportPackageOverride) {
-      const arr =
-        subBilling === 'annual'
-          ? supportPackageAnnualSKUs
-          : supportPackageMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === supportPackageSKU);
-      if (!currentPlan && supportPackageVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              supportPackageVolume >= plan.rangeStart &&
-              supportPackageVolume <= plan.rangeEnd
-          ) || arr[arr.length - 1];
-        setSupportPackageSKU(selected.sku);
-      }
-    }
-  }, [subBilling]);
-
-  // NEW: Check Dock Scheduling SKU on billing change
-  useEffect(() => {
-    if (dockSchedulingSKU && !dockSchedulingOverride) {
-      const arr =
-        subBilling === 'annual'
-          ? dockSchedulingAnnualSKUs
-          : dockSchedulingMonthlySKUs;
-      const currentPlan = arr.find(plan => plan.sku === dockSchedulingSKU);
-      if (!currentPlan && dockSchedulingVolume >= 1) {
-        const selected =
-          arr.find(
-            plan =>
-              dockSchedulingVolume >= plan.rangeStart &&
-              dockSchedulingVolume <= plan.rangeEnd
-          ) || arr[arr.length - 1];
-        setDockSchedulingSKU(selected.sku);
-      }
-    }
-  }, [subBilling]);
+    });
+  }, [products, subBilling]);
 
   // === LOOKUP PLANS ===
   const freightPlan = freightSKU
