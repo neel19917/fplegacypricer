@@ -464,12 +464,15 @@ const App = () => {
     
     // Handle different range formats
     let selected;
-    if (product.pricingType === 'tiered' || product.pricingType === 'perUnit') {
+    
+    // Check if SKUs have rangeStart/rangeEnd or range[] array
+    const firstSKU = skuArray[0];
+    if (firstSKU.rangeStart !== undefined && firstSKU.rangeEnd !== undefined) {
       // Products with rangeStart/rangeEnd (freight, parcel, locations, ocean, support, dock)
       selected = skuArray.find(
         plan => volume >= plan.rangeStart && volume <= plan.rangeEnd
       );
-    } else if (product.pricingType === 'range') {
+    } else if (firstSKU.range && Array.isArray(firstSKU.range)) {
       // Products with range array (auditing, FRM)
       selected = skuArray.find(
         plan => plan.range && volume >= plan.range[0] && volume <= plan.range[1]
