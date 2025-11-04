@@ -489,17 +489,35 @@ const App = () => {
         return;
       }
       
-      const volume = getProductValue(product.id, 'volume');
-      const override = getProductValue(product.id, 'override');
+      const productState = products[product.id];
+      if (!productState) return;
+      
+      const volume = productState.volume || 0;
+      const override = productState.override || false;
+      const currentSKU = productState.sku || '';
       
       if (!override && volume >= 1) {
         const selectedSKU = findSKUForProduct(product, volume, subBilling);
-        setProductValue(product.id, 'sku', selectedSKU);
-      } else if (volume < 1) {
+        // Only update if SKU actually changed to avoid infinite loops
+        if (selectedSKU !== currentSKU) {
+          setProductValue(product.id, 'sku', selectedSKU);
+        }
+      } else if (volume < 1 && currentSKU !== '') {
         setProductValue(product.id, 'sku', '');
       }
     });
-  }, [products, subBilling]);
+  }, [
+    // Track individual product values to avoid infinite loops
+    freightVolume, freightOverride,
+    parcelVolume, parcelOverride,
+    oceanTrackingVolume, oceanTrackingOverride,
+    locationsVolume, locationsOverride,
+    supportPackageVolume, supportPackageOverride,
+    auditingVolume, auditingOverride,
+    fleetRouteVolume, fleetRouteOverride,
+    dockSchedulingVolume, dockSchedulingOverride,
+    subBilling
+  ]);
 
   // === LOOKUP PLANS ===
   const freightPlan = freightSKU
