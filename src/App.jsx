@@ -20,6 +20,18 @@ import {
   dockSchedulingAnnualSKUs,
   dockSchedulingMonthlySKUs,
 } from './skus';
+import { useProductState } from './hooks/useProductState';
+import {
+  computeVolumeBasedCost,
+  computeFixedCost,
+  calculateBillPayCost,
+  calculateVendorPortalCost,
+  calculateYardManagementCost,
+  calculateSubscriptionTotal,
+  calculateOneTimeCosts,
+} from './utils/calculations';
+import { formatCost } from './utils/formatting';
+import { findSKUForProduct, getPlanBySKU, getSKUArrayByBilling } from './utils/skuHelpers';
 
 /* ============================
    STYLE CONSTANTS
@@ -79,87 +91,6 @@ const firstColumnStyle = {
   paddingLeft: '16px',
 };
 
-/* ============================
-   HELPER FUNCTIONS
-============================ */
-const computeVolumeBasedCost = (volume, plan, billing) => {
-  const vol = Number(volume) || 0;
-  if (!plan) return { included: 0, overage: 0, monthlyCost: 0, annualCost: 0 };
-  const included = plan.shipmentsIncluded || 0;
-  const overage =
-    vol > included ? (vol - included) * (plan.costPerShipment || 0) : 0;
-  let monthlyCost = 0,
-    annualCost = 0;
-  if (billing === 'annual') {
-    const baseAnnual = (plan.perMonthCost || 0) * 12;
-    annualCost = baseAnnual + overage;
-    monthlyCost = annualCost / 12;
-  } else {
-    monthlyCost = (plan.perMonthCost || 0) + overage;
-    annualCost = monthlyCost * 12;
-  }
-  return { included, overage, monthlyCost, annualCost };
-};
-
-const computeFixedCost = (plan, billing = 'annual') => {
-  if (!plan) return { monthlyCost: 0, annualCost: 0 };
-  if (billing === 'annual') {
-    const annualCost =
-      plan.annualCost !== undefined
-        ? Number(plan.annualCost)
-        : Number(plan.cost || 0);
-    return { monthlyCost: annualCost / 12, annualCost };
-  } else {
-    const monthlyCost =
-      plan.perMonthCost !== undefined
-        ? Number(plan.perMonthCost)
-        : Number(plan.cost || 0) / 12;
-    return { monthlyCost, annualCost: monthlyCost * 12 };
-  }
-};
-
-const formatCost = cost =>
-  Number(cost).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  });
-
-/* ============================
-   PRODUCT STATE INITIALIZER
-============================ */
-const initializeProductState = () => {
-  const state = {};
-  
-  productConfig.forEach(product => {
-    if (product.pricingType === 'custom' && product.customInputs) {
-      // Yard Management: facilities + assets
-      state[product.id] = {
-        inputs: product.customInputs.reduce((acc, input) => ({
-          ...acc,
-          [input.id]: input.defaultValue
-        }), {}),
-        markup: 0
-      };
-    } else if (product.inputType === 'yesNo') {
-      // Bill Pay: Yes/No instead of volume
-      state[product.id] = {
-        value: product.defaultValue || 'No',
-        markup: 0
-      };
-    } else {
-      // Standard products: volume, sku, override, markup
-      state[product.id] = {
-        volume: product.defaultVolume || 0,
-        sku: '',
-        override: false,
-        markup: 0
-      };
-    }
-  });
-  
-  return state;
-};
 
 /* ============================
    REUSABLE COMPONENTS
@@ -370,48 +301,14 @@ const App = () => {
   const [showCustomerView, setShowCustomerView] = useState(false);
   const [oneTimeCosts, setOneTimeCosts] = useState([]);
 
-  // MODULE STATES - Centralized product state
-  const [products, setProducts] = useState(initializeProductState);
-
-  // Helper functions for product state access
-  const getProductValue = (productId, field) => {
-    const product = products[productId];
-    if (!product) return field === 'inputs' ? {} : (field === 'sku' ? '' : 0);
-    
-    // Handle different product types
-    if (field === 'volume' || field === 'value') {
-      return product.volume !== undefined ? product.volume : product.value;
-    }
-    if (field === 'markup') return product.markup || 0;
-    if (field === 'sku') return product.sku || '';
-    if (field === 'override') return product.override || false;
-    if (field === 'inputs') return product.inputs || {};
-    
-    return 0;
-  };
-
-  const setProductValue = (productId, field, value) => {
-    setProducts(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        [field]: value
-      }
-    }));
-  };
-
-  const setProductInput = (productId, inputId, value) => {
-    setProducts(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        inputs: {
-          ...prev[productId].inputs,
-          [inputId]: value
-        }
-      }
-    }));
-  };
+  // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
+  const {
+    products,
+    getProductValue,
+    setProductValue,
+    setProductInput,
+    resetAllProducts,
+  } = useProductState();
 
   // Backward-compatible getters (temporary during refactor)
   const freightVolume = getProductValue('freight', 'volume');
@@ -515,34 +412,6 @@ const App = () => {
   const setDockSchedulingSKU = (val) => setProductValue('dockScheduling', 'sku', val);
   const setDockSchedulingOverride = (val) => setProductValue('dockScheduling', 'override', val);
 
-  // === GENERIC SKU SELECTION HELPER ===
-  const findSKUForProduct = (product, volume, billing) => {
-    if (!product.skus || volume < 1) return '';
-    
-    const skuArray = billing === 'annual' ? product.skus.annual : product.skus.monthly;
-    if (!skuArray || skuArray.length === 0) return '';
-    
-    // Handle different range formats
-    let selected;
-    
-    // Check if SKUs have rangeStart/rangeEnd or range[] array
-    const firstSKU = skuArray[0];
-    if (firstSKU.rangeStart !== undefined && firstSKU.rangeEnd !== undefined) {
-      // Products with rangeStart/rangeEnd (freight, parcel, locations, ocean, support, dock)
-      selected = skuArray.find(
-        plan => volume >= plan.rangeStart && volume <= plan.rangeEnd
-      );
-    } else if (firstSKU.range && Array.isArray(firstSKU.range)) {
-      // Products with range array (auditing, FRM)
-      selected = skuArray.find(
-        plan => plan.range && volume >= plan.range[0] && volume <= plan.range[1]
-      );
-    }
-    
-    // Fallback to highest tier if volume exceeds all ranges
-    return selected ? selected.sku : skuArray[skuArray.length - 1].sku;
-  };
-
   // === AUTO-SELECTION EFFECTS ===
   // Unified auto-tier selection for all products
   useEffect(() => {
@@ -583,46 +452,38 @@ const App = () => {
   ]);
 
   // === LOOKUP PLANS ===
-  const freightPlan = freightSKU
-    ? subBilling === 'annual'
-      ? freightAnnualSKUs.find(p => p.sku === freightSKU)
-      : freightMonthlySKUs.find(p => p.sku === freightSKU)
-    : null;
-  const parcelPlan = parcelSKU
-    ? subBilling === 'annual'
-      ? parcelAnnualSKUs.find(p => p.sku === parcelSKU)
-      : parcelMonthlySKUs.find(p => p.sku === parcelSKU)
-    : null;
-  const auditingPlan = auditingSKU
-    ? subBilling === 'annual'
-      ? auditingAnnualSKUs.find(p => p.sku === auditingSKU)
-      : auditingMonthlySKUs.find(p => p.sku === auditingSKU)
-    : null;
-  const locationsPlan = locationsSKU
-    ? subBilling === 'annual'
-      ? locationsAnnualSKUs.find(p => p.sku === locationsSKU)
-      : locationsMonthlySKUs.find(p => p.sku === locationsSKU)
-    : null;
-  const fleetRoutePlan = fleetRouteSKU
-    ? subBilling === 'annual'
-      ? fleetRouteOptimizationAnnualSKUs.find(p => p.sku === fleetRouteSKU)
-      : fleetRouteOptimizationMonthlySKUs.find(p => p.sku === fleetRouteSKU)
-    : null;
-  const oceanTrackingPlan = oceanTrackingSKU
-    ? subBilling === 'annual'
-      ? oceanTrackingAnnualSKUs.find(p => p.sku === oceanTrackingSKU)
-      : oceanTrackingMonthlySKUs.find(p => p.sku === oceanTrackingSKU)
-    : null;
-  const supportPackagePlan = supportPackageSKU
-    ? subBilling === 'annual'
-      ? supportPackageAnnualSKUs.find(p => p.sku === supportPackageSKU)
-      : supportPackageMonthlySKUs.find(p => p.sku === supportPackageSKU)
-    : null;
-  const dockSchedulingPlan = dockSchedulingSKU
-    ? subBilling === 'annual'
-      ? dockSchedulingAnnualSKUs.find(p => p.sku === dockSchedulingSKU)
-      : dockSchedulingMonthlySKUs.find(p => p.sku === dockSchedulingSKU)
-    : null;
+  const freightPlan = getPlanBySKU(
+    subBilling === 'annual' ? freightAnnualSKUs : freightMonthlySKUs,
+    freightSKU
+  );
+  const parcelPlan = getPlanBySKU(
+    subBilling === 'annual' ? parcelAnnualSKUs : parcelMonthlySKUs,
+    parcelSKU
+  );
+  const auditingPlan = getPlanBySKU(
+    subBilling === 'annual' ? auditingAnnualSKUs : auditingMonthlySKUs,
+    auditingSKU
+  );
+  const locationsPlan = getPlanBySKU(
+    subBilling === 'annual' ? locationsAnnualSKUs : locationsMonthlySKUs,
+    locationsSKU
+  );
+  const fleetRoutePlan = getPlanBySKU(
+    subBilling === 'annual' ? fleetRouteOptimizationAnnualSKUs : fleetRouteOptimizationMonthlySKUs,
+    fleetRouteSKU
+  );
+  const oceanTrackingPlan = getPlanBySKU(
+    subBilling === 'annual' ? oceanTrackingAnnualSKUs : oceanTrackingMonthlySKUs,
+    oceanTrackingSKU
+  );
+  const supportPackagePlan = getPlanBySKU(
+    subBilling === 'annual' ? supportPackageAnnualSKUs : supportPackageMonthlySKUs,
+    supportPackageSKU
+  );
+  const dockSchedulingPlan = getPlanBySKU(
+    subBilling === 'annual' ? dockSchedulingAnnualSKUs : dockSchedulingMonthlySKUs,
+    dockSchedulingSKU
+  );
 
   // Define customPricingPresent to be used in the detailed quote summary
   const customPricingPresent = [
@@ -637,110 +498,53 @@ const App = () => {
   ].some(plan => plan && plan.tier.includes('Custom Pricing'));
 
   // === COMPUTE COSTS ===
-  const freightCostObj = computeVolumeBasedCost(
-    freightVolume,
-    freightPlan,
-    subBilling
-  );
+  const freightCostObj = computeVolumeBasedCost(freightVolume, freightPlan, subBilling);
   const freightAnnualCost =
-    (subBilling === 'annual'
-      ? freightCostObj.annualCost
-      : freightCostObj.monthlyCost * 12) *
+    (subBilling === 'annual' ? freightCostObj.annualCost : freightCostObj.monthlyCost * 12) *
     (1 + freightMarkup / 100);
 
-  const parcelCostObj = computeVolumeBasedCost(
-    parcelVolume,
-    parcelPlan,
-    subBilling
-  );
+  const parcelCostObj = computeVolumeBasedCost(parcelVolume, parcelPlan, subBilling);
   const parcelAnnualCost = parcelCostObj.annualCost * (1 + parcelMarkup / 100);
 
-  let oceanTrackingAnnualCost = 0;
-  if (oceanTrackingPlan) {
-    const costObj = computeVolumeBasedCost(
-      oceanTrackingVolume,
-      oceanTrackingPlan,
-      subBilling
-    );
-    oceanTrackingAnnualCost =
-      (subBilling === 'annual'
-        ? costObj.annualCost
-        : costObj.monthlyCost * 12) *
-      (1 + oceanTrackingMarkup / 100);
-  }
+  const oceanTrackingCostObj = computeVolumeBasedCost(oceanTrackingVolume, oceanTrackingPlan, subBilling);
+  const oceanTrackingAnnualCost =
+    (subBilling === 'annual' ? oceanTrackingCostObj.annualCost : oceanTrackingCostObj.monthlyCost * 12) *
+    (1 + oceanTrackingMarkup / 100);
 
-  const locationsCostObj = computeVolumeBasedCost(
-    locationsVolume,
-    locationsPlan,
-    subBilling
-  );
-  const locationsAnnualCost =
-    locationsCostObj.annualCost * (1 + locationsMarkup / 100);
+  const locationsCostObj = computeVolumeBasedCost(locationsVolume, locationsPlan, subBilling);
+  const locationsAnnualCost = locationsCostObj.annualCost * (1 + locationsMarkup / 100);
 
   const supportPackageCostAnnual = supportPackagePlan
     ? supportPackagePlan.annualCost * (1 + supportPackageMarkup / 100)
     : 0;
-  const supportPackageCostMonthly = supportPackagePlan
-    ? supportPackageCostAnnual / 12
-    : 0;
 
   // Yard Management Calculation
-  const assetFacilityRate = subBilling === 'annual' ? 100 : 130;
-  const assetRate = subBilling === 'annual' ? 10 : 13;
-  const assetManagementMonthlyBase =
-    assetManagementFacilities * assetFacilityRate +
-    assetManagementAssets * assetRate;
-  const assetManagementMonthlyCost =
-    assetManagementMonthlyBase * (1 + assetManagementMarkup / 100);
-  const assetManagementAnnualCost = assetManagementMonthlyCost * 12;
+  const { monthlyCost: assetManagementMonthlyCost, annualCost: assetManagementAnnualCost } =
+    calculateYardManagementCost(assetManagementFacilities, assetManagementAssets, subBilling, assetManagementMarkup);
 
-  const coreTMSAnnualCost =
-    freightAnnualCost + parcelAnnualCost + oceanTrackingAnnualCost;
+  const coreTMSAnnualCost = freightAnnualCost + parcelAnnualCost + oceanTrackingAnnualCost;
   const useLocations = locationsAnnualCost > coreTMSAnnualCost;
-  const effectiveCoreAnnualCost = useLocations
-    ? locationsAnnualCost
-    : coreTMSAnnualCost;
+  const effectiveCoreAnnualCost = useLocations ? locationsAnnualCost : coreTMSAnnualCost;
 
-  let billPayMonthlyCost = 0;
-  if (billPayYesNo === 'Yes') {
-    if (subBilling === 'annual') {
-      const base = 500 + 2 * freightVolume + 0.5 * parcelVolume;
-      billPayMonthlyCost = base * (1 + billPayMarkup / 100);
-    } else {
-      const base = 650 + 2.6 * freightVolume + 0.65 * parcelVolume;
-      billPayMonthlyCost = base * (1 + billPayMarkup / 100);
-    }
-  }
-  const billPayAnnualCost = billPayMonthlyCost * 12;
+  // Bill Pay Calculation
+  const { monthlyCost: billPayMonthlyCost, annualCost: billPayAnnualCost } =
+    calculateBillPayCost(billPayYesNo, freightVolume, parcelVolume, subBilling, billPayMarkup);
 
-  const vendorRate = subBilling === 'annual' ? 20 : 30;
-  const vendorMonthlyBase = vendorPortalCount * vendorRate;
-  const vendorMonthlyCost = vendorMonthlyBase * (1 + vendorPortalMarkup / 100);
-  const vendorAnnualCost = vendorMonthlyCost * 12;
+  // Vendor Portals Calculation
+  const { monthlyCost: vendorMonthlyCost, annualCost: vendorAnnualCost } =
+    calculateVendorPortalCost(vendorPortalCount, subBilling, vendorPortalMarkup);
 
-  const auditingCostObj = auditingPlan
-    ? computeFixedCost(auditingPlan, subBilling)
-    : { monthlyCost: 0, annualCost: 0 };
-  const auditingAnnualCost =
-    auditingCostObj.annualCost * (1 + auditingMarkup / 100);
+  const auditingCostObj = auditingPlan ? computeFixedCost(auditingPlan, subBilling) : { monthlyCost: 0, annualCost: 0 };
+  const auditingAnnualCost = auditingCostObj.annualCost * (1 + auditingMarkup / 100);
 
   const fleetRouteCostObj = fleetRoutePlan
-    ? {
-        monthlyCost: fleetRoutePlan.perMonthCost,
-        annualCost: fleetRoutePlan.annualCost,
-      }
+    ? { monthlyCost: fleetRoutePlan.perMonthCost, annualCost: fleetRoutePlan.annualCost }
     : { monthlyCost: 0, annualCost: 0 };
-  const fleetRouteEffectiveAnnual =
-    fleetRouteCostObj.annualCost * (1 + fleetRouteMarkup / 100);
+  const fleetRouteEffectiveAnnual = fleetRouteCostObj.annualCost * (1 + fleetRouteMarkup / 100);
 
-  // NEW: Dock Scheduling cost
-  const dockSchedulingCostObj = computeVolumeBasedCost(
-    dockSchedulingVolume,
-    dockSchedulingPlan,
-    subBilling
-  );
-  const dockSchedulingAnnualCost =
-    dockSchedulingCostObj.annualCost * (1 + dockSchedulingMarkup / 100);
+  // Dock Scheduling cost
+  const dockSchedulingCostObj = computeVolumeBasedCost(dockSchedulingVolume, dockSchedulingPlan, subBilling);
+  const dockSchedulingAnnualCost = dockSchedulingCostObj.annualCost * (1 + dockSchedulingMarkup / 100);
 
   const rawSubAnnualSubscription =
     effectiveCoreAnnualCost +
@@ -752,21 +556,16 @@ const App = () => {
     (assetManagementAnnualCost > 0 ? assetManagementAnnualCost : 0) +
     dockSchedulingAnnualCost;
 
-  const subAfterMin = Math.max(rawSubAnnualSubscription, minSubscription);
-  const finalSubscriptionAnnual = subAfterMin * (1 + globalMarkup / 100);
-  const finalSubscriptionMonthly = finalSubscriptionAnnual / 12;
+  // Calculate subscription total with minimum enforcement
+  const {
+    finalAnnual: finalSubscriptionAnnual,
+    finalMonthly: finalSubscriptionMonthly,
+    neededToMin: neededToMinAnnual,
+    neededToMinMonthly,
+  } = calculateSubscriptionTotal(rawSubAnnualSubscription, minSubscription, globalMarkup);
 
-  const neededToMinAnnual = Math.max(
-    0,
-    minSubscription - rawSubAnnualSubscription
-  );
-  const neededToMinMonthly = neededToMinAnnual / 12;
-
-  const rawOneTimeTotal = oneTimeCosts.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
-  );
-  const finalOneTimeCost = rawOneTimeTotal * (1 + oneTimeMarkup / 100);
+  // Calculate one-time costs
+  const { finalTotal: finalOneTimeCost } = calculateOneTimeCosts(oneTimeCosts, oneTimeMarkup);
 
   const finalGrandTotal = finalSubscriptionAnnual + finalOneTimeCost;
 
@@ -824,7 +623,7 @@ const App = () => {
 
   // === Handle Reset ===
   const handleReset = () => {
-    setProducts(initializeProductState());
+    resetAllProducts();
     setGlobalMarkup(0);
     setMinSubscription(20000);
     setOneTimeMarkup(0);
