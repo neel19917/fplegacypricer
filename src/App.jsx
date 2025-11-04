@@ -164,7 +164,7 @@ const initializeProductState = () => {
 /* ============================
    REUSABLE COMPONENTS
 ============================ */
-const FixedHeader = () => (
+const FixedHeader = ({ onLogout }) => (
   <div
     style={{
       position: 'fixed',
@@ -185,8 +185,36 @@ const FixedHeader = () => (
     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '600', letterSpacing: '0.3px' }}>
       FreightPOP Quote Builder
     </h1>
-    <div style={{ fontSize: '13px', opacity: 0.8 }}>
-      Professional Pricing Tool
+    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <div style={{ fontSize: '13px', opacity: 0.8 }}>
+        Professional Pricing Tool
+      </div>
+      {onLogout && (
+        <button
+          onClick={onLogout}
+          style={{
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: '500',
+            color: 'white',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          }}
+        >
+          🔓 Logout
+        </button>
+      )}
     </div>
   </div>
 );
@@ -242,6 +270,38 @@ const CardContent = ({ children }) => (
 ============================ */
 const App = () => {
   const pageRef = useRef(null);
+
+  // === AUTHENTICATION STATE ===
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const MASTER_PASSWORD = 'ai-tms-freightpop.ai';
+
+  // Check if already authenticated (from sessionStorage)
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('freightpop-authenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginPassword === MASTER_PASSWORD) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('freightpop-authenticated', 'true');
+      setLoginError('');
+      setLoginPassword('');
+    } else {
+      setLoginError('Invalid password. Please try again.');
+      setLoginPassword('');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('freightpop-authenticated');
+  };
 
   // === Load URL Parameters on Mount ===
   useEffect(() => {
@@ -774,9 +834,135 @@ const App = () => {
 
   const topSpacerHeight = '90px';
 
+  // === LOGIN SCREEN ===
+  if (!isAuthenticated) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          padding: '48px',
+          maxWidth: '400px',
+          width: '100%'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <h1 style={{
+              fontSize: '28px',
+              fontWeight: '700',
+              color: '#334155',
+              marginBottom: '8px'
+            }}>
+              FreightPOP Quote Builder
+            </h1>
+            <p style={{
+              fontSize: '14px',
+              color: '#64748b',
+              margin: 0
+            }}>
+              Please enter the master password to continue
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#334155',
+                marginBottom: '8px'
+              }}>
+                Master Password
+              </label>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="Enter password..."
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '15px',
+                  border: loginError ? '2px solid #ef4444' : '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  outline: 'none',
+                  transition: 'border-color 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => {
+                  if (!loginError) e.target.style.borderColor = '#667eea';
+                }}
+                onBlur={(e) => {
+                  if (!loginError) e.target.style.borderColor = '#e2e8f0';
+                }}
+              />
+              {loginError && (
+                <p style={{
+                  fontSize: '13px',
+                  color: '#ef4444',
+                  marginTop: '8px',
+                  marginBottom: 0
+                }}>
+                  🔒 {loginError}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                width: '100%',
+                padding: '14px',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: 'white',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: '0 4px 14px rgba(102, 126, 234, 0.4)'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 14px rgba(102, 126, 234, 0.4)';
+              }}
+            >
+              Login
+            </button>
+          </form>
+
+          <p style={{
+            textAlign: 'center',
+            fontSize: '12px',
+            color: '#94a3b8',
+            marginTop: '24px',
+            marginBottom: 0
+          }}>
+            🔐 Secure access only
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // === MAIN APP CONTENT ===
   return (
     <>
-      <FixedHeader />
+      <FixedHeader onLogout={handleLogout} />
       <div style={{ height: topSpacerHeight }} />
       <div
         ref={pageRef}
