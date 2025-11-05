@@ -1726,9 +1726,12 @@ const App = () => {
                       </tr>
                     </thead>
                   <tbody>
-                    {[
+                    {(() => {
+                      // Define the product rows array
+                      const productRows = [
                       {
                         productType: 'Core TMS - Freight',
+                        pricingModel: 'shipmentBased',
                         planDescription: freightPlan
                           ? `${freightPlan.tier} (Incl: ${freightPlan.shipmentsIncluded})`
                           : 'N/A',
@@ -1749,6 +1752,7 @@ const App = () => {
                       },
                       {
                         productType: 'Core TMS - Parcel',
+                        pricingModel: 'shipmentBased',
                         planDescription: parcelPlan
                           ? `${parcelPlan.tier} (Incl: ${parcelPlan.shipmentsIncluded})`
                           : 'N/A',
@@ -1769,6 +1773,7 @@ const App = () => {
                       },
                       {
                         productType: 'Ocean Tracking',
+                        pricingModel: 'shipmentBased',
                         planDescription: oceanTrackingPlan
                           ? `${oceanTrackingPlan.tier} (Incl: ${oceanTrackingPlan.shipmentsIncluded})`
                           : 'N/A',
@@ -1789,6 +1794,7 @@ const App = () => {
                       },
                       {
                         productType: 'Bill Pay',
+                        pricingModel: 'customCalculation',
                         planDescription:
                           subBilling === 'annual'
                             ? '$500 base + $2/ LTL-FTL + $0.50/Parcel'
@@ -1803,6 +1809,7 @@ const App = () => {
                       },
                       {
                         productType: 'Locations',
+                        pricingModel: 'infrastructureTiers',
                         planDescription: locationsPlan
                           ? `${locationsPlan.tier} (Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd})`
                           : 'N/A',
@@ -1823,6 +1830,7 @@ const App = () => {
                       },
                       {
                         productType: 'Support Package',
+                        pricingModel: 'infrastructureTiers',
                         planDescription: supportPackagePlan
                           ? `${supportPackagePlan.tier} (Range: ${
                               supportPackagePlan.rangeStart
@@ -1849,6 +1857,7 @@ const App = () => {
                       },
                       {
                         productType: 'Vendor Portals',
+                        pricingModel: 'countBased',
                         planDescription:
                           subBilling === 'annual'
                             ? '$20/portal/month'
@@ -1864,6 +1873,7 @@ const App = () => {
                       },
                       {
                         productType: 'Auditing Module',
+                        pricingModel: 'countBased',
                         planDescription: auditingPlan
                           ? `${auditingPlan.tier} (Range: ${
                               auditingPlan.range[0]
@@ -1890,6 +1900,7 @@ const App = () => {
                       },
                       {
                         productType: 'Fleet Route Optimization',
+                        pricingModel: 'countBased',
                         planDescription: fleetRoutePlan
                           ? `${fleetRoutePlan.tier} (Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]})`
                           : 'N/A',
@@ -1910,6 +1921,7 @@ const App = () => {
                       },
                       {
                         productType: 'Yard Management',
+                        pricingModel: 'customCalculation',
                         planDescription: `Per facility: $${
                           subBilling === 'annual' ? '100' : '130'
                         } / per asset: $${
@@ -1949,6 +1961,7 @@ const App = () => {
                       },
                       {
                         productType: 'Dock Scheduling',
+                        pricingModel: 'countBased',
                         planDescription: dockSchedulingPlan
                           ? `${dockSchedulingPlan.tier} (Range: ${
                               dockSchedulingPlan.rangeStart
@@ -1973,7 +1986,106 @@ const App = () => {
                         monthlyCost: dockSchedulingAnnualCost / 12,
                         annualCost: dockSchedulingAnnualCost,
                       },
-                    ].map((row, idx) => (
+                    ];
+                    
+                    // Group by pricing model if selected
+                    if (groupBy === 'pricingModel') {
+                      const grouped = {};
+                      productRows.forEach(row => {
+                        if (!grouped[row.pricingModel]) {
+                          grouped[row.pricingModel] = [];
+                        }
+                        grouped[row.pricingModel].push(row);
+                      });
+                      
+                      return Object.values(pricingModels)
+                        .sort((a, b) => a.order - b.order)
+                        .map(model => {
+                          const modelProducts = grouped[model.id] || [];
+                          if (modelProducts.length === 0) return null;
+                          
+                          return (
+                            <React.Fragment key={model.id}>
+                              <tr style={{ background: `${model.color}10` }}>
+                                <td colSpan={6} style={{ padding: '16px', border: '1px solid #e2e8f0' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontSize: '24px' }}>{model.icon}</span>
+                                    <div>
+                                      <div style={{ fontWeight: '700', fontSize: '16px', color: model.color }}>
+                                        {model.name}
+                                      </div>
+                                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                                        {model.description}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                              {modelProducts.map((row, idx) => (
+                                <tr key={`${model.id}-${idx}`}>
+                                  <td style={{ ...tableTdStyle, ...firstColumnStyle }}>
+                                    {row.productType}
+                                  </td>
+                                  <td style={tableTdStyle}>{row.planDescription}</td>
+                                  <td style={tableTdStyle}>
+                                    {row.tierOptions && row.tierOptions.length > 0 ? (
+                                      editPricingEnabled ? (
+                                        <select
+                                          value={row.selectedSKU}
+                                          onChange={e => row.onSKUChange(e.target.value)}
+                                          style={selectStyle}
+                                        >
+                                          {row.tierOptions.map(opt => (
+                                            <option key={opt.sku} value={opt.sku}>
+                                              {opt.tier}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <span>Locked</span>
+                                      )
+                                    ) : (
+                                      'N/A'
+                                    )}
+                                  </td>
+                                  <td style={tableTdStyle}>
+                                    {row.productType === 'Yard Management' ? (
+                                      row.renderVolumeInput ? (
+                                        row.renderVolumeInput()
+                                      ) : null
+                                    ) : row.productType === 'Bill Pay' ? (
+                                      <select
+                                        value={billPayYesNo}
+                                        onChange={e => setBillPayYesNo(e.target.value)}
+                                        style={selectStyle}
+                                      >
+                                        <option value='No'>No</option>
+                                        <option value='Yes'>Yes</option>
+                                      </select>
+                                    ) : (
+                                      <input
+                                        type='number'
+                                        value={row.volumeCount}
+                                        onChange={e => row.onVolumeChange(e)}
+                                        style={inputStyle}
+                                      />
+                                    )}
+                                  </td>
+                                  <td style={tableTdStyle}>
+                                    {formatCost(row.monthlyCost)}
+                                  </td>
+                                  <td style={tableTdStyle}>
+                                    {formatCost(row.annualCost)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </React.Fragment>
+                          );
+                        }).filter(Boolean);
+                    }
+                    
+                    // Default: show all products ungrouped
+                    return productRows.map((row, idx) => (
                       <tr key={idx}>
                         <td style={{ ...tableTdStyle, ...firstColumnStyle }}>
                           {row.productType}
@@ -2030,7 +2142,8 @@ const App = () => {
                           {formatCost(row.annualCost)}
                         </td>
                       </tr>
-                    ))}
+                    ));
+                    })()}
                   </tbody>
                 </table>
                 </div>
