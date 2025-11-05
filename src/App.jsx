@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { productConfig } from './productConfig';
+import { productConfig, pricingModels, getPricingModelsWithProducts } from './productConfig';
 import {
   freightAnnualSKUs,
   freightMonthlySKUs,
@@ -95,6 +95,32 @@ const firstColumnStyle = {
 /* ============================
    REUSABLE COMPONENTS
 ============================ */
+const PricingModelBadge = ({ modelId }) => {
+  const model = pricingModels[modelId];
+  if (!model) return null;
+  
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '4px 10px',
+        borderRadius: '12px',
+        backgroundColor: `${model.color}15`,
+        border: `1px solid ${model.color}40`,
+        fontSize: '11px',
+        fontWeight: '600',
+        color: model.color,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span>{model.icon}</span>
+      <span>{model.name}</span>
+    </span>
+  );
+};
+
 const FixedHeader = ({ onLogout }) => (
   <div
     style={{
@@ -300,6 +326,7 @@ const App = () => {
   const [editPricingEnabled, setEditPricingEnabled] = useState(false);
   const [showCustomerView, setShowCustomerView] = useState(false);
   const [oneTimeCosts, setOneTimeCosts] = useState([]);
+  const [groupBy, setGroupBy] = useState('category'); // 'category' or 'pricingModel'
 
   // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
   const {
@@ -1582,30 +1609,101 @@ const App = () => {
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '16px'
                 }}>
-                  <label style={{ 
-                    marginRight: '8px',
-                    fontWeight: '600',
-                    fontSize: '15px',
-                    color: '#1e293b'
-                  }}>
-                    Billing Frequency:
-                  </label>
-                  <select
-                    value={subBilling}
-                    onChange={e => setSubBilling(e.target.value)}
-                    style={{ 
-                      ...selectStyle, 
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <label style={{ 
+                      marginRight: '8px',
                       fontWeight: '600',
                       fontSize: '15px',
-                      minWidth: '140px'
-                    }}
-                  >
-                    <option value='annual'>📅 Annual</option>
-                    <option value='monthly'>📆 Monthly</option>
-                  </select>
+                      color: '#1e293b'
+                    }}>
+                      Billing Frequency:
+                    </label>
+                    <select
+                      value={subBilling}
+                      onChange={e => setSubBilling(e.target.value)}
+                      style={{ 
+                        ...selectStyle, 
+                        fontWeight: '600',
+                        fontSize: '15px',
+                        minWidth: '140px'
+                      }}
+                    >
+                      <option value='annual'>📅 Annual</option>
+                      <option value='monthly'>📆 Monthly</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ 
+                      marginRight: '8px',
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      Group By:
+                    </label>
+                    <button
+                      onClick={() => setGroupBy('category')}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: groupBy === 'category' ? '#3b82f6' : 'white',
+                        color: groupBy === 'category' ? 'white' : '#64748b',
+                        border: groupBy === 'category' ? 'none' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Business Category
+                    </button>
+                    <button
+                      onClick={() => setGroupBy('pricingModel')}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: groupBy === 'pricingModel' ? '#8b5cf6' : 'white',
+                        color: groupBy === 'pricingModel' ? 'white' : '#64748b',
+                        border: groupBy === 'pricingModel' ? 'none' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Pricing Model
+                    </button>
+                  </div>
                 </div>
+                
+                {groupBy === 'pricingModel' && (
+                  <div style={{ 
+                    padding: '16px', 
+                    background: '#f0f9ff', 
+                    border: '1px solid #bae6fd', 
+                    borderRadius: '8px', 
+                    marginBottom: '16px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ fontWeight: '600', color: '#075985', fontSize: '14px' }}>
+                      Viewing by Pricing Model:
+                    </span>
+                    {Object.values(pricingModels).sort((a, b) => a.order - b.order).map(model => (
+                      <PricingModelBadge key={model.id} modelId={model.id} />
+                    ))}
+                  </div>
+                )}
+                
                 <div style={{ overflowX: 'auto' }}>
                   <table
                     style={{

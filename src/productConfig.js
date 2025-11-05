@@ -36,7 +36,7 @@ import {
 
 /**
  * Product Categories
- * Each category groups related products
+ * Each category groups related products by business function
  */
 export const productCategories = {
   coreTMS: {
@@ -70,6 +70,49 @@ export const productCategories = {
 };
 
 /**
+ * Pricing Models
+ * Groups products by how they are priced (input type and calculation method)
+ */
+export const pricingModels = {
+  shipmentBased: {
+    id: 'shipmentBased',
+    name: 'Shipment-Based Pricing',
+    description: 'Priced by number of shipments with overage charges',
+    icon: '📦',
+    inputType: 'shipments',
+    color: '#3b82f6',
+    order: 1,
+  },
+  countBased: {
+    id: 'countBased',
+    name: 'Count-Based Pricing',
+    description: 'Tiered pricing based on counts (portals, carriers, docks)',
+    icon: '🔢',
+    inputType: 'count',
+    color: '#8b5cf6',
+    order: 2,
+  },
+  customCalculation: {
+    id: 'customCalculation',
+    name: 'Custom Calculation',
+    description: 'Complex formulas with multiple inputs',
+    icon: '🧮',
+    inputType: 'custom',
+    color: '#f59e0b',
+    order: 3,
+  },
+  infrastructureTiers: {
+    id: 'infrastructureTiers',
+    name: 'Infrastructure Tiers',
+    description: 'Fixed tiers for locations and support',
+    icon: '🏗️',
+    inputType: 'tiers',
+    color: '#10b981',
+    order: 4,
+  },
+};
+
+/**
  * Main Product Configuration
  * Each product definition includes:
  * - id: Unique identifier
@@ -87,6 +130,7 @@ export const productConfig = [
     id: 'freight',
     name: 'Core TMS - Freight',
     category: 'coreTMS',
+    pricingModel: 'shipmentBased',
     pricingType: 'volume',
     description: (plan) =>
       plan ? `${plan.tier} - Incl: ${plan.shipmentsIncluded} shipments` : 'N/A',
@@ -108,6 +152,7 @@ export const productConfig = [
     id: 'parcel',
     name: 'Core TMS - Parcel',
     category: 'coreTMS',
+    pricingModel: 'shipmentBased',
     pricingType: 'volume',
     description: (plan) =>
       plan ? `${plan.tier} - Incl: ${plan.shipmentsIncluded} shipments` : 'N/A',
@@ -129,6 +174,7 @@ export const productConfig = [
     id: 'oceanTracking',
     name: 'Ocean Tracking',
     category: 'coreTMS',
+    pricingModel: 'shipmentBased',
     pricingType: 'volume',
     description: (plan) =>
       plan ? `${plan.tier} - Incl: ${plan.shipmentsIncluded} shipments` : 'N/A',
@@ -152,6 +198,7 @@ export const productConfig = [
     id: 'billPay',
     name: 'Bill Pay',
     category: 'addons',
+    pricingModel: 'customCalculation',
     pricingType: 'calculated',
     description: (_, billing) =>
       billing === 'annual'
@@ -175,6 +222,7 @@ export const productConfig = [
     id: 'vendorPortals',
     name: 'Vendor Portals',
     category: 'addons',
+    pricingModel: 'countBased',
     pricingType: 'calculated',
     description: (_, billing) =>
       billing === 'annual' ? '$20/portal/month' : '$30/portal/month',
@@ -194,6 +242,7 @@ export const productConfig = [
     id: 'locations',
     name: 'Locations',
     category: 'infrastructure',
+    pricingModel: 'infrastructureTiers',
     pricingType: 'volume',
     description: (plan) =>
       plan
@@ -215,6 +264,7 @@ export const productConfig = [
     id: 'supportPackage',
     name: 'Support Package',
     category: 'infrastructure',
+    pricingModel: 'infrastructureTiers',
     pricingType: 'fixed',
     description: (plan) =>
       plan
@@ -244,6 +294,7 @@ export const productConfig = [
     id: 'auditing',
     name: 'Auditing Module',
     category: 'modules',
+    pricingModel: 'countBased',
     pricingType: 'fixed',
     description: (plan) =>
       plan
@@ -271,6 +322,7 @@ export const productConfig = [
     id: 'fleetRouteOptimization',
     name: 'Fleet Route Optimization',
     category: 'modules',
+    pricingModel: 'countBased',
     pricingType: 'fixed',
     description: (plan) =>
       plan ? `${plan.tier} - Range: ${plan.range[0]}–${plan.range[1]}` : 'N/A',
@@ -290,6 +342,7 @@ export const productConfig = [
     id: 'yardManagement',
     name: 'Yard Management',
     category: 'modules',
+    pricingModel: 'customCalculation',
     pricingType: 'custom',
     description: (_, billing) =>
       `Per facility: $${billing === 'annual' ? '100' : '130'} / per asset: $${
@@ -322,6 +375,7 @@ export const productConfig = [
     id: 'dockScheduling',
     name: 'Dock Scheduling',
     category: 'modules',
+    pricingModel: 'countBased',
     pricingType: 'volume',
     description: (plan) =>
       plan
@@ -373,6 +427,27 @@ export const getCategoriesWithProducts = () => {
  */
 export const getProductById = (id) => {
   return productConfig.find((p) => p.id === id);
+};
+
+/**
+ * Get products by pricing model
+ */
+export const getProductsByPricingModel = (modelId) => {
+  return productConfig
+    .filter((p) => p.pricingModel === modelId)
+    .sort((a, b) => a.order - b.order);
+};
+
+/**
+ * Get all pricing models with their products
+ */
+export const getPricingModelsWithProducts = () => {
+  return Object.values(pricingModels)
+    .sort((a, b) => a.order - b.order)
+    .map((model) => ({
+      ...model,
+      products: getProductsByPricingModel(model.id),
+    }));
 };
 
 /**
