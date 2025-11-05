@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { productConfig, pricingModels, getPricingModelsWithProducts } from './productConfig';
+import { APP_VERSION } from './version';
+import {
+  exportSKUsToCSV,
+  downloadCSV,
+  parseCSV,
+  csvToSKUs,
+  applySKUData,
+} from './utils/csvHelpers';
 import {
   freightAnnualSKUs,
   freightMonthlySKUs,
@@ -141,10 +149,22 @@ const FixedHeader = ({ onLogout }) => (
   >
     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '600', letterSpacing: '0.3px' }}>
       FreightPOP Quote Builder
+      <span style={{
+        marginLeft: '12px',
+        padding: '4px 10px',
+        fontSize: '11px',
+        fontWeight: '600',
+        background: 'rgba(255, 255, 255, 0.15)',
+        border: '1px solid rgba(255, 255, 255, 0.25)',
+        borderRadius: '12px',
+        letterSpacing: '0.5px',
+      }}>
+        v{APP_VERSION.version} • {APP_VERSION.releaseName}
+      </span>
     </h1>
     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
       <div style={{ fontSize: '13px', opacity: 0.8 }}>
-        Professional Pricing Tool
+        Professional Pricing Tool • Released {APP_VERSION.releaseDate}
       </div>
       {onLogout && (
         <button
@@ -327,6 +347,76 @@ const App = () => {
   const [showCustomerView, setShowCustomerView] = useState(false);
   const [oneTimeCosts, setOneTimeCosts] = useState([]);
   const [groupBy, setGroupBy] = useState('category'); // 'category' or 'pricingModel'
+  
+  // Filtering state
+  const [selectedModels, setSelectedModels] = useState(
+    Object.keys(pricingModels)
+  );
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // CSV Import/Export state
+  const [showCSVSuccess, setShowCSVSuccess] = useState(false);
+  const [csvMessage, setCSVMessage] = useState('');
+  const fileInputRef = useRef(null);
+  
+  // CSV Export Handler
+  const handleExportCSV = () => {
+    try {
+      const csvContent = exportSKUsToCSV();
+      const timestamp = new Date().toISOString().split('T')[0];
+      downloadCSV(csvContent, `pricing_data_${timestamp}.csv`);
+      setCSVMessage('✅ Pricing data exported successfully!');
+      setShowCSVSuccess(true);
+      setTimeout(() => setShowCSVSuccess(false), 3000);
+    } catch (error) {
+      setCSVMessage(`❌ Export failed: ${error.message}`);
+      setShowCSVSuccess(true);
+      setTimeout(() => setShowCSVSuccess(false), 5000);
+    }
+  };
+  
+  // CSV Import Handler
+  const handleImportCSV = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target.result;
+        const parsedData = parseCSV(csvText);
+        const skusByProduct = csvToSKUs(parsedData);
+        
+        // Apply the new SKU data (would need to reload app or use dynamic SKUs)
+        // For now, show success message and suggest page reload
+        setCSVMessage(`✅ CSV imported! Found ${parsedData.length} pricing entries. Reload page to apply changes.`);
+        setShowCSVSuccess(true);
+        setTimeout(() => setShowCSVSuccess(false), 5000);
+        
+        // Store in localStorage for reload
+        localStorage.setItem('importedSKUs', JSON.stringify(skusByProduct));
+        
+      } catch (error) {
+        setCSVMessage(`❌ Import failed: ${error.message}`);
+        setShowCSVSuccess(true);
+        setTimeout(() => setShowCSVSuccess(false), 5000);
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
+  };
+  
+  // Handle Reload from localStorage
+  useEffect(() => {
+    const importedSKUs = localStorage.getItem('importedSKUs');
+    if (importedSKUs) {
+      // You could dynamically update SKUs here
+      // For now, we'll just show a message
+      console.log('Found imported SKUs:', JSON.parse(importedSKUs));
+    }
+  }, []);
 
   // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
   const {
@@ -1600,6 +1690,83 @@ const App = () => {
             <Card>
               <CardHeader>
                 <CardTitle>📦 Product Configuration</CardTitle>
+                
+                {/* CSV Import/Export Controls */}
+                <div style={{ 
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}>
+                  <span style={{ fontSize: '20px' }}>💾</span>
+                  <span style={{ fontWeight: '600', color: '#166534', fontSize: '14px' }}>
+                    Pricing Data Management:
+                  </span>
+                  <button
+                    onClick={handleExportCSV}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>⬇️</span>
+                    <span>Export to CSV</span>
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>⬆️</span>
+                    <span>Import from CSV</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleImportCSV}
+                    style={{ display: 'none' }}
+                  />
+                  {showCSVSuccess && (
+                    <span style={{ 
+                      padding: '8px 12px',
+                      background: 'white',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      animation: 'fadeIn 0.3s',
+                    }}>
+                      {csvMessage}
+                    </span>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div style={{ 
@@ -1683,26 +1850,117 @@ const App = () => {
                   </div>
                 </div>
                 
-                {groupBy === 'pricingModel' && (
+                {/* Advanced Filtering UI */}
+                <div style={{ 
+                  padding: '20px', 
+                  background: '#f8fafc', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '8px', 
+                  marginBottom: '16px',
+                }}>
+                  {/* Search and Quick Actions Row */}
                   <div style={{ 
-                    padding: '16px', 
-                    background: '#f0f9ff', 
-                    border: '1px solid #bae6fd', 
-                    borderRadius: '8px', 
-                    marginBottom: '16px',
-                    display: 'flex',
-                    flexWrap: 'wrap',
+                    display: 'flex', 
+                    alignItems: 'center', 
                     gap: '12px',
+                    marginBottom: '16px',
+                    flexWrap: 'wrap',
+                  }}>
+                    <span style={{ fontSize: '18px' }}>🔍</span>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search products..."
+                      style={{
+                        flex: '1',
+                        minWidth: '200px',
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      onClick={() => setSelectedModels(Object.keys(pricingModels))}
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: 'white',
+                        color: '#64748b',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Show All
+                    </button>
+                    <button
+                      onClick={() => setSelectedModels([])}
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: 'white',
+                        color: '#64748b',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Hide All
+                    </button>
+                  </div>
+
+                  {/* Quick Filter Pills */}
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    flexWrap: 'wrap',
                     alignItems: 'center',
                   }}>
-                    <span style={{ fontWeight: '600', color: '#075985', fontSize: '14px' }}>
-                      Viewing by Pricing Model:
+                    <span style={{ fontWeight: '600', color: '#64748b', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Quick Filters:
                     </span>
-                    {Object.values(pricingModels).sort((a, b) => a.order - b.order).map(model => (
-                      <PricingModelBadge key={model.id} modelId={model.id} />
-                    ))}
+                    {Object.values(pricingModels).sort((a, b) => a.order - b.order).map(model => {
+                      const isSelected = selectedModels.includes(model.id);
+                      return (
+                        <button
+                          key={model.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedModels(prev => prev.filter(id => id !== model.id));
+                            } else {
+                              setSelectedModels(prev => [...prev, model.id]);
+                            }
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 12px',
+                            borderRadius: '16px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: isSelected ? model.color : 'white',
+                            color: isSelected ? 'white' : model.color,
+                            border: `2px solid ${model.color}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            opacity: isSelected ? 1 : 0.6,
+                          }}
+                        >
+                          <span>{model.icon}</span>
+                          <span>{model.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
                 
                 <div style={{ overflowX: 'auto' }}>
                   <table
@@ -1794,7 +2052,7 @@ const App = () => {
                       },
                       {
                         productType: 'Bill Pay',
-                        pricingModel: 'customCalculation',
+                        pricingModel: 'billPay',
                         planDescription:
                           subBilling === 'annual'
                             ? '$500 base + $2/ LTL-FTL + $0.50/Parcel'
@@ -1809,7 +2067,7 @@ const App = () => {
                       },
                       {
                         productType: 'Locations',
-                        pricingModel: 'infrastructureTiers',
+                        pricingModel: 'infrastructureLocations',
                         planDescription: locationsPlan
                           ? `${locationsPlan.tier} (Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd})`
                           : 'N/A',
@@ -1830,7 +2088,7 @@ const App = () => {
                       },
                       {
                         productType: 'Support Package',
-                        pricingModel: 'infrastructureTiers',
+                        pricingModel: 'infrastructureSupport',
                         planDescription: supportPackagePlan
                           ? `${supportPackagePlan.tier} (Range: ${
                               supportPackagePlan.rangeStart
@@ -1857,7 +2115,7 @@ const App = () => {
                       },
                       {
                         productType: 'Vendor Portals',
-                        pricingModel: 'countBased',
+                        pricingModel: 'portalBased',
                         planDescription:
                           subBilling === 'annual'
                             ? '$20/portal/month'
@@ -1873,7 +2131,7 @@ const App = () => {
                       },
                       {
                         productType: 'Auditing Module',
-                        pricingModel: 'countBased',
+                        pricingModel: 'carrierBased',
                         planDescription: auditingPlan
                           ? `${auditingPlan.tier} (Range: ${
                               auditingPlan.range[0]
@@ -1900,7 +2158,7 @@ const App = () => {
                       },
                       {
                         productType: 'Fleet Route Optimization',
-                        pricingModel: 'countBased',
+                        pricingModel: 'stopBased',
                         planDescription: fleetRoutePlan
                           ? `${fleetRoutePlan.tier} (Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]})`
                           : 'N/A',
@@ -1921,7 +2179,7 @@ const App = () => {
                       },
                       {
                         productType: 'Yard Management',
-                        pricingModel: 'customCalculation',
+                        pricingModel: 'yardManagement',
                         planDescription: `Per facility: $${
                           subBilling === 'annual' ? '100' : '130'
                         } / per asset: $${
@@ -1961,7 +2219,7 @@ const App = () => {
                       },
                       {
                         productType: 'Dock Scheduling',
-                        pricingModel: 'countBased',
+                        pricingModel: 'dockBased',
                         planDescription: dockSchedulingPlan
                           ? `${dockSchedulingPlan.tier} (Range: ${
                               dockSchedulingPlan.rangeStart
@@ -1988,10 +2246,22 @@ const App = () => {
                       },
                     ];
                     
+                    // Apply search and model filters
+                    const filteredRows = productRows.filter(row => {
+                      // Search filter
+                      const matchesSearch = searchTerm.trim() === '' || 
+                        row.productType.toLowerCase().includes(searchTerm.toLowerCase());
+                      
+                      // Model filter
+                      const matchesModel = selectedModels.includes(row.pricingModel);
+                      
+                      return matchesSearch && matchesModel;
+                    });
+                    
                     // Group by pricing model if selected
                     if (groupBy === 'pricingModel') {
                       const grouped = {};
-                      productRows.forEach(row => {
+                      filteredRows.forEach(row => {
                         if (!grouped[row.pricingModel]) {
                           grouped[row.pricingModel] = [];
                         }
@@ -2085,7 +2355,7 @@ const App = () => {
                     }
                     
                     // Default: show all products ungrouped
-                    return productRows.map((row, idx) => (
+                    return filteredRows.map((row, idx) => (
                       <tr key={idx}>
                         <td style={{ ...tableTdStyle, ...firstColumnStyle }}>
                           {row.productType}

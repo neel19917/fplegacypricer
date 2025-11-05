@@ -71,44 +71,89 @@ export const productCategories = {
 
 /**
  * Pricing Models
- * Groups products by how they are priced (input type and calculation method)
+ * Groups products by how they are priced (granular classification)
  */
 export const pricingModels = {
   shipmentBased: {
     id: 'shipmentBased',
-    name: 'Shipment-Based Pricing',
+    name: 'Shipment-Based',
     description: 'Priced by number of shipments with overage charges',
     icon: '📦',
     inputType: 'shipments',
     color: '#3b82f6',
     order: 1,
   },
-  countBased: {
-    id: 'countBased',
-    name: 'Count-Based Pricing',
-    description: 'Tiered pricing based on counts (portals, carriers, docks)',
-    icon: '🔢',
-    inputType: 'count',
-    color: '#8b5cf6',
+  stopBased: {
+    id: 'stopBased',
+    name: 'Stop-Based',
+    description: 'Fleet route optimization by number of stops',
+    icon: '🚛',
+    inputType: 'stops',
+    color: '#10b981',
     order: 2,
   },
-  customCalculation: {
-    id: 'customCalculation',
-    name: 'Custom Calculation',
-    description: 'Complex formulas with multiple inputs',
-    icon: '🧮',
-    inputType: 'custom',
-    color: '#f59e0b',
+  dockBased: {
+    id: 'dockBased',
+    name: 'Dock-Based',
+    description: 'Dock scheduling by number of docks',
+    icon: '🚪',
+    inputType: 'docks',
+    color: '#6366f1',
     order: 3,
   },
-  infrastructureTiers: {
-    id: 'infrastructureTiers',
-    name: 'Infrastructure Tiers',
-    description: 'Fixed tiers for locations and support',
-    icon: '🏗️',
-    inputType: 'tiers',
-    color: '#10b981',
+  portalBased: {
+    id: 'portalBased',
+    name: 'Portal-Based',
+    description: 'Per portal pricing for vendor portals',
+    icon: '🌐',
+    inputType: 'portals',
+    color: '#06b6d4',
     order: 4,
+  },
+  carrierBased: {
+    id: 'carrierBased',
+    name: 'Carrier-Based',
+    description: 'Auditing module priced by carrier count',
+    icon: '🚚',
+    inputType: 'carriers',
+    color: '#84cc16',
+    order: 5,
+  },
+  yardManagement: {
+    id: 'yardManagement',
+    name: 'Yard Management',
+    description: 'Custom calculation: per facility + per asset',
+    icon: '🏭',
+    inputType: 'custom',
+    color: '#f59e0b',
+    order: 6,
+  },
+  billPay: {
+    id: 'billPay',
+    name: 'Bill Pay',
+    description: 'Custom formula based on freight & parcel volume',
+    icon: '💳',
+    inputType: 'custom',
+    color: '#ec4899',
+    order: 7,
+  },
+  infrastructureLocations: {
+    id: 'infrastructureLocations',
+    name: 'Infrastructure - Locations',
+    description: 'Fixed location tiers',
+    icon: '📍',
+    inputType: 'tiers',
+    color: '#8b5cf6',
+    order: 8,
+  },
+  infrastructureSupport: {
+    id: 'infrastructureSupport',
+    name: 'Infrastructure - Support',
+    description: 'Support package tiers by hours',
+    icon: '🎧',
+    inputType: 'tiers',
+    color: '#14b8a6',
+    order: 9,
   },
 };
 
@@ -198,7 +243,7 @@ export const productConfig = [
     id: 'billPay',
     name: 'Bill Pay',
     category: 'addons',
-    pricingModel: 'customCalculation',
+    pricingModel: 'billPay',
     pricingType: 'calculated',
     description: (_, billing) =>
       billing === 'annual'
@@ -222,7 +267,7 @@ export const productConfig = [
     id: 'vendorPortals',
     name: 'Vendor Portals',
     category: 'addons',
-    pricingModel: 'countBased',
+    pricingModel: 'portalBased',
     pricingType: 'calculated',
     description: (_, billing) =>
       billing === 'annual' ? '$20/portal/month' : '$30/portal/month',
@@ -242,7 +287,7 @@ export const productConfig = [
     id: 'locations',
     name: 'Locations',
     category: 'infrastructure',
-    pricingModel: 'infrastructureTiers',
+    pricingModel: 'infrastructureLocations',
     pricingType: 'volume',
     description: (plan) =>
       plan
@@ -264,7 +309,7 @@ export const productConfig = [
     id: 'supportPackage',
     name: 'Support Package',
     category: 'infrastructure',
-    pricingModel: 'infrastructureTiers',
+    pricingModel: 'infrastructureSupport',
     pricingType: 'fixed',
     description: (plan) =>
       plan
@@ -294,7 +339,7 @@ export const productConfig = [
     id: 'auditing',
     name: 'Auditing Module',
     category: 'modules',
-    pricingModel: 'countBased',
+    pricingModel: 'carrierBased',
     pricingType: 'fixed',
     description: (plan) =>
       plan
@@ -322,7 +367,7 @@ export const productConfig = [
     id: 'fleetRouteOptimization',
     name: 'Fleet Route Optimization',
     category: 'modules',
-    pricingModel: 'countBased',
+    pricingModel: 'stopBased',
     pricingType: 'fixed',
     description: (plan) =>
       plan ? `${plan.tier} - Range: ${plan.range[0]}–${plan.range[1]}` : 'N/A',
@@ -342,7 +387,7 @@ export const productConfig = [
     id: 'yardManagement',
     name: 'Yard Management',
     category: 'modules',
-    pricingModel: 'customCalculation',
+    pricingModel: 'yardManagement',
     pricingType: 'custom',
     description: (_, billing) =>
       `Per facility: $${billing === 'annual' ? '100' : '130'} / per asset: $${
@@ -375,7 +420,7 @@ export const productConfig = [
     id: 'dockScheduling',
     name: 'Dock Scheduling',
     category: 'modules',
-    pricingModel: 'countBased',
+    pricingModel: 'dockBased',
     pricingType: 'volume',
     description: (plan) =>
       plan
