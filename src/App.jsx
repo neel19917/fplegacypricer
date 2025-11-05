@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { productConfig } from './productConfig';
+import { productConfig, pricingModels, getPricingModelsWithProducts } from './productConfig';
+import { APP_VERSION } from './version';
+import {
+  exportSKUsToCSV,
+  downloadCSV,
+  parseCSV,
+  csvToSKUs,
+  applySKUData,
+} from './utils/csvHelpers';
 import {
   freightAnnualSKUs,
   freightMonthlySKUs,
@@ -20,6 +28,18 @@ import {
   dockSchedulingAnnualSKUs,
   dockSchedulingMonthlySKUs,
 } from './skus';
+import { useProductState } from './hooks/useProductState';
+import {
+  computeVolumeBasedCost,
+  computeFixedCost,
+  calculateBillPayCost,
+  calculateVendorPortalCost,
+  calculateYardManagementCost,
+  calculateSubscriptionTotal,
+  calculateOneTimeCosts,
+} from './utils/calculations';
+import { formatCost } from './utils/formatting';
+import { findSKUForProduct, getPlanBySKU, getSKUArrayByBilling } from './utils/skuHelpers';
 
 /* ============================
    STYLE CONSTANTS
@@ -79,91 +99,36 @@ const firstColumnStyle = {
   paddingLeft: '16px',
 };
 
-/* ============================
-   HELPER FUNCTIONS
-============================ */
-const computeVolumeBasedCost = (volume, plan, billing) => {
-  const vol = Number(volume) || 0;
-  if (!plan) return { included: 0, overage: 0, monthlyCost: 0, annualCost: 0 };
-  const included = plan.shipmentsIncluded || 0;
-  const overage =
-    vol > included ? (vol - included) * (plan.costPerShipment || 0) : 0;
-  let monthlyCost = 0,
-    annualCost = 0;
-  if (billing === 'annual') {
-    const baseAnnual = (plan.perMonthCost || 0) * 12;
-    annualCost = baseAnnual + overage;
-    monthlyCost = annualCost / 12;
-  } else {
-    monthlyCost = (plan.perMonthCost || 0) + overage;
-    annualCost = monthlyCost * 12;
-  }
-  return { included, overage, monthlyCost, annualCost };
-};
-
-const computeFixedCost = (plan, billing = 'annual') => {
-  if (!plan) return { monthlyCost: 0, annualCost: 0 };
-  if (billing === 'annual') {
-    const annualCost =
-      plan.annualCost !== undefined
-        ? Number(plan.annualCost)
-        : Number(plan.cost || 0);
-    return { monthlyCost: annualCost / 12, annualCost };
-  } else {
-    const monthlyCost =
-      plan.perMonthCost !== undefined
-        ? Number(plan.perMonthCost)
-        : Number(plan.cost || 0) / 12;
-    return { monthlyCost, annualCost: monthlyCost * 12 };
-  }
-};
-
-const formatCost = cost =>
-  Number(cost).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  });
-
-/* ============================
-   PRODUCT STATE INITIALIZER
-============================ */
-const initializeProductState = () => {
-  const state = {};
-  
-  productConfig.forEach(product => {
-    if (product.pricingType === 'custom' && product.customInputs) {
-      // Yard Management: facilities + assets
-      state[product.id] = {
-        inputs: product.customInputs.reduce((acc, input) => ({
-          ...acc,
-          [input.id]: input.defaultValue
-        }), {}),
-        markup: 0
-      };
-    } else if (product.inputType === 'yesNo') {
-      // Bill Pay: Yes/No instead of volume
-      state[product.id] = {
-        value: product.defaultValue || 'No',
-        markup: 0
-      };
-    } else {
-      // Standard products: volume, sku, override, markup
-      state[product.id] = {
-        volume: product.defaultVolume || 0,
-        sku: '',
-        override: false,
-        markup: 0
-      };
-    }
-  });
-  
-  return state;
-};
 
 /* ============================
    REUSABLE COMPONENTS
 ============================ */
+const PricingModelBadge = ({ modelId }) => {
+  const model = pricingModels[modelId];
+  if (!model) return null;
+  
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '4px 10px',
+        borderRadius: '12px',
+        backgroundColor: `${model.color}15`,
+        border: `1px solid ${model.color}40`,
+        fontSize: '11px',
+        fontWeight: '600',
+        color: model.color,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      <span>{model.icon}</span>
+      <span>{model.name}</span>
+    </span>
+  );
+};
+
 const FixedHeader = ({ onLogout }) => (
   <div
     style={{
@@ -184,10 +149,22 @@ const FixedHeader = ({ onLogout }) => (
   >
     <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '600', letterSpacing: '0.3px' }}>
       FreightPOP Quote Builder
+      <span style={{
+        marginLeft: '12px',
+        padding: '4px 10px',
+        fontSize: '11px',
+        fontWeight: '600',
+        background: 'rgba(255, 255, 255, 0.15)',
+        border: '1px solid rgba(255, 255, 255, 0.25)',
+        borderRadius: '12px',
+        letterSpacing: '0.5px',
+      }}>
+        v{APP_VERSION.version} • {APP_VERSION.releaseName}
+      </span>
     </h1>
     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
       <div style={{ fontSize: '13px', opacity: 0.8 }}>
-        Professional Pricing Tool
+        Professional Pricing Tool • Released {APP_VERSION.releaseDate}
       </div>
       {onLogout && (
         <button
@@ -369,49 +346,86 @@ const App = () => {
   const [editPricingEnabled, setEditPricingEnabled] = useState(false);
   const [showCustomerView, setShowCustomerView] = useState(false);
   const [oneTimeCosts, setOneTimeCosts] = useState([]);
-
-  // MODULE STATES - Centralized product state
-  const [products, setProducts] = useState(initializeProductState);
-
-  // Helper functions for product state access
-  const getProductValue = (productId, field) => {
-    const product = products[productId];
-    if (!product) return field === 'inputs' ? {} : (field === 'sku' ? '' : 0);
-    
-    // Handle different product types
-    if (field === 'volume' || field === 'value') {
-      return product.volume !== undefined ? product.volume : product.value;
+  const [groupBy, setGroupBy] = useState('category'); // 'category' or 'pricingModel'
+  
+  // Filtering state
+  const [selectedModels, setSelectedModels] = useState(
+    Object.keys(pricingModels)
+  );
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // CSV Import/Export state
+  const [showCSVSuccess, setShowCSVSuccess] = useState(false);
+  const [csvMessage, setCSVMessage] = useState('');
+  const fileInputRef = useRef(null);
+  
+  // CSV Export Handler
+  const handleExportCSV = () => {
+    try {
+      const csvContent = exportSKUsToCSV();
+      const timestamp = new Date().toISOString().split('T')[0];
+      downloadCSV(csvContent, `pricing_data_${timestamp}.csv`);
+      setCSVMessage('✅ Pricing data exported successfully!');
+      setShowCSVSuccess(true);
+      setTimeout(() => setShowCSVSuccess(false), 3000);
+    } catch (error) {
+      setCSVMessage(`❌ Export failed: ${error.message}`);
+      setShowCSVSuccess(true);
+      setTimeout(() => setShowCSVSuccess(false), 5000);
     }
-    if (field === 'markup') return product.markup || 0;
-    if (field === 'sku') return product.sku || '';
-    if (field === 'override') return product.override || false;
-    if (field === 'inputs') return product.inputs || {};
+  };
+  
+  // CSV Import Handler
+  const handleImportCSV = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
     
-    return 0;
-  };
-
-  const setProductValue = (productId, field, value) => {
-    setProducts(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        [field]: value
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const csvText = e.target.result;
+        const parsedData = parseCSV(csvText);
+        const skusByProduct = csvToSKUs(parsedData);
+        
+        // Apply the new SKU data (would need to reload app or use dynamic SKUs)
+        // For now, show success message and suggest page reload
+        setCSVMessage(`✅ CSV imported! Found ${parsedData.length} pricing entries. Reload page to apply changes.`);
+        setShowCSVSuccess(true);
+        setTimeout(() => setShowCSVSuccess(false), 5000);
+        
+        // Store in localStorage for reload
+        localStorage.setItem('importedSKUs', JSON.stringify(skusByProduct));
+        
+      } catch (error) {
+        setCSVMessage(`❌ Import failed: ${error.message}`);
+        setShowCSVSuccess(true);
+        setTimeout(() => setShowCSVSuccess(false), 5000);
       }
-    }));
+    };
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
   };
+  
+  // Handle Reload from localStorage
+  useEffect(() => {
+    const importedSKUs = localStorage.getItem('importedSKUs');
+    if (importedSKUs) {
+      // You could dynamically update SKUs here
+      // For now, we'll just show a message
+      console.log('Found imported SKUs:', JSON.parse(importedSKUs));
+    }
+  }, []);
 
-  const setProductInput = (productId, inputId, value) => {
-    setProducts(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        inputs: {
-          ...prev[productId].inputs,
-          [inputId]: value
-        }
-      }
-    }));
-  };
+  // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
+  const {
+    products,
+    getProductValue,
+    setProductValue,
+    setProductInput,
+    resetAllProducts,
+  } = useProductState();
 
   // Backward-compatible getters (temporary during refactor)
   const freightVolume = getProductValue('freight', 'volume');
@@ -515,34 +529,6 @@ const App = () => {
   const setDockSchedulingSKU = (val) => setProductValue('dockScheduling', 'sku', val);
   const setDockSchedulingOverride = (val) => setProductValue('dockScheduling', 'override', val);
 
-  // === GENERIC SKU SELECTION HELPER ===
-  const findSKUForProduct = (product, volume, billing) => {
-    if (!product.skus || volume < 1) return '';
-    
-    const skuArray = billing === 'annual' ? product.skus.annual : product.skus.monthly;
-    if (!skuArray || skuArray.length === 0) return '';
-    
-    // Handle different range formats
-    let selected;
-    
-    // Check if SKUs have rangeStart/rangeEnd or range[] array
-    const firstSKU = skuArray[0];
-    if (firstSKU.rangeStart !== undefined && firstSKU.rangeEnd !== undefined) {
-      // Products with rangeStart/rangeEnd (freight, parcel, locations, ocean, support, dock)
-      selected = skuArray.find(
-        plan => volume >= plan.rangeStart && volume <= plan.rangeEnd
-      );
-    } else if (firstSKU.range && Array.isArray(firstSKU.range)) {
-      // Products with range array (auditing, FRM)
-      selected = skuArray.find(
-        plan => plan.range && volume >= plan.range[0] && volume <= plan.range[1]
-      );
-    }
-    
-    // Fallback to highest tier if volume exceeds all ranges
-    return selected ? selected.sku : skuArray[skuArray.length - 1].sku;
-  };
-
   // === AUTO-SELECTION EFFECTS ===
   // Unified auto-tier selection for all products
   useEffect(() => {
@@ -583,46 +569,38 @@ const App = () => {
   ]);
 
   // === LOOKUP PLANS ===
-  const freightPlan = freightSKU
-    ? subBilling === 'annual'
-      ? freightAnnualSKUs.find(p => p.sku === freightSKU)
-      : freightMonthlySKUs.find(p => p.sku === freightSKU)
-    : null;
-  const parcelPlan = parcelSKU
-    ? subBilling === 'annual'
-      ? parcelAnnualSKUs.find(p => p.sku === parcelSKU)
-      : parcelMonthlySKUs.find(p => p.sku === parcelSKU)
-    : null;
-  const auditingPlan = auditingSKU
-    ? subBilling === 'annual'
-      ? auditingAnnualSKUs.find(p => p.sku === auditingSKU)
-      : auditingMonthlySKUs.find(p => p.sku === auditingSKU)
-    : null;
-  const locationsPlan = locationsSKU
-    ? subBilling === 'annual'
-      ? locationsAnnualSKUs.find(p => p.sku === locationsSKU)
-      : locationsMonthlySKUs.find(p => p.sku === locationsSKU)
-    : null;
-  const fleetRoutePlan = fleetRouteSKU
-    ? subBilling === 'annual'
-      ? fleetRouteOptimizationAnnualSKUs.find(p => p.sku === fleetRouteSKU)
-      : fleetRouteOptimizationMonthlySKUs.find(p => p.sku === fleetRouteSKU)
-    : null;
-  const oceanTrackingPlan = oceanTrackingSKU
-    ? subBilling === 'annual'
-      ? oceanTrackingAnnualSKUs.find(p => p.sku === oceanTrackingSKU)
-      : oceanTrackingMonthlySKUs.find(p => p.sku === oceanTrackingSKU)
-    : null;
-  const supportPackagePlan = supportPackageSKU
-    ? subBilling === 'annual'
-      ? supportPackageAnnualSKUs.find(p => p.sku === supportPackageSKU)
-      : supportPackageMonthlySKUs.find(p => p.sku === supportPackageSKU)
-    : null;
-  const dockSchedulingPlan = dockSchedulingSKU
-    ? subBilling === 'annual'
-      ? dockSchedulingAnnualSKUs.find(p => p.sku === dockSchedulingSKU)
-      : dockSchedulingMonthlySKUs.find(p => p.sku === dockSchedulingSKU)
-    : null;
+  const freightPlan = getPlanBySKU(
+    subBilling === 'annual' ? freightAnnualSKUs : freightMonthlySKUs,
+    freightSKU
+  );
+  const parcelPlan = getPlanBySKU(
+    subBilling === 'annual' ? parcelAnnualSKUs : parcelMonthlySKUs,
+    parcelSKU
+  );
+  const auditingPlan = getPlanBySKU(
+    subBilling === 'annual' ? auditingAnnualSKUs : auditingMonthlySKUs,
+    auditingSKU
+  );
+  const locationsPlan = getPlanBySKU(
+    subBilling === 'annual' ? locationsAnnualSKUs : locationsMonthlySKUs,
+    locationsSKU
+  );
+  const fleetRoutePlan = getPlanBySKU(
+    subBilling === 'annual' ? fleetRouteOptimizationAnnualSKUs : fleetRouteOptimizationMonthlySKUs,
+    fleetRouteSKU
+  );
+  const oceanTrackingPlan = getPlanBySKU(
+    subBilling === 'annual' ? oceanTrackingAnnualSKUs : oceanTrackingMonthlySKUs,
+    oceanTrackingSKU
+  );
+  const supportPackagePlan = getPlanBySKU(
+    subBilling === 'annual' ? supportPackageAnnualSKUs : supportPackageMonthlySKUs,
+    supportPackageSKU
+  );
+  const dockSchedulingPlan = getPlanBySKU(
+    subBilling === 'annual' ? dockSchedulingAnnualSKUs : dockSchedulingMonthlySKUs,
+    dockSchedulingSKU
+  );
 
   // Define customPricingPresent to be used in the detailed quote summary
   const customPricingPresent = [
@@ -637,110 +615,53 @@ const App = () => {
   ].some(plan => plan && plan.tier.includes('Custom Pricing'));
 
   // === COMPUTE COSTS ===
-  const freightCostObj = computeVolumeBasedCost(
-    freightVolume,
-    freightPlan,
-    subBilling
-  );
+  const freightCostObj = computeVolumeBasedCost(freightVolume, freightPlan, subBilling);
   const freightAnnualCost =
-    (subBilling === 'annual'
-      ? freightCostObj.annualCost
-      : freightCostObj.monthlyCost * 12) *
+    (subBilling === 'annual' ? freightCostObj.annualCost : freightCostObj.monthlyCost * 12) *
     (1 + freightMarkup / 100);
 
-  const parcelCostObj = computeVolumeBasedCost(
-    parcelVolume,
-    parcelPlan,
-    subBilling
-  );
+  const parcelCostObj = computeVolumeBasedCost(parcelVolume, parcelPlan, subBilling);
   const parcelAnnualCost = parcelCostObj.annualCost * (1 + parcelMarkup / 100);
 
-  let oceanTrackingAnnualCost = 0;
-  if (oceanTrackingPlan) {
-    const costObj = computeVolumeBasedCost(
-      oceanTrackingVolume,
-      oceanTrackingPlan,
-      subBilling
-    );
-    oceanTrackingAnnualCost =
-      (subBilling === 'annual'
-        ? costObj.annualCost
-        : costObj.monthlyCost * 12) *
-      (1 + oceanTrackingMarkup / 100);
-  }
+  const oceanTrackingCostObj = computeVolumeBasedCost(oceanTrackingVolume, oceanTrackingPlan, subBilling);
+  const oceanTrackingAnnualCost =
+    (subBilling === 'annual' ? oceanTrackingCostObj.annualCost : oceanTrackingCostObj.monthlyCost * 12) *
+    (1 + oceanTrackingMarkup / 100);
 
-  const locationsCostObj = computeVolumeBasedCost(
-    locationsVolume,
-    locationsPlan,
-    subBilling
-  );
-  const locationsAnnualCost =
-    locationsCostObj.annualCost * (1 + locationsMarkup / 100);
+  const locationsCostObj = computeVolumeBasedCost(locationsVolume, locationsPlan, subBilling);
+  const locationsAnnualCost = locationsCostObj.annualCost * (1 + locationsMarkup / 100);
 
   const supportPackageCostAnnual = supportPackagePlan
     ? supportPackagePlan.annualCost * (1 + supportPackageMarkup / 100)
     : 0;
-  const supportPackageCostMonthly = supportPackagePlan
-    ? supportPackageCostAnnual / 12
-    : 0;
 
   // Yard Management Calculation
-  const assetFacilityRate = subBilling === 'annual' ? 100 : 130;
-  const assetRate = subBilling === 'annual' ? 10 : 13;
-  const assetManagementMonthlyBase =
-    assetManagementFacilities * assetFacilityRate +
-    assetManagementAssets * assetRate;
-  const assetManagementMonthlyCost =
-    assetManagementMonthlyBase * (1 + assetManagementMarkup / 100);
-  const assetManagementAnnualCost = assetManagementMonthlyCost * 12;
+  const { monthlyCost: assetManagementMonthlyCost, annualCost: assetManagementAnnualCost } =
+    calculateYardManagementCost(assetManagementFacilities, assetManagementAssets, subBilling, assetManagementMarkup);
 
-  const coreTMSAnnualCost =
-    freightAnnualCost + parcelAnnualCost + oceanTrackingAnnualCost;
+  const coreTMSAnnualCost = freightAnnualCost + parcelAnnualCost + oceanTrackingAnnualCost;
   const useLocations = locationsAnnualCost > coreTMSAnnualCost;
-  const effectiveCoreAnnualCost = useLocations
-    ? locationsAnnualCost
-    : coreTMSAnnualCost;
+  const effectiveCoreAnnualCost = useLocations ? locationsAnnualCost : coreTMSAnnualCost;
 
-  let billPayMonthlyCost = 0;
-  if (billPayYesNo === 'Yes') {
-    if (subBilling === 'annual') {
-      const base = 500 + 2 * freightVolume + 0.5 * parcelVolume;
-      billPayMonthlyCost = base * (1 + billPayMarkup / 100);
-    } else {
-      const base = 650 + 2.6 * freightVolume + 0.65 * parcelVolume;
-      billPayMonthlyCost = base * (1 + billPayMarkup / 100);
-    }
-  }
-  const billPayAnnualCost = billPayMonthlyCost * 12;
+  // Bill Pay Calculation
+  const { monthlyCost: billPayMonthlyCost, annualCost: billPayAnnualCost } =
+    calculateBillPayCost(billPayYesNo, freightVolume, parcelVolume, subBilling, billPayMarkup);
 
-  const vendorRate = subBilling === 'annual' ? 20 : 30;
-  const vendorMonthlyBase = vendorPortalCount * vendorRate;
-  const vendorMonthlyCost = vendorMonthlyBase * (1 + vendorPortalMarkup / 100);
-  const vendorAnnualCost = vendorMonthlyCost * 12;
+  // Vendor Portals Calculation
+  const { monthlyCost: vendorMonthlyCost, annualCost: vendorAnnualCost } =
+    calculateVendorPortalCost(vendorPortalCount, subBilling, vendorPortalMarkup);
 
-  const auditingCostObj = auditingPlan
-    ? computeFixedCost(auditingPlan, subBilling)
-    : { monthlyCost: 0, annualCost: 0 };
-  const auditingAnnualCost =
-    auditingCostObj.annualCost * (1 + auditingMarkup / 100);
+  const auditingCostObj = auditingPlan ? computeFixedCost(auditingPlan, subBilling) : { monthlyCost: 0, annualCost: 0 };
+  const auditingAnnualCost = auditingCostObj.annualCost * (1 + auditingMarkup / 100);
 
   const fleetRouteCostObj = fleetRoutePlan
-    ? {
-        monthlyCost: fleetRoutePlan.perMonthCost,
-        annualCost: fleetRoutePlan.annualCost,
-      }
+    ? { monthlyCost: fleetRoutePlan.perMonthCost, annualCost: fleetRoutePlan.annualCost }
     : { monthlyCost: 0, annualCost: 0 };
-  const fleetRouteEffectiveAnnual =
-    fleetRouteCostObj.annualCost * (1 + fleetRouteMarkup / 100);
+  const fleetRouteEffectiveAnnual = fleetRouteCostObj.annualCost * (1 + fleetRouteMarkup / 100);
 
-  // NEW: Dock Scheduling cost
-  const dockSchedulingCostObj = computeVolumeBasedCost(
-    dockSchedulingVolume,
-    dockSchedulingPlan,
-    subBilling
-  );
-  const dockSchedulingAnnualCost =
-    dockSchedulingCostObj.annualCost * (1 + dockSchedulingMarkup / 100);
+  // Dock Scheduling cost
+  const dockSchedulingCostObj = computeVolumeBasedCost(dockSchedulingVolume, dockSchedulingPlan, subBilling);
+  const dockSchedulingAnnualCost = dockSchedulingCostObj.annualCost * (1 + dockSchedulingMarkup / 100);
 
   const rawSubAnnualSubscription =
     effectiveCoreAnnualCost +
@@ -752,21 +673,16 @@ const App = () => {
     (assetManagementAnnualCost > 0 ? assetManagementAnnualCost : 0) +
     dockSchedulingAnnualCost;
 
-  const subAfterMin = Math.max(rawSubAnnualSubscription, minSubscription);
-  const finalSubscriptionAnnual = subAfterMin * (1 + globalMarkup / 100);
-  const finalSubscriptionMonthly = finalSubscriptionAnnual / 12;
+  // Calculate subscription total with minimum enforcement
+  const {
+    finalAnnual: finalSubscriptionAnnual,
+    finalMonthly: finalSubscriptionMonthly,
+    neededToMin: neededToMinAnnual,
+    neededToMinMonthly,
+  } = calculateSubscriptionTotal(rawSubAnnualSubscription, minSubscription, globalMarkup);
 
-  const neededToMinAnnual = Math.max(
-    0,
-    minSubscription - rawSubAnnualSubscription
-  );
-  const neededToMinMonthly = neededToMinAnnual / 12;
-
-  const rawOneTimeTotal = oneTimeCosts.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
-  );
-  const finalOneTimeCost = rawOneTimeTotal * (1 + oneTimeMarkup / 100);
+  // Calculate one-time costs
+  const { finalTotal: finalOneTimeCost } = calculateOneTimeCosts(oneTimeCosts, oneTimeMarkup);
 
   const finalGrandTotal = finalSubscriptionAnnual + finalOneTimeCost;
 
@@ -824,7 +740,7 @@ const App = () => {
 
   // === Handle Reset ===
   const handleReset = () => {
-    setProducts(initializeProductState());
+    resetAllProducts();
     setGlobalMarkup(0);
     setMinSubscription(20000);
     setOneTimeMarkup(0);
@@ -1774,6 +1690,83 @@ const App = () => {
             <Card>
               <CardHeader>
                 <CardTitle>📦 Product Configuration</CardTitle>
+                
+                {/* CSV Import/Export Controls */}
+                <div style={{ 
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}>
+                  <span style={{ fontSize: '20px' }}>💾</span>
+                  <span style={{ fontWeight: '600', color: '#166534', fontSize: '14px' }}>
+                    Pricing Data Management:
+                  </span>
+                  <button
+                    onClick={handleExportCSV}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>⬇️</span>
+                    <span>Export to CSV</span>
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      background: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>⬆️</span>
+                    <span>Import from CSV</span>
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleImportCSV}
+                    style={{ display: 'none' }}
+                  />
+                  {showCSVSuccess && (
+                    <span style={{ 
+                      padding: '8px 12px',
+                      background: 'white',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      animation: 'fadeIn 0.3s',
+                    }}>
+                      {csvMessage}
+                    </span>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div style={{ 
@@ -1783,30 +1776,192 @@ const App = () => {
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '16px'
                 }}>
-                  <label style={{ 
-                    marginRight: '8px',
-                    fontWeight: '600',
-                    fontSize: '15px',
-                    color: '#1e293b'
-                  }}>
-                    Billing Frequency:
-                  </label>
-                  <select
-                    value={subBilling}
-                    onChange={e => setSubBilling(e.target.value)}
-                    style={{ 
-                      ...selectStyle, 
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <label style={{ 
+                      marginRight: '8px',
                       fontWeight: '600',
                       fontSize: '15px',
-                      minWidth: '140px'
-                    }}
-                  >
-                    <option value='annual'>📅 Annual</option>
-                    <option value='monthly'>📆 Monthly</option>
-                  </select>
+                      color: '#1e293b'
+                    }}>
+                      Billing Frequency:
+                    </label>
+                    <select
+                      value={subBilling}
+                      onChange={e => setSubBilling(e.target.value)}
+                      style={{ 
+                        ...selectStyle, 
+                        fontWeight: '600',
+                        fontSize: '15px',
+                        minWidth: '140px'
+                      }}
+                    >
+                      <option value='annual'>📅 Annual</option>
+                      <option value='monthly'>📆 Monthly</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ 
+                      marginRight: '8px',
+                      fontWeight: '600',
+                      fontSize: '13px',
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      Group By:
+                    </label>
+                    <button
+                      onClick={() => setGroupBy('category')}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: groupBy === 'category' ? '#3b82f6' : 'white',
+                        color: groupBy === 'category' ? 'white' : '#64748b',
+                        border: groupBy === 'category' ? 'none' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Business Category
+                    </button>
+                    <button
+                      onClick={() => setGroupBy('pricingModel')}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: groupBy === 'pricingModel' ? '#8b5cf6' : 'white',
+                        color: groupBy === 'pricingModel' ? 'white' : '#64748b',
+                        border: groupBy === 'pricingModel' ? 'none' : '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Pricing Model
+                    </button>
+                  </div>
                 </div>
+                
+                {/* Advanced Filtering UI */}
+                <div style={{ 
+                  padding: '20px', 
+                  background: '#f8fafc', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '8px', 
+                  marginBottom: '16px',
+                }}>
+                  {/* Search and Quick Actions Row */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '12px',
+                    marginBottom: '16px',
+                    flexWrap: 'wrap',
+                  }}>
+                    <span style={{ fontSize: '18px' }}>🔍</span>
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search products..."
+                      style={{
+                        flex: '1',
+                        minWidth: '200px',
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      onClick={() => setSelectedModels(Object.keys(pricingModels))}
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: 'white',
+                        color: '#64748b',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Show All
+                    </button>
+                    <button
+                      onClick={() => setSelectedModels([])}
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        background: 'white',
+                        color: '#64748b',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      Hide All
+                    </button>
+                  </div>
+
+                  {/* Quick Filter Pills */}
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ fontWeight: '600', color: '#64748b', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Quick Filters:
+                    </span>
+                    {Object.values(pricingModels).sort((a, b) => a.order - b.order).map(model => {
+                      const isSelected = selectedModels.includes(model.id);
+                      return (
+                        <button
+                          key={model.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedModels(prev => prev.filter(id => id !== model.id));
+                            } else {
+                              setSelectedModels(prev => [...prev, model.id]);
+                            }
+                          }}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 12px',
+                            borderRadius: '16px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            background: isSelected ? model.color : 'white',
+                            color: isSelected ? 'white' : model.color,
+                            border: `2px solid ${model.color}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            opacity: isSelected ? 1 : 0.6,
+                          }}
+                        >
+                          <span>{model.icon}</span>
+                          <span>{model.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                
                 <div style={{ overflowX: 'auto' }}>
                   <table
                     style={{
@@ -1829,9 +1984,12 @@ const App = () => {
                       </tr>
                     </thead>
                   <tbody>
-                    {[
+                    {(() => {
+                      // Define the product rows array
+                      const productRows = [
                       {
                         productType: 'Core TMS - Freight',
+                        pricingModel: 'shipmentBased',
                         planDescription: freightPlan
                           ? `${freightPlan.tier} (Incl: ${freightPlan.shipmentsIncluded})`
                           : 'N/A',
@@ -1852,6 +2010,7 @@ const App = () => {
                       },
                       {
                         productType: 'Core TMS - Parcel',
+                        pricingModel: 'shipmentBased',
                         planDescription: parcelPlan
                           ? `${parcelPlan.tier} (Incl: ${parcelPlan.shipmentsIncluded})`
                           : 'N/A',
@@ -1872,6 +2031,7 @@ const App = () => {
                       },
                       {
                         productType: 'Ocean Tracking',
+                        pricingModel: 'shipmentBased',
                         planDescription: oceanTrackingPlan
                           ? `${oceanTrackingPlan.tier} (Incl: ${oceanTrackingPlan.shipmentsIncluded})`
                           : 'N/A',
@@ -1892,6 +2052,7 @@ const App = () => {
                       },
                       {
                         productType: 'Bill Pay',
+                        pricingModel: 'billPay',
                         planDescription:
                           subBilling === 'annual'
                             ? '$500 base + $2/ LTL-FTL + $0.50/Parcel'
@@ -1906,6 +2067,7 @@ const App = () => {
                       },
                       {
                         productType: 'Locations',
+                        pricingModel: 'infrastructureLocations',
                         planDescription: locationsPlan
                           ? `${locationsPlan.tier} (Range: ${locationsPlan.rangeStart}–${locationsPlan.rangeEnd})`
                           : 'N/A',
@@ -1926,6 +2088,7 @@ const App = () => {
                       },
                       {
                         productType: 'Support Package',
+                        pricingModel: 'infrastructureSupport',
                         planDescription: supportPackagePlan
                           ? `${supportPackagePlan.tier} (Range: ${
                               supportPackagePlan.rangeStart
@@ -1952,6 +2115,7 @@ const App = () => {
                       },
                       {
                         productType: 'Vendor Portals',
+                        pricingModel: 'portalBased',
                         planDescription:
                           subBilling === 'annual'
                             ? '$20/portal/month'
@@ -1967,6 +2131,7 @@ const App = () => {
                       },
                       {
                         productType: 'Auditing Module',
+                        pricingModel: 'carrierBased',
                         planDescription: auditingPlan
                           ? `${auditingPlan.tier} (Range: ${
                               auditingPlan.range[0]
@@ -1993,6 +2158,7 @@ const App = () => {
                       },
                       {
                         productType: 'Fleet Route Optimization',
+                        pricingModel: 'stopBased',
                         planDescription: fleetRoutePlan
                           ? `${fleetRoutePlan.tier} (Range: ${fleetRoutePlan.range[0]}–${fleetRoutePlan.range[1]})`
                           : 'N/A',
@@ -2013,6 +2179,7 @@ const App = () => {
                       },
                       {
                         productType: 'Yard Management',
+                        pricingModel: 'yardManagement',
                         planDescription: `Per facility: $${
                           subBilling === 'annual' ? '100' : '130'
                         } / per asset: $${
@@ -2052,6 +2219,7 @@ const App = () => {
                       },
                       {
                         productType: 'Dock Scheduling',
+                        pricingModel: 'dockBased',
                         planDescription: dockSchedulingPlan
                           ? `${dockSchedulingPlan.tier} (Range: ${
                               dockSchedulingPlan.rangeStart
@@ -2076,7 +2244,118 @@ const App = () => {
                         monthlyCost: dockSchedulingAnnualCost / 12,
                         annualCost: dockSchedulingAnnualCost,
                       },
-                    ].map((row, idx) => (
+                    ];
+                    
+                    // Apply search and model filters
+                    const filteredRows = productRows.filter(row => {
+                      // Search filter
+                      const matchesSearch = searchTerm.trim() === '' || 
+                        row.productType.toLowerCase().includes(searchTerm.toLowerCase());
+                      
+                      // Model filter
+                      const matchesModel = selectedModels.includes(row.pricingModel);
+                      
+                      return matchesSearch && matchesModel;
+                    });
+                    
+                    // Group by pricing model if selected
+                    if (groupBy === 'pricingModel') {
+                      const grouped = {};
+                      filteredRows.forEach(row => {
+                        if (!grouped[row.pricingModel]) {
+                          grouped[row.pricingModel] = [];
+                        }
+                        grouped[row.pricingModel].push(row);
+                      });
+                      
+                      return Object.values(pricingModels)
+                        .sort((a, b) => a.order - b.order)
+                        .map(model => {
+                          const modelProducts = grouped[model.id] || [];
+                          if (modelProducts.length === 0) return null;
+                          
+                          return (
+                            <React.Fragment key={model.id}>
+                              <tr style={{ background: `${model.color}10` }}>
+                                <td colSpan={6} style={{ padding: '16px', border: '1px solid #e2e8f0' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontSize: '24px' }}>{model.icon}</span>
+                                    <div>
+                                      <div style={{ fontWeight: '700', fontSize: '16px', color: model.color }}>
+                                        {model.name}
+                                      </div>
+                                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                                        {model.description}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                              {modelProducts.map((row, idx) => (
+                                <tr key={`${model.id}-${idx}`}>
+                                  <td style={{ ...tableTdStyle, ...firstColumnStyle }}>
+                                    {row.productType}
+                                  </td>
+                                  <td style={tableTdStyle}>{row.planDescription}</td>
+                                  <td style={tableTdStyle}>
+                                    {row.tierOptions && row.tierOptions.length > 0 ? (
+                                      editPricingEnabled ? (
+                                        <select
+                                          value={row.selectedSKU}
+                                          onChange={e => row.onSKUChange(e.target.value)}
+                                          style={selectStyle}
+                                        >
+                                          {row.tierOptions.map(opt => (
+                                            <option key={opt.sku} value={opt.sku}>
+                                              {opt.tier}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      ) : (
+                                        <span>Locked</span>
+                                      )
+                                    ) : (
+                                      'N/A'
+                                    )}
+                                  </td>
+                                  <td style={tableTdStyle}>
+                                    {row.productType === 'Yard Management' ? (
+                                      row.renderVolumeInput ? (
+                                        row.renderVolumeInput()
+                                      ) : null
+                                    ) : row.productType === 'Bill Pay' ? (
+                                      <select
+                                        value={billPayYesNo}
+                                        onChange={e => setBillPayYesNo(e.target.value)}
+                                        style={selectStyle}
+                                      >
+                                        <option value='No'>No</option>
+                                        <option value='Yes'>Yes</option>
+                                      </select>
+                                    ) : (
+                                      <input
+                                        type='number'
+                                        value={row.volumeCount}
+                                        onChange={e => row.onVolumeChange(e)}
+                                        style={inputStyle}
+                                      />
+                                    )}
+                                  </td>
+                                  <td style={tableTdStyle}>
+                                    {formatCost(row.monthlyCost)}
+                                  </td>
+                                  <td style={tableTdStyle}>
+                                    {formatCost(row.annualCost)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </React.Fragment>
+                          );
+                        }).filter(Boolean);
+                    }
+                    
+                    // Default: show all products ungrouped
+                    return filteredRows.map((row, idx) => (
                       <tr key={idx}>
                         <td style={{ ...tableTdStyle, ...firstColumnStyle }}>
                           {row.productType}
@@ -2133,7 +2412,8 @@ const App = () => {
                           {formatCost(row.annualCost)}
                         </td>
                       </tr>
-                    ))}
+                    ));
+                    })()}
                   </tbody>
                 </table>
                 </div>

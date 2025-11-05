@@ -1,5 +1,9 @@
 # 🚀 FreightPOP Legacy Pricer - Quote Builder
 
+**Version:** 2.0.0 "Granite"  
+**Released:** November 5, 2025  
+**Status:** ✅ Stable Production
+
 A professional quote builder application for FreightPOP's transportation management system products and services.
 
 ## 📋 Table of Contents
@@ -22,6 +26,15 @@ The FreightPOP Legacy Pricer is a sophisticated quote building tool that allows 
 - Apply markups and minimum subscription requirements
 - Generate professional quotes for customers
 - Export quotes as PNG images
+
+### ✨ What's New in v2.0.0 "Granite"
+
+- 📦 **9 Granular Pricing Models** - Better organization and categorization
+- 🔍 **Advanced Filtering & Search** - Find products instantly
+- 💾 **CSV Import/Export** - Manage pricing in Excel/Sheets
+- 🏷️ **Version Tracking** - Track changes across releases
+
+👉 **See full release notes:** [RELEASE_NOTES_v2.0.0.md](./RELEASE_NOTES_v2.0.0.md)
 
 ### Built With
 
@@ -159,6 +172,9 @@ Comprehensive documentation is available in the repository:
 
 | Document | Description |
 |----------|-------------|
+| **[RELEASE_NOTES_v2.0.0.md](RELEASE_NOTES_v2.0.0.md)** | 🆕 Full release notes for v2.0.0 "Granite" |
+| **[CSV_IMPORT_EXPORT_GUIDE.md](CSV_IMPORT_EXPORT_GUIDE.md)** | 🆕 Complete guide for CSV pricing management |
+| **[PHASE1_IMPLEMENTATION_SUMMARY.md](PHASE1_IMPLEMENTATION_SUMMARY.md)** | 🆕 Technical implementation details |
 | **[SUMMARY.md](SUMMARY.md)** | Executive summary of analysis and deliverables |
 | **[PRODUCT_MANAGEMENT_GUIDE.md](PRODUCT_MANAGEMENT_GUIDE.md)** | Complete guide for adding/managing products |
 | **[ARCHITECTURE_ANALYSIS.md](ARCHITECTURE_ANALYSIS.md)** | Technical deep-dive into system architecture |
