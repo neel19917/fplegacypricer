@@ -103,7 +103,7 @@
           "perMonthCost": 10338,
           "costPerShipment": 1.03,
           "rangeStart": 6501,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 124056
         }
       ],
@@ -205,7 +205,7 @@
           "perMonthCost": 13440,
           "costPerShipment": 1.34,
           "rangeStart": 6501,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 161280
         }
       ]
@@ -291,7 +291,7 @@
           "perMonthCost": 3000,
           "costPerShipment": 0.03,
           "rangeStart": 50001,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 36000
         }
       ],
@@ -373,7 +373,7 @@
           "perMonthCost": 4080,
           "costPerShipment": 0.04,
           "rangeStart": 50001,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 48960
         }
       ]
@@ -489,7 +489,7 @@
           "perMonthCost": 15000,
           "costPerShipment": 1.5,
           "rangeStart": 6501,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 180000
         }
       ],
@@ -601,7 +601,7 @@
           "perMonthCost": 19500,
           "costPerShipment": 1.95,
           "rangeStart": 6501,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 234000
         }
       ]
@@ -646,7 +646,7 @@
           "sku": "FP1055",
           "tier": "Enterprise",
           "rangeStart": 25,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 5416.67,
           "annualCost": 65000
         }
@@ -688,7 +688,7 @@
           "sku": "FP1076",
           "tier": "Enterprise",
           "rangeStart": 25,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 7041.67,
           "annualCost": 84500
         }
@@ -734,7 +734,7 @@
           "sku": "FP1065",
           "tier": "Custom Pricing Needed",
           "rangeStart": 101,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 1295.83,
           "annualCost": 15550
         }
@@ -776,7 +776,7 @@
           "sku": "FP1081",
           "tier": "Custom Pricing Needed",
           "rangeStart": 101,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 1684.58,
           "annualCost": 20215
         }
@@ -814,7 +814,7 @@
           "sku": "FP1063",
           "tier": "Enterprise",
           "rangeStart": 21,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 833.33,
           "annualCost": 10000
         }
@@ -848,7 +848,7 @@
           "sku": "FP1063",
           "tier": "Enterprise",
           "rangeStart": 21,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 833.33,
           "annualCost": 10000
         }
@@ -865,7 +865,7 @@
           "perMonthCost": 20,
           "costPerShipment": 20,
           "rangeStart": 1,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 240
         }
       ],
@@ -877,7 +877,7 @@
           "perMonthCost": 20,
           "costPerShipment": 20,
           "rangeStart": 1,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "annualCost": 240
         }
       ]
@@ -914,7 +914,7 @@
           "sku": "FP1100",
           "tier": "Enterprise",
           "rangeStart": 10,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 2000,
           "annualCost": 24000
         }
@@ -948,7 +948,7 @@
           "sku": "FP1104",
           "tier": "Enterprise",
           "rangeStart": 10,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 2600,
           "annualCost": 31200
         }
@@ -994,7 +994,7 @@
           "sku": "FP1091",
           "tier": "Enterprise 2",
           "rangeStart": 201,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 9750,
           "annualCost": 117000
         }
@@ -1036,7 +1036,7 @@
           "sku": "FP1096",
           "tier": "Enterprise 2",
           "rangeStart": 201,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 12675,
           "annualCost": 152100
         }
@@ -1058,10 +1058,89 @@
           "sku": "WMS1002",
           "tier": "Multi-Warehouse",
           "rangeStart": 2,
-          "rangeEnd": Infinity,
+          "rangeEnd": 999999,
           "perMonthCost": 1000,
           "annualCost": 12000,
           "note": "Base $12,000 + $6,000 per additional warehouse"
+        }
+      ],
+      "monthly": []
+    },
+    "aiAgent": {
+      "name": "FreightPOP AI Agent",
+      "pricingType": "tiered",
+      "annual": [
+        {
+          "sku": "AI-AGENT-001",
+          "tier": "Tier 1",
+          "shipmentsIncluded": 250,
+          "rangeStart": 0,
+          "rangeEnd": 250,
+          "annualCost": 3000,
+          "tokensIncluded": 50000000
+        },
+        {
+          "sku": "AI-AGENT-002",
+          "tier": "Tier 2",
+          "shipmentsIncluded": 500,
+          "rangeStart": 251,
+          "rangeEnd": 500,
+          "annualCost": 6000,
+          "tokensIncluded": 100000000
+        },
+        {
+          "sku": "AI-AGENT-003",
+          "tier": "Tier 3",
+          "shipmentsIncluded": 1000,
+          "rangeStart": 501,
+          "rangeEnd": 1000,
+          "annualCost": 12000,
+          "tokensIncluded": 200000000
+        },
+        {
+          "sku": "AI-AGENT-004",
+          "tier": "Tier 4",
+          "shipmentsIncluded": 1500,
+          "rangeStart": 1001,
+          "rangeEnd": 1500,
+          "annualCost": 18000,
+          "tokensIncluded": 300000000
+        },
+        {
+          "sku": "AI-AGENT-005",
+          "tier": "Tier 5",
+          "shipmentsIncluded": 2000,
+          "rangeStart": 1501,
+          "rangeEnd": 2000,
+          "annualCost": 24000,
+          "tokensIncluded": 400000000
+        },
+        {
+          "sku": "AI-AGENT-006",
+          "tier": "Tier 6",
+          "shipmentsIncluded": 3000,
+          "rangeStart": 2001,
+          "rangeEnd": 3000,
+          "annualCost": 36000,
+          "tokensIncluded": 600000000
+        },
+        {
+          "sku": "AI-AGENT-007",
+          "tier": "Tier 7",
+          "shipmentsIncluded": 4000,
+          "rangeStart": 3001,
+          "rangeEnd": 4000,
+          "annualCost": 48000,
+          "tokensIncluded": 800000000
+        },
+        {
+          "sku": "AI-AGENT-008",
+          "tier": "Tier 8",
+          "shipmentsIncluded": 5000,
+          "rangeStart": 4001,
+          "rangeEnd": 5000,
+          "annualCost": 60000,
+          "tokensIncluded": 1000000000
         }
       ],
       "monthly": []

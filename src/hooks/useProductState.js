@@ -26,6 +26,18 @@ export const useProductState = () => {
           value: product.defaultValue || 'No',
           markup: 0
         };
+      } else if (product.id === 'aiAgent') {
+        // AI Agent: Special handling for checkbox-based product selection
+        state[product.id] = {
+          volume: product.defaultVolume || 0,
+          sku: '',
+          override: false,
+          markup: 0,
+          enabled: false,
+          // Note: includesFreight, includesParcel, includesOcean are intentionally
+          // NOT initialized here - they need to remain undefined until user interaction
+          // so the auto-check logic in App.jsx works correctly
+        };
       } else {
         // Standard products: volume, sku, override, markup
         state[product.id] = {
@@ -45,12 +57,18 @@ export const useProductState = () => {
   /**
    * Get a specific value from a product's state
    * @param {string} productId - The product ID
-   * @param {string} field - The field to retrieve (volume, markup, sku, override, inputs, value)
-   * @returns {*} The field value or default
+   * @param {string} field - The field to retrieve (volume, markup, sku, override, inputs, value, includesFreight, includesParcel, includesOcean, enabled)
+   * @returns {*} The field value or default (returns undefined for unset checkbox fields)
    */
   const getProductValue = (productId, field) => {
     const product = products[productId];
-    if (!product) return field === 'inputs' ? {} : (field === 'sku' ? '' : 0);
+    if (!product) {
+      // Return appropriate defaults for missing products
+      if (field === 'inputs') return {};
+      if (field === 'sku') return '';
+      if (field === 'override' || field === 'enabled') return false;
+      return 0;
+    }
     
     // Handle different product types
     if (field === 'volume' || field === 'value') {
@@ -60,8 +78,20 @@ export const useProductState = () => {
     if (field === 'sku') return product.sku || '';
     if (field === 'override') return product.override || false;
     if (field === 'inputs') return product.inputs || {};
+    if (field === 'enabled') return product.enabled || false;
     
-    return 0;
+    // AI Agent checkbox fields - must return undefined if not set
+    // This is critical for the auto-check logic in App.jsx
+    if (field === 'includesFreight' || field === 'includesParcel' || field === 'includesOcean') {
+      // Debug logging (will be removed after validation)
+      if (productId === 'aiAgent') {
+        console.log(`[useProductState] getProductValue('${productId}', '${field}') = ${product[field]}`);
+      }
+      return product[field]; // Returns undefined if not set, which is intentional
+    }
+    
+    // For any other custom fields, return the value directly or undefined
+    return product[field];
   };
 
   /**
@@ -71,6 +101,11 @@ export const useProductState = () => {
    * @param {*} value - The new value
    */
   const setProductValue = (productId, field, value) => {
+    // Debug logging for AI Agent checkbox changes (will be removed after validation)
+    if (productId === 'aiAgent' && (field === 'includesFreight' || field === 'includesParcel' || field === 'includesOcean')) {
+      console.log(`[useProductState] setProductValue('${productId}', '${field}', ${value})`);
+    }
+    
     setProducts(prev => ({
       ...prev,
       [productId]: {

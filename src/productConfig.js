@@ -34,6 +34,8 @@ import {
   dockSchedulingMonthlySKUs,
   wmsAnnualSKUs,
   wmsMonthlySKUs,
+  aiAgentAnnualSKUs,
+  aiAgentMonthlySKUs,
 } from './skus';
 
 /**
@@ -165,6 +167,15 @@ export const pricingModels = {
     inputType: 'warehouses',
     color: '#f97316',
     order: 10,
+  },
+  aiAgentBased: {
+    id: 'aiAgentBased',
+    name: 'AI Agent - Token Based',
+    description: 'Token allocation based on total shipment volume',
+    icon: '🤖',
+    inputType: 'tokens',
+    color: '#a855f7',
+    order: 11,
   },
 };
 
@@ -475,6 +486,74 @@ export const productConfig = [
     annualOnly: true,
     includeInMinimum: true,
     order: 12,
+  },
+  {
+    id: 'aiAgent',
+    name: 'FreightPOP AI Agent',
+    category: 'addons',
+    pricingModel: 'aiAgentBased',
+    pricingType: 'tiered',
+    description: (_, billing) =>
+      billing === 'annual'
+        ? 'AI tokens based on total shipment volume (Freight + Parcel + Ocean)'
+        : 'Annual Only',
+    tierDetails: (volume) => {
+      // Find the matching tier based on volume
+      const tiers = [
+        { max: 250, cost: '$3,000', tokens: '50M' },
+        { max: 500, cost: '$6,000', tokens: '100M' },
+        { max: 1000, cost: '$12,000', tokens: '200M' },
+        { max: 1500, cost: '$18,000', tokens: '300M' },
+        { max: 2000, cost: '$24,000', tokens: '400M' },
+        { max: 3000, cost: '$36,000', tokens: '600M' },
+        { max: 4000, cost: '$48,000', tokens: '800M' },
+        { max: 5000, cost: '$60,000', tokens: '1B' },
+      ];
+      const tier = tiers.find(t => volume <= t.max) || tiers[tiers.length - 1];
+      return `${tier.cost}/year → ${tier.tokens} tokens`;
+    },
+    skus: {
+      annual: aiAgentAnnualSKUs,
+      monthly: aiAgentMonthlySKUs,
+    },
+    defaultVolume: 0,
+    volumeLabel: 'Total Shipments (Auto-calculated)',
+    annualOnly: true,
+    includeInMinimum: true,
+    order: 13,
+    calculation: (totalShipments, billing) => {
+      if (billing !== 'annual') return 0;
+      
+      // Find the matching tier
+      const tiers = [
+        { rangeStart: 0, rangeEnd: 250, cost: 3000 },
+        { rangeStart: 251, rangeEnd: 500, cost: 6000 },
+        { rangeStart: 501, rangeEnd: 1000, cost: 12000 },
+        { rangeStart: 1001, rangeEnd: 1500, cost: 18000 },
+        { rangeStart: 1501, rangeEnd: 2000, cost: 24000 },
+        { rangeStart: 2001, rangeEnd: 3000, cost: 36000 },
+        { rangeStart: 3001, rangeEnd: 4000, cost: 48000 },
+        { rangeStart: 4001, rangeEnd: 5000, cost: 60000 },
+      ];
+      
+      const tier = tiers.find(t => totalShipments >= t.rangeStart && totalShipments <= t.rangeEnd);
+      return tier ? tier.cost : 0;
+    },
+    getTokens: (totalShipments) => {
+      const tiers = [
+        { rangeEnd: 250, tokens: 50000000 },
+        { rangeEnd: 500, tokens: 100000000 },
+        { rangeEnd: 1000, tokens: 200000000 },
+        { rangeEnd: 1500, tokens: 300000000 },
+        { rangeEnd: 2000, tokens: 400000000 },
+        { rangeEnd: 3000, tokens: 600000000 },
+        { rangeEnd: 4000, tokens: 800000000 },
+        { rangeEnd: 5000, tokens: 1000000000 },
+      ];
+      
+      const tier = tiers.find(t => totalShipments <= t.rangeEnd);
+      return tier ? tier.tokens : 0;
+    },
   },
 ];
 

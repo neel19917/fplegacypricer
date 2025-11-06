@@ -7,11 +7,23 @@
  * @param {number} volume - The shipment/volume count
  * @param {object} plan - The selected pricing plan/tier
  * @param {string} billing - 'annual' or 'monthly'
- * @returns {object} Cost breakdown with included, overage, monthlyCost, annualCost
+ * @returns {object} Cost breakdown with included, overage, monthlyCost, annualCost, isCustomPricing
  */
 export const computeVolumeBasedCost = (volume, plan, billing) => {
   const vol = Number(volume) || 0;
-  if (!plan) return { included: 0, overage: 0, monthlyCost: 0, annualCost: 0 };
+  
+  // Handle custom pricing
+  if (plan && plan.isCustomPricing) {
+    return { 
+      included: 0, 
+      overage: 0, 
+      monthlyCost: 0, 
+      annualCost: 0,
+      isCustomPricing: true
+    };
+  }
+  
+  if (!plan) return { included: 0, overage: 0, monthlyCost: 0, annualCost: 0, isCustomPricing: false };
   
   const included = plan.shipmentsIncluded || 0;
   const overage = vol > included ? (vol - included) * (plan.costPerShipment || 0) : 0;
@@ -28,28 +40,37 @@ export const computeVolumeBasedCost = (volume, plan, billing) => {
     annualCost = monthlyCost * 12;
   }
   
-  return { included, overage, monthlyCost, annualCost };
+  return { included, overage, monthlyCost, annualCost, isCustomPricing: false };
 };
 
 /**
  * Compute costs for fixed-tier products (no overage)
  * @param {object} plan - The selected pricing plan/tier
  * @param {string} billing - 'annual' or 'monthly'
- * @returns {object} Cost breakdown with monthlyCost, annualCost
+ * @returns {object} Cost breakdown with monthlyCost, annualCost, isCustomPricing
  */
 export const computeFixedCost = (plan, billing = 'annual') => {
-  if (!plan) return { monthlyCost: 0, annualCost: 0 };
+  // Handle custom pricing
+  if (plan && plan.isCustomPricing) {
+    return { 
+      monthlyCost: 0, 
+      annualCost: 0,
+      isCustomPricing: true
+    };
+  }
+  
+  if (!plan) return { monthlyCost: 0, annualCost: 0, isCustomPricing: false };
   
   if (billing === 'annual') {
     const annualCost = plan.annualCost !== undefined
       ? Number(plan.annualCost)
       : Number(plan.cost || 0);
-    return { monthlyCost: annualCost / 12, annualCost };
+    return { monthlyCost: annualCost / 12, annualCost, isCustomPricing: false };
   } else {
     const monthlyCost = plan.perMonthCost !== undefined
       ? Number(plan.perMonthCost)
       : Number(plan.cost || 0) / 12;
-    return { monthlyCost, annualCost: monthlyCost * 12 };
+    return { monthlyCost, annualCost: monthlyCost * 12, isCustomPricing: false };
   }
 };
 
