@@ -3,12 +3,8 @@ import html2canvas from 'html2canvas';
 import { productConfig, pricingModels, getPricingModelsWithProducts } from './productConfig';
 import { APP_VERSION } from './version';
 import {
-  exportSKUsToCSV,
-  downloadCSV,
-  parseCSV,
-  csvToSKUs,
-  applySKUData,
-} from './utils/csvHelpers';
+  loadDefaultPricing,
+} from './utils/jsonHelpers';
 import {
   freightAnnualSKUs,
   freightMonthlySKUs,
@@ -27,6 +23,9 @@ import {
   // NEW: Dock Scheduling SKUs
   dockSchedulingAnnualSKUs,
   dockSchedulingMonthlySKUs,
+  // NEW: WMS SKUs
+  wmsAnnualSKUs,
+  wmsMonthlySKUs,
 } from './skus';
 import { useProductState } from './hooks/useProductState';
 import {
@@ -243,10 +242,73 @@ const CardContent = ({ children }) => (
 );
 
 /* ============================
+   TOOLTIP COMPONENT
+============================ */
+const Tooltip = ({ text, children }) => {
+  const [show, setShow] = useState(false);
+  
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <span
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        style={{ cursor: 'help' }}
+      >
+        {children}
+      </span>
+      {show && (
+        <div style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#1e293b',
+          color: 'white',
+          padding: '8px 12px',
+          borderRadius: '6px',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          zIndex: 1000,
+          marginBottom: '5px',
+        }}>
+          {text}
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '5px solid transparent',
+            borderRight: '5px solid transparent',
+            borderTop: '5px solid #1e293b',
+          }} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ============================
    MAIN COMPONENT: App
 ============================ */
 const App = () => {
   const pageRef = useRef(null);
+  
+  // === SKU DATA STATE (LOADED FROM CSV) ===
+  const [skuData, setSKUData] = useState({
+    Freight: { annual: freightAnnualSKUs, monthly: freightMonthlySKUs },
+    Parcel: { annual: parcelAnnualSKUs, monthly: parcelMonthlySKUs },
+    Ocean: { annual: oceanTrackingAnnualSKUs, monthly: oceanTrackingMonthlySKUs },
+    Locations: { annual: locationsAnnualSKUs, monthly: locationsMonthlySKUs },
+    Support: { annual: supportPackageAnnualSKUs, monthly: supportPackageMonthlySKUs },
+    Auditing: { annual: auditingAnnualSKUs, monthly: auditingMonthlySKUs },
+    FleetRoute: { annual: fleetRouteOptimizationAnnualSKUs, monthly: fleetRouteOptimizationMonthlySKUs },
+    DockScheduling: { annual: dockSchedulingAnnualSKUs, monthly: dockSchedulingMonthlySKUs },
+    VendorPortals: { annual: [], monthly: [] },
+    WMS: { annual: wmsAnnualSKUs, monthly: wmsMonthlySKUs },
+  });
+  const [isLoadingPricing, setIsLoadingPricing] = useState(true);
 
   // === AUTHENTICATION STATE ===
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -260,6 +322,26 @@ const App = () => {
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
+  }, []);
+  
+  // Load pricing data from CSV on mount
+  useEffect(() => {
+    async function initializePricing() {
+      const csvData = await loadDefaultPricing();
+      
+      if (csvData) {
+        // Replace with CSV data
+        setSKUData(csvData);
+        console.log('✅ Using pricing from CSV');
+      } else {
+        // Keep using hardcoded imports (already initialized)
+        console.log('⚠️ CSV load failed, using hardcoded SKUs');
+      }
+      
+      setIsLoadingPricing(false);
+    }
+    
+    initializePricing();
   }, []);
 
   const handleLogin = (e) => {
@@ -353,70 +435,6 @@ const App = () => {
     Object.keys(pricingModels)
   );
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // CSV Import/Export state
-  const [showCSVSuccess, setShowCSVSuccess] = useState(false);
-  const [csvMessage, setCSVMessage] = useState('');
-  const fileInputRef = useRef(null);
-  
-  // CSV Export Handler
-  const handleExportCSV = () => {
-    try {
-      const csvContent = exportSKUsToCSV();
-      const timestamp = new Date().toISOString().split('T')[0];
-      downloadCSV(csvContent, `pricing_data_${timestamp}.csv`);
-      setCSVMessage('✅ Pricing data exported successfully!');
-      setShowCSVSuccess(true);
-      setTimeout(() => setShowCSVSuccess(false), 3000);
-    } catch (error) {
-      setCSVMessage(`❌ Export failed: ${error.message}`);
-      setShowCSVSuccess(true);
-      setTimeout(() => setShowCSVSuccess(false), 5000);
-    }
-  };
-  
-  // CSV Import Handler
-  const handleImportCSV = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const csvText = e.target.result;
-        const parsedData = parseCSV(csvText);
-        const skusByProduct = csvToSKUs(parsedData);
-        
-        // Apply the new SKU data (would need to reload app or use dynamic SKUs)
-        // For now, show success message and suggest page reload
-        setCSVMessage(`✅ CSV imported! Found ${parsedData.length} pricing entries. Reload page to apply changes.`);
-        setShowCSVSuccess(true);
-        setTimeout(() => setShowCSVSuccess(false), 5000);
-        
-        // Store in localStorage for reload
-        localStorage.setItem('importedSKUs', JSON.stringify(skusByProduct));
-        
-      } catch (error) {
-        setCSVMessage(`❌ Import failed: ${error.message}`);
-        setShowCSVSuccess(true);
-        setTimeout(() => setShowCSVSuccess(false), 5000);
-      }
-    };
-    reader.readAsText(file);
-    
-    // Reset file input
-    event.target.value = '';
-  };
-  
-  // Handle Reload from localStorage
-  useEffect(() => {
-    const importedSKUs = localStorage.getItem('importedSKUs');
-    if (importedSKUs) {
-      // You could dynamically update SKUs here
-      // For now, we'll just show a message
-      console.log('Found imported SKUs:', JSON.parse(importedSKUs));
-    }
-  }, []);
 
   // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
   const {
@@ -478,6 +496,10 @@ const App = () => {
   const dockSchedulingSKU = getProductValue('dockScheduling', 'sku');
   const dockSchedulingOverride = getProductValue('dockScheduling', 'override');
 
+  // WMS getters - use standard volume like other products
+  const wmsVolume = getProductValue('wms', 'volume');
+  const wmsMarkup = getProductValue('wms', 'markup');
+
   // Backward-compatible setters (temporary during refactor)
   const setFreightVolume = (val) => setProductValue('freight', 'volume', val);
   const setFreightMarkup = (val) => setProductValue('freight', 'markup', val);
@@ -529,6 +551,9 @@ const App = () => {
   const setDockSchedulingSKU = (val) => setProductValue('dockScheduling', 'sku', val);
   const setDockSchedulingOverride = (val) => setProductValue('dockScheduling', 'override', val);
 
+  const setWmsVolume = (val) => setProductValue('wms', 'volume', val);
+  const setWmsMarkup = (val) => setProductValue('wms', 'markup', val);
+
   // === AUTO-SELECTION EFFECTS ===
   // Unified auto-tier selection for all products
   useEffect(() => {
@@ -570,35 +595,35 @@ const App = () => {
 
   // === LOOKUP PLANS ===
   const freightPlan = getPlanBySKU(
-    subBilling === 'annual' ? freightAnnualSKUs : freightMonthlySKUs,
+    subBilling === 'annual' ? skuData.Freight.annual : skuData.Freight.monthly,
     freightSKU
   );
   const parcelPlan = getPlanBySKU(
-    subBilling === 'annual' ? parcelAnnualSKUs : parcelMonthlySKUs,
+    subBilling === 'annual' ? skuData.Parcel.annual : skuData.Parcel.monthly,
     parcelSKU
   );
   const auditingPlan = getPlanBySKU(
-    subBilling === 'annual' ? auditingAnnualSKUs : auditingMonthlySKUs,
+    subBilling === 'annual' ? skuData.Auditing.annual : skuData.Auditing.monthly,
     auditingSKU
   );
   const locationsPlan = getPlanBySKU(
-    subBilling === 'annual' ? locationsAnnualSKUs : locationsMonthlySKUs,
+    subBilling === 'annual' ? skuData.Locations.annual : skuData.Locations.monthly,
     locationsSKU
   );
   const fleetRoutePlan = getPlanBySKU(
-    subBilling === 'annual' ? fleetRouteOptimizationAnnualSKUs : fleetRouteOptimizationMonthlySKUs,
+    subBilling === 'annual' ? skuData.FleetRoute.annual : skuData.FleetRoute.monthly,
     fleetRouteSKU
   );
   const oceanTrackingPlan = getPlanBySKU(
-    subBilling === 'annual' ? oceanTrackingAnnualSKUs : oceanTrackingMonthlySKUs,
+    subBilling === 'annual' ? skuData.Ocean.annual : skuData.Ocean.monthly,
     oceanTrackingSKU
   );
   const supportPackagePlan = getPlanBySKU(
-    subBilling === 'annual' ? supportPackageAnnualSKUs : supportPackageMonthlySKUs,
+    subBilling === 'annual' ? skuData.Support.annual : skuData.Support.monthly,
     supportPackageSKU
   );
   const dockSchedulingPlan = getPlanBySKU(
-    subBilling === 'annual' ? dockSchedulingAnnualSKUs : dockSchedulingMonthlySKUs,
+    subBilling === 'annual' ? skuData.DockScheduling.annual : skuData.DockScheduling.monthly,
     dockSchedulingSKU
   );
 
@@ -663,6 +688,19 @@ const App = () => {
   const dockSchedulingCostObj = computeVolumeBasedCost(dockSchedulingVolume, dockSchedulingPlan, subBilling);
   const dockSchedulingAnnualCost = dockSchedulingCostObj.annualCost * (1 + dockSchedulingMarkup / 100);
 
+  // WMS Costs - Annual only (simplified, no implementation fee)
+  const wmsSubscriptionCost = (() => {
+    if (wmsVolume === 0 || subBilling !== 'annual') return 0;
+    
+    // First warehouse: $12,000, each additional: $6,000
+    const firstWarehouse = 12000;
+    const additionalWarehouses = Math.max(0, wmsVolume - 1);
+    const additionalCost = additionalWarehouses * 6000;
+    
+    return firstWarehouse + additionalCost;
+  })();
+  const wmsAnnualCost = wmsSubscriptionCost * (1 + wmsMarkup / 100);
+
   const rawSubAnnualSubscription =
     effectiveCoreAnnualCost +
     (billPayYesNo === 'Yes' ? billPayAnnualCost : 0) +
@@ -671,7 +709,8 @@ const App = () => {
     fleetRouteEffectiveAnnual +
     supportPackageCostAnnual +
     (assetManagementAnnualCost > 0 ? assetManagementAnnualCost : 0) +
-    dockSchedulingAnnualCost;
+    dockSchedulingAnnualCost +
+    wmsAnnualCost;
 
   // Calculate subscription total with minimum enforcement
   const {
@@ -751,6 +790,30 @@ const App = () => {
   const topSpacerHeight = '90px';
 
   // === LOGIN SCREEN ===
+  // Show loading state while pricing data loads
+  if (isLoadingPricing) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '20px' }}>📦</div>
+        <div style={{ fontSize: '24px', fontWeight: '600', marginBottom: '12px' }}>
+          Loading Pricing Data...
+        </div>
+        <div style={{ fontSize: '14px', opacity: 0.9 }}>
+          Fetching latest pricing from CSV
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div style={{
@@ -967,6 +1030,14 @@ const App = () => {
                   customerQuoteItems.push({
                     label: 'Dock Scheduling',
                     value: `${dockSchedulingPlan.tier} - ${dockSchedulingVolume} hours`,
+                  });
+                }
+
+                // WMS
+                if (wmsVolume > 0) {
+                  customerQuoteItems.push({
+                    label: 'WMS',
+                    value: `${wmsVolume} warehouse${wmsVolume > 1 ? 's' : ''}`,
                   });
                 }
 
@@ -1444,9 +1515,24 @@ const App = () => {
                       lineMarkup: dockSchedulingMarkup,
                       hideIfZero: true,
                     },
+                    {
+                      productName: 'WMS',
+                      volume: wmsVolume,
+                      monthlyCost: wmsAnnualCost / 12,
+                      annualCost: wmsAnnualCost,
+                      planDetails: subBilling === 'annual'
+                        ? `${wmsVolume} warehouse${wmsVolume > 1 ? 's' : ''}`
+                        : 'Annual Only',
+                      tierDetails: subBilling === 'annual'
+                        ? `$12,000 first + $6,000 each additional`
+                        : '',
+                      lineMarkup: wmsMarkup,
+                      hideIfZero: true,
+                    },
                   ];
 
                   const visibleSummaryRows = summaryRows.filter(row => {
+                    // Standard volume check
                     if (typeof row.volume === 'number') {
                       return row.volume !== 0;
                     }
@@ -1690,83 +1776,6 @@ const App = () => {
             <Card>
               <CardHeader>
                 <CardTitle>📦 Product Configuration</CardTitle>
-                
-                {/* CSV Import/Export Controls */}
-                <div style={{ 
-                  marginTop: '16px',
-                  padding: '12px',
-                  background: '#f0fdf4',
-                  border: '1px solid #bbf7d0',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  flexWrap: 'wrap',
-                }}>
-                  <span style={{ fontSize: '20px' }}>💾</span>
-                  <span style={{ fontWeight: '600', color: '#166534', fontSize: '14px' }}>
-                    Pricing Data Management:
-                  </span>
-                  <button
-                    onClick={handleExportCSV}
-                    style={{
-                      padding: '8px 16px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      background: '#10b981',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <span>⬇️</span>
-                    <span>Export to CSV</span>
-                  </button>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      padding: '8px 16px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      background: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <span>⬆️</span>
-                    <span>Import from CSV</span>
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv"
-                    onChange={handleImportCSV}
-                    style={{ display: 'none' }}
-                  />
-                  {showCSVSuccess && (
-                    <span style={{ 
-                      padding: '8px 12px',
-                      background: 'white',
-                      borderRadius: '6px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      animation: 'fadeIn 0.3s',
-                    }}>
-                      {csvMessage}
-                    </span>
-                  )}
-                </div>
               </CardHeader>
               <CardContent>
                 <div style={{ 
@@ -1995,8 +2004,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? freightAnnualSKUs
-                            : freightMonthlySKUs,
+                            ? skuData.Freight.annual
+                            : skuData.Freight.monthly,
                         selectedSKU: freightSKU,
                         onSKUChange: val => {
                           setFreightSKU(val);
@@ -2016,8 +2025,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? parcelAnnualSKUs
-                            : parcelMonthlySKUs,
+                            ? skuData.Parcel.annual
+                            : skuData.Parcel.monthly,
                         selectedSKU: parcelSKU,
                         onSKUChange: val => {
                           setParcelSKU(val);
@@ -2037,8 +2046,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? oceanTrackingAnnualSKUs
-                            : oceanTrackingMonthlySKUs,
+                            ? skuData.Ocean.annual
+                            : skuData.Ocean.monthly,
                         selectedSKU: oceanTrackingSKU,
                         onSKUChange: val => {
                           setOceanTrackingSKU(val);
@@ -2073,8 +2082,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? locationsAnnualSKUs
-                            : locationsMonthlySKUs,
+                            ? skuData.Locations.annual
+                            : skuData.Locations.monthly,
                         selectedSKU: locationsSKU,
                         onSKUChange: val => {
                           setLocationsSKU(val);
@@ -2100,8 +2109,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? supportPackageAnnualSKUs
-                            : supportPackageMonthlySKUs,
+                            ? skuData.Support.annual
+                            : skuData.Support.monthly,
                         selectedSKU: supportPackageSKU,
                         onSKUChange: val => {
                           setSupportPackageSKU(val);
@@ -2143,8 +2152,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? auditingAnnualSKUs
-                            : auditingMonthlySKUs,
+                            ? skuData.Auditing.annual
+                            : skuData.Auditing.monthly,
                         selectedSKU: auditingSKU,
                         onSKUChange: val => {
                           setAuditingSKU(val);
@@ -2164,8 +2173,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? fleetRouteOptimizationAnnualSKUs
-                            : fleetRouteOptimizationMonthlySKUs,
+                            ? skuData.FleetRoute.annual
+                            : skuData.FleetRoute.monthly,
                         selectedSKU: fleetRouteSKU,
                         onSKUChange: val => {
                           setFleetRouteSKU(val);
@@ -2231,8 +2240,8 @@ const App = () => {
                           : 'N/A',
                         tierOptions:
                           subBilling === 'annual'
-                            ? dockSchedulingAnnualSKUs
-                            : dockSchedulingMonthlySKUs,
+                            ? skuData.DockScheduling.annual
+                            : skuData.DockScheduling.monthly,
                         selectedSKU: dockSchedulingSKU,
                         onSKUChange: val => {
                           setDockSchedulingSKU(val);
@@ -2243,6 +2252,19 @@ const App = () => {
                           setDockSchedulingVolume(Number(e.target.value) || 0),
                         monthlyCost: dockSchedulingAnnualCost / 12,
                         annualCost: dockSchedulingAnnualCost,
+                      },
+                      {
+                        productType: 'WMS',
+                        pricingModel: 'wmsBased',
+                        planDescription: subBilling === 'annual' 
+                          ? `$12,000 first warehouse + $6,000 per additional`
+                          : 'Annual Only',
+                        tierOptions: [],
+                        volumeCount: wmsVolume,
+                        onVolumeChange: e => setWmsVolume(Number(e.target.value) || 0),
+                        monthlyCost: wmsAnnualCost / 12,
+                        annualCost: wmsAnnualCost,
+                        tooltip: '💡 First warehouse: $12,000/year, each additional: $6,000/year. Add implementation fees manually as one-time costs.',
                       },
                     ];
                     

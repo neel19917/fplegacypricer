@@ -1,0 +1,1071 @@
+{
+  "version": "2.1.2",
+  "lastUpdated": "2025-11-06",
+  "products": {
+    "freight": {
+      "name": "Core TMS – Freight",
+      "pricingType": "volume",
+      "annual": [
+        {
+          "sku": "FP1001",
+          "tier": "Starter",
+          "shipmentsIncluded": 100,
+          "perMonthCost": 830,
+          "costPerShipment": 8.3,
+          "rangeStart": 1,
+          "rangeEnd": 100,
+          "annualCost": 9960
+        },
+        {
+          "sku": "FP1002",
+          "tier": "Pro",
+          "shipmentsIncluded": 250,
+          "perMonthCost": 1438,
+          "costPerShipment": 5.75,
+          "rangeStart": 101,
+          "rangeEnd": 250,
+          "annualCost": 17256
+        },
+        {
+          "sku": "FP1003",
+          "tier": "Pro+",
+          "shipmentsIncluded": 450,
+          "perMonthCost": 1890,
+          "costPerShipment": 4.2,
+          "rangeStart": 251,
+          "rangeEnd": 450,
+          "annualCost": 22680
+        },
+        {
+          "sku": "FP1004",
+          "tier": "Enterprise 1",
+          "shipmentsIncluded": 750,
+          "perMonthCost": 2520,
+          "costPerShipment": 3.36,
+          "rangeStart": 451,
+          "rangeEnd": 750,
+          "annualCost": 30240
+        },
+        {
+          "sku": "FP1005",
+          "tier": "Enterprise 2",
+          "shipmentsIncluded": 1250,
+          "perMonthCost": 3500,
+          "costPerShipment": 2.8,
+          "rangeStart": 751,
+          "rangeEnd": 1250,
+          "annualCost": 42000
+        },
+        {
+          "sku": "FP1006",
+          "tier": "Enterprise 3",
+          "shipmentsIncluded": 2000,
+          "perMonthCost": 4771,
+          "costPerShipment": 2.39,
+          "rangeStart": 1251,
+          "rangeEnd": 2000,
+          "annualCost": 57252
+        },
+        {
+          "sku": "FP1007",
+          "tier": "Enterprise 4",
+          "shipmentsIncluded": 3000,
+          "perMonthCost": 6237,
+          "costPerShipment": 2.08,
+          "rangeStart": 2001,
+          "rangeEnd": 3000,
+          "annualCost": 74844
+        },
+        {
+          "sku": "FP1008",
+          "tier": "Enterprise 5",
+          "shipmentsIncluded": 4500,
+          "perMonthCost": 8253,
+          "costPerShipment": 1.83,
+          "rangeStart": 3001,
+          "rangeEnd": 4500,
+          "annualCost": 99036
+        },
+        {
+          "sku": "FP1009",
+          "tier": "Enterprise 6",
+          "shipmentsIncluded": 6500,
+          "perMonthCost": 8736,
+          "costPerShipment": 1.34,
+          "rangeStart": 4501,
+          "rangeEnd": 6500,
+          "annualCost": 104832
+        },
+        {
+          "sku": "FP1010",
+          "tier": "Enterprise 7",
+          "shipmentsIncluded": 10000,
+          "perMonthCost": 10338,
+          "costPerShipment": 1.03,
+          "rangeStart": 6501,
+          "rangeEnd": Infinity,
+          "annualCost": 124056
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1019",
+          "tier": "Starter",
+          "shipmentsIncluded": 100,
+          "perMonthCost": 1079,
+          "costPerShipment": 10.79,
+          "rangeStart": 1,
+          "rangeEnd": 100,
+          "annualCost": 12948
+        },
+        {
+          "sku": "FP1020",
+          "tier": "Pro",
+          "shipmentsIncluded": 250,
+          "perMonthCost": 1869,
+          "costPerShipment": 7.48,
+          "rangeStart": 101,
+          "rangeEnd": 250,
+          "annualCost": 22428
+        },
+        {
+          "sku": "FP1021",
+          "tier": "Pro+",
+          "shipmentsIncluded": 450,
+          "perMonthCost": 2457,
+          "costPerShipment": 5.46,
+          "rangeStart": 251,
+          "rangeEnd": 450,
+          "annualCost": 29484
+        },
+        {
+          "sku": "FP1022",
+          "tier": "Enterprise 1",
+          "shipmentsIncluded": 750,
+          "perMonthCost": 3250,
+          "costPerShipment": 4.33,
+          "rangeStart": 451,
+          "rangeEnd": 750,
+          "annualCost": 39000
+        },
+        {
+          "sku": "FP1023",
+          "tier": "Enterprise 2",
+          "shipmentsIncluded": 1250,
+          "perMonthCost": 4550,
+          "costPerShipment": 3.64,
+          "rangeStart": 751,
+          "rangeEnd": 1250,
+          "annualCost": 54600
+        },
+        {
+          "sku": "FP1024",
+          "tier": "Enterprise 3",
+          "shipmentsIncluded": 2000,
+          "perMonthCost": 6203,
+          "costPerShipment": 3.1,
+          "rangeStart": 1251,
+          "rangeEnd": 2000,
+          "annualCost": 74436
+        },
+        {
+          "sku": "FP1025",
+          "tier": "Enterprise 4",
+          "shipmentsIncluded": 3000,
+          "perMonthCost": 8108,
+          "costPerShipment": 2.7,
+          "rangeStart": 2001,
+          "rangeEnd": 3000,
+          "annualCost": 97296
+        },
+        {
+          "sku": "FP1026",
+          "tier": "Enterprise 5",
+          "shipmentsIncluded": 4500,
+          "perMonthCost": 10729,
+          "costPerShipment": 2.38,
+          "rangeStart": 3001,
+          "rangeEnd": 4500,
+          "annualCost": 128748
+        },
+        {
+          "sku": "FP1027",
+          "tier": "Enterprise 6",
+          "shipmentsIncluded": 6500,
+          "perMonthCost": 11357,
+          "costPerShipment": 1.75,
+          "rangeStart": 4501,
+          "rangeEnd": 6500,
+          "annualCost": 136284
+        },
+        {
+          "sku": "FP1028",
+          "tier": "Enterprise 7",
+          "shipmentsIncluded": 10000,
+          "perMonthCost": 13440,
+          "costPerShipment": 1.34,
+          "rangeStart": 6501,
+          "rangeEnd": Infinity,
+          "annualCost": 161280
+        }
+      ]
+    },
+    "parcel": {
+      "name": "Core TMS – Parcel",
+      "pricingType": "volume",
+      "annual": [
+        {
+          "sku": "FP1011",
+          "tier": "Starter",
+          "shipmentsIncluded": 1000,
+          "perMonthCost": 100,
+          "costPerShipment": 0.1,
+          "rangeStart": 1,
+          "rangeEnd": 1000,
+          "annualCost": 1200
+        },
+        {
+          "sku": "FP1012",
+          "tier": "Pro",
+          "shipmentsIncluded": 2000,
+          "perMonthCost": 180,
+          "costPerShipment": 0.09,
+          "rangeStart": 1001,
+          "rangeEnd": 2000,
+          "annualCost": 2160
+        },
+        {
+          "sku": "FP1013",
+          "tier": "Pro+",
+          "shipmentsIncluded": 5000,
+          "perMonthCost": 400,
+          "costPerShipment": 0.08,
+          "rangeStart": 2001,
+          "rangeEnd": 5000,
+          "annualCost": 4800
+        },
+        {
+          "sku": "FP1014",
+          "tier": "Enterprise 1",
+          "shipmentsIncluded": 10000,
+          "perMonthCost": 700,
+          "costPerShipment": 0.07,
+          "rangeStart": 5001,
+          "rangeEnd": 10000,
+          "annualCost": 8400
+        },
+        {
+          "sku": "FP1015",
+          "tier": "Enterprise 2",
+          "shipmentsIncluded": 15000,
+          "perMonthCost": 900,
+          "costPerShipment": 0.06,
+          "rangeStart": 10001,
+          "rangeEnd": 15000,
+          "annualCost": 10800
+        },
+        {
+          "sku": "FP1016",
+          "tier": "Enterprise 3",
+          "shipmentsIncluded": 25000,
+          "perMonthCost": 1250,
+          "costPerShipment": 0.05,
+          "rangeStart": 15001,
+          "rangeEnd": 25000,
+          "annualCost": 15000
+        },
+        {
+          "sku": "FP1017",
+          "tier": "Enterprise 4",
+          "shipmentsIncluded": 50000,
+          "perMonthCost": 2000,
+          "costPerShipment": 0.04,
+          "rangeStart": 25001,
+          "rangeEnd": 50000,
+          "annualCost": 24000
+        },
+        {
+          "sku": "FP1018",
+          "tier": "Enterprise 5",
+          "shipmentsIncluded": 100000,
+          "perMonthCost": 3000,
+          "costPerShipment": 0.03,
+          "rangeStart": 50001,
+          "rangeEnd": Infinity,
+          "annualCost": 36000
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1029",
+          "tier": "Starter",
+          "shipmentsIncluded": 1000,
+          "perMonthCost": 130,
+          "costPerShipment": 0.13,
+          "rangeStart": 1,
+          "rangeEnd": 1000,
+          "annualCost": 1560
+        },
+        {
+          "sku": "FP1030",
+          "tier": "Pro",
+          "shipmentsIncluded": 2000,
+          "perMonthCost": 234,
+          "costPerShipment": 0.12,
+          "rangeStart": 1001,
+          "rangeEnd": 2000,
+          "annualCost": 2808
+        },
+        {
+          "sku": "FP1031",
+          "tier": "Pro+",
+          "shipmentsIncluded": 5000,
+          "perMonthCost": 520,
+          "costPerShipment": 0.10,
+          "rangeStart": 2001,
+          "rangeEnd": 5000,
+          "annualCost": 6240
+        },
+        {
+          "sku": "FP1032",
+          "tier": "Enterprise 1",
+          "shipmentsIncluded": 10000,
+          "perMonthCost": 910,
+          "costPerShipment": 0.09,
+          "rangeStart": 5001,
+          "rangeEnd": 10000,
+          "annualCost": 10920
+        },
+        {
+          "sku": "FP1033",
+          "tier": "Enterprise 2",
+          "shipmentsIncluded": 15000,
+          "perMonthCost": 1170,
+          "costPerShipment": 0.08,
+          "rangeStart": 10001,
+          "rangeEnd": 15000,
+          "annualCost": 14040
+        },
+        {
+          "sku": "FP1034",
+          "tier": "Enterprise 3",
+          "shipmentsIncluded": 25000,
+          "perMonthCost": 1625,
+          "costPerShipment": 0.07,
+          "rangeStart": 15001,
+          "rangeEnd": 25000,
+          "annualCost": 19500
+        },
+        {
+          "sku": "FP1035",
+          "tier": "Enterprise 4",
+          "shipmentsIncluded": 50000,
+          "perMonthCost": 2580,
+          "costPerShipment": 0.05,
+          "rangeStart": 25001,
+          "rangeEnd": 50000,
+          "annualCost": 30960
+        },
+        {
+          "sku": "FP1036",
+          "tier": "Enterprise 5",
+          "shipmentsIncluded": 100000,
+          "perMonthCost": 4080,
+          "costPerShipment": 0.04,
+          "rangeStart": 50001,
+          "rangeEnd": Infinity,
+          "annualCost": 48960
+        }
+      ]
+    },
+    "oceanTracking": {
+      "name": "Ocean Tracking",
+      "pricingType": "volume",
+      "annual": [
+        {
+          "sku": "FP1029",
+          "tier": "Starter",
+          "shipmentsIncluded": 50,
+          "perMonthCost": 175,
+          "costPerShipment": 3.5,
+          "rangeStart": 1,
+          "rangeEnd": 50,
+          "annualCost": 2100
+        },
+        {
+          "sku": "FP1030",
+          "tier": "Pro",
+          "shipmentsIncluded": 100,
+          "perMonthCost": 325,
+          "costPerShipment": 3.25,
+          "rangeStart": 51,
+          "rangeEnd": 100,
+          "annualCost": 3900
+        },
+        {
+          "sku": "FP1031",
+          "tier": "Pro+",
+          "shipmentsIncluded": 250,
+          "perMonthCost": 750,
+          "costPerShipment": 3.0,
+          "rangeStart": 101,
+          "rangeEnd": 250,
+          "annualCost": 9000
+        },
+        {
+          "sku": "FP1032",
+          "tier": "Enterprise 1",
+          "shipmentsIncluded": 450,
+          "perMonthCost": 1238,
+          "costPerShipment": 2.75,
+          "rangeStart": 251,
+          "rangeEnd": 450,
+          "annualCost": 14856
+        },
+        {
+          "sku": "FP1033",
+          "tier": "Enterprise 2",
+          "shipmentsIncluded": 750,
+          "perMonthCost": 1875,
+          "costPerShipment": 2.5,
+          "rangeStart": 451,
+          "rangeEnd": 750,
+          "annualCost": 22500
+        },
+        {
+          "sku": "FP1034",
+          "tier": "Enterprise 3",
+          "shipmentsIncluded": 1250,
+          "perMonthCost": 1813,
+          "costPerShipment": 1.45,
+          "rangeStart": 751,
+          "rangeEnd": 1250,
+          "annualCost": 21756
+        },
+        {
+          "sku": "FP1035",
+          "tier": "Enterprise 4",
+          "shipmentsIncluded": 2000,
+          "perMonthCost": 4000,
+          "costPerShipment": 2.0,
+          "rangeStart": 1251,
+          "rangeEnd": 2000,
+          "annualCost": 48000
+        },
+        {
+          "sku": "FP1036",
+          "tier": "Enterprise 5",
+          "shipmentsIncluded": 3000,
+          "perMonthCost": 5250,
+          "costPerShipment": 1.75,
+          "rangeStart": 2001,
+          "rangeEnd": 3000,
+          "annualCost": 63000
+        },
+        {
+          "sku": "FP1037",
+          "tier": "Enterprise 6",
+          "shipmentsIncluded": 4500,
+          "perMonthCost": 6750,
+          "costPerShipment": 1.5,
+          "rangeStart": 3001,
+          "rangeEnd": 4500,
+          "annualCost": 81000
+        },
+        {
+          "sku": "FP1038",
+          "tier": "Enterprise 7",
+          "shipmentsIncluded": 6500,
+          "perMonthCost": 9750,
+          "costPerShipment": 1.5,
+          "rangeStart": 4501,
+          "rangeEnd": 6500,
+          "annualCost": 117000
+        },
+        {
+          "sku": "FP1039",
+          "tier": "Enterprise 8",
+          "shipmentsIncluded": 10000,
+          "perMonthCost": 15000,
+          "costPerShipment": 1.5,
+          "rangeStart": 6501,
+          "rangeEnd": Infinity,
+          "annualCost": 180000
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1040",
+          "tier": "Starter",
+          "shipmentsIncluded": 50,
+          "perMonthCost": 228,
+          "costPerShipment": 4.56,
+          "rangeStart": 1,
+          "rangeEnd": 50,
+          "annualCost": 2736
+        },
+        {
+          "sku": "FP1041",
+          "tier": "Pro",
+          "shipmentsIncluded": 100,
+          "perMonthCost": 423,
+          "costPerShipment": 4.23,
+          "rangeStart": 51,
+          "rangeEnd": 100,
+          "annualCost": 5076
+        },
+        {
+          "sku": "FP1042",
+          "tier": "Pro+",
+          "shipmentsIncluded": 250,
+          "perMonthCost": 975,
+          "costPerShipment": 3.9,
+          "rangeStart": 101,
+          "rangeEnd": 250,
+          "annualCost": 11700
+        },
+        {
+          "sku": "FP1043",
+          "tier": "Enterprise 1",
+          "shipmentsIncluded": 450,
+          "perMonthCost": 1609,
+          "costPerShipment": 3.58,
+          "rangeStart": 251,
+          "rangeEnd": 450,
+          "annualCost": 19308
+        },
+        {
+          "sku": "FP1044",
+          "tier": "Enterprise 2",
+          "shipmentsIncluded": 750,
+          "perMonthCost": 2438,
+          "costPerShipment": 3.25,
+          "rangeStart": 451,
+          "rangeEnd": 750,
+          "annualCost": 29256
+        },
+        {
+          "sku": "FP1045",
+          "tier": "Enterprise 3",
+          "shipmentsIncluded": 1250,
+          "perMonthCost": 3656,
+          "costPerShipment": 2.92,
+          "rangeStart": 751,
+          "rangeEnd": 1250,
+          "annualCost": 43872
+        },
+        {
+          "sku": "FP1046",
+          "tier": "Enterprise 4",
+          "shipmentsIncluded": 2000,
+          "perMonthCost": 5200,
+          "costPerShipment": 2.6,
+          "rangeStart": 1251,
+          "rangeEnd": 2000,
+          "annualCost": 62400
+        },
+        {
+          "sku": "FP1047",
+          "tier": "Enterprise 5",
+          "shipmentsIncluded": 3000,
+          "perMonthCost": 6825,
+          "costPerShipment": 2.28,
+          "rangeStart": 2001,
+          "rangeEnd": 3000,
+          "annualCost": 81900
+        },
+        {
+          "sku": "FP1048",
+          "tier": "Enterprise 6",
+          "shipmentsIncluded": 4500,
+          "perMonthCost": 8775,
+          "costPerShipment": 1.95,
+          "rangeStart": 3001,
+          "rangeEnd": 4500,
+          "annualCost": 105300
+        },
+        {
+          "sku": "FP1049",
+          "tier": "Enterprise 7",
+          "shipmentsIncluded": 6500,
+          "perMonthCost": 12675,
+          "costPerShipment": 1.95,
+          "rangeStart": 4501,
+          "rangeEnd": 6500,
+          "annualCost": 152100
+        },
+        {
+          "sku": "FP1050",
+          "tier": "Enterprise 8",
+          "shipmentsIncluded": 10000,
+          "perMonthCost": 19500,
+          "costPerShipment": 1.95,
+          "rangeStart": 6501,
+          "rangeEnd": Infinity,
+          "annualCost": 234000
+        }
+      ]
+    },
+    "locations": {
+      "name": "Locations",
+      "pricingType": "fixed",
+      "annual": [
+        {
+          "sku": "FP1051",
+          "tier": "Starter",
+          "rangeStart": 1,
+          "rangeEnd": 3,
+          "perMonthCost": 0,
+          "annualCost": 0
+        },
+        {
+          "sku": "FP1052",
+          "tier": "Basic",
+          "rangeStart": 4,
+          "rangeEnd": 8,
+          "perMonthCost": 2083.33,
+          "annualCost": 25000
+        },
+        {
+          "sku": "FP1053",
+          "tier": "Professional",
+          "rangeStart": 9,
+          "rangeEnd": 15,
+          "perMonthCost": 3333.33,
+          "annualCost": 40000
+        },
+        {
+          "sku": "FP1054",
+          "tier": "Advanced",
+          "rangeStart": 16,
+          "rangeEnd": 25,
+          "perMonthCost": 4166.67,
+          "annualCost": 50000
+        },
+        {
+          "sku": "FP1055",
+          "tier": "Enterprise",
+          "rangeStart": 25,
+          "rangeEnd": Infinity,
+          "perMonthCost": 5416.67,
+          "annualCost": 65000
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1072",
+          "tier": "Starter",
+          "rangeStart": 1,
+          "rangeEnd": 3,
+          "perMonthCost": 0,
+          "annualCost": 0
+        },
+        {
+          "sku": "FP1073",
+          "tier": "Basic",
+          "rangeStart": 4,
+          "rangeEnd": 8,
+          "perMonthCost": 2708.33,
+          "annualCost": 32500
+        },
+        {
+          "sku": "FP1074",
+          "tier": "Professional",
+          "rangeStart": 9,
+          "rangeEnd": 15,
+          "perMonthCost": 4333.33,
+          "annualCost": 52000
+        },
+        {
+          "sku": "FP1075",
+          "tier": "Advanced",
+          "rangeStart": 16,
+          "rangeEnd": 25,
+          "perMonthCost": 5416.67,
+          "annualCost": 65000
+        },
+        {
+          "sku": "FP1076",
+          "tier": "Enterprise",
+          "rangeStart": 25,
+          "rangeEnd": Infinity,
+          "perMonthCost": 7041.67,
+          "annualCost": 84500
+        }
+      ]
+    },
+    "dockScheduling": {
+      "name": "Dock Scheduling",
+      "pricingType": "fixed",
+      "annual": [
+        {
+          "sku": "FP1056",
+          "tier": "Basic",
+          "rangeStart": 1,
+          "rangeEnd": 5,
+          "perMonthCost": 291.67,
+          "annualCost": 3500
+        },
+        {
+          "sku": "FP1057",
+          "tier": "Professional",
+          "rangeStart": 6,
+          "rangeEnd": 25,
+          "perMonthCost": 612.5,
+          "annualCost": 7350
+        },
+        {
+          "sku": "FP1058",
+          "tier": "Advanced",
+          "rangeStart": 26,
+          "rangeEnd": 50,
+          "perMonthCost": 979.17,
+          "annualCost": 11750
+        },
+        {
+          "sku": "FP1059",
+          "tier": "Enterprise",
+          "rangeStart": 51,
+          "rangeEnd": 100,
+          "perMonthCost": 1295.83,
+          "annualCost": 15550
+        },
+        {
+          "sku": "FP1065",
+          "tier": "Custom Pricing Needed",
+          "rangeStart": 101,
+          "rangeEnd": Infinity,
+          "perMonthCost": 1295.83,
+          "annualCost": 15550
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1077",
+          "tier": "Basic",
+          "rangeStart": 1,
+          "rangeEnd": 5,
+          "perMonthCost": 379.17,
+          "annualCost": 4550
+        },
+        {
+          "sku": "FP1078",
+          "tier": "Professional",
+          "rangeStart": 6,
+          "rangeEnd": 25,
+          "perMonthCost": 796.25,
+          "annualCost": 9555
+        },
+        {
+          "sku": "FP1079",
+          "tier": "Advanced",
+          "rangeStart": 26,
+          "rangeEnd": 50,
+          "perMonthCost": 1272.92,
+          "annualCost": 15275
+        },
+        {
+          "sku": "FP1080",
+          "tier": "Enterprise",
+          "rangeStart": 51,
+          "rangeEnd": 100,
+          "perMonthCost": 1684.58,
+          "annualCost": 20215
+        },
+        {
+          "sku": "FP1081",
+          "tier": "Custom Pricing Needed",
+          "rangeStart": 101,
+          "rangeEnd": Infinity,
+          "perMonthCost": 1684.58,
+          "annualCost": 20215
+        }
+      ]
+    },
+    "auditing": {
+      "name": "Auditing Module",
+      "pricingType": "fixed",
+      "annual": [
+        {
+          "sku": "FP1060",
+          "tier": "Basic",
+          "rangeStart": 1,
+          "rangeEnd": 5,
+          "perMonthCost": 250,
+          "annualCost": 3000
+        },
+        {
+          "sku": "FP1061",
+          "tier": "Professional",
+          "rangeStart": 6,
+          "rangeEnd": 10,
+          "perMonthCost": 500,
+          "annualCost": 6000
+        },
+        {
+          "sku": "FP1062",
+          "tier": "Advanced",
+          "rangeStart": 11,
+          "rangeEnd": 20,
+          "perMonthCost": 750,
+          "annualCost": 9000
+        },
+        {
+          "sku": "FP1063",
+          "tier": "Enterprise",
+          "rangeStart": 21,
+          "rangeEnd": Infinity,
+          "perMonthCost": 833.33,
+          "annualCost": 10000
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1060",
+          "tier": "Basic",
+          "rangeStart": 1,
+          "rangeEnd": 5,
+          "perMonthCost": 250,
+          "annualCost": 3000
+        },
+        {
+          "sku": "FP1061",
+          "tier": "Professional",
+          "rangeStart": 6,
+          "rangeEnd": 10,
+          "perMonthCost": 500,
+          "annualCost": 6000
+        },
+        {
+          "sku": "FP1062",
+          "tier": "Advanced",
+          "rangeStart": 11,
+          "rangeEnd": 20,
+          "perMonthCost": 750,
+          "annualCost": 9000
+        },
+        {
+          "sku": "FP1063",
+          "tier": "Enterprise",
+          "rangeStart": 21,
+          "rangeEnd": Infinity,
+          "perMonthCost": 833.33,
+          "annualCost": 10000
+        }
+      ]
+    },
+    "vendorPortals": {
+      "name": "Vendor Portals",
+      "pricingType": "volume",
+      "annual": [
+        {
+          "sku": "FP1064",
+          "tier": "Per Portal",
+          "shipmentsIncluded": 0,
+          "perMonthCost": 20,
+          "costPerShipment": 20,
+          "rangeStart": 1,
+          "rangeEnd": Infinity,
+          "annualCost": 240
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1064",
+          "tier": "Per Portal",
+          "shipmentsIncluded": 0,
+          "perMonthCost": 20,
+          "costPerShipment": 20,
+          "rangeStart": 1,
+          "rangeEnd": Infinity,
+          "annualCost": 240
+        }
+      ]
+    },
+    "supportPackage": {
+      "name": "Support Package",
+      "pricingType": "fixed",
+      "annual": [
+        {
+          "sku": "FP1097",
+          "tier": "Basic",
+          "rangeStart": 0,
+          "rangeEnd": 3,
+          "perMonthCost": 500,
+          "annualCost": 6000
+        },
+        {
+          "sku": "FP1098",
+          "tier": "Pro",
+          "rangeStart": 4,
+          "rangeEnd": 6,
+          "perMonthCost": 1000,
+          "annualCost": 12000
+        },
+        {
+          "sku": "FP1099",
+          "tier": "Premier",
+          "rangeStart": 7,
+          "rangeEnd": 10,
+          "perMonthCost": 1500,
+          "annualCost": 18000
+        },
+        {
+          "sku": "FP1100",
+          "tier": "Enterprise",
+          "rangeStart": 10,
+          "rangeEnd": Infinity,
+          "perMonthCost": 2000,
+          "annualCost": 24000
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1101",
+          "tier": "Basic",
+          "rangeStart": 0,
+          "rangeEnd": 3,
+          "perMonthCost": 650,
+          "annualCost": 7800
+        },
+        {
+          "sku": "FP1102",
+          "tier": "Pro",
+          "rangeStart": 4,
+          "rangeEnd": 6,
+          "perMonthCost": 1300,
+          "annualCost": 15600
+        },
+        {
+          "sku": "FP1103",
+          "tier": "Premier",
+          "rangeStart": 7,
+          "rangeEnd": 10,
+          "perMonthCost": 1950,
+          "annualCost": 23400
+        },
+        {
+          "sku": "FP1104",
+          "tier": "Enterprise",
+          "rangeStart": 10,
+          "rangeEnd": Infinity,
+          "perMonthCost": 2600,
+          "annualCost": 31200
+        }
+      ]
+    },
+    "fleetRouteOptimization": {
+      "name": "Fleet Route Optimization",
+      "pricingType": "fixed",
+      "annual": [
+        {
+          "sku": "FP1087",
+          "tier": "Starter",
+          "rangeStart": 1,
+          "rangeEnd": 20,
+          "perMonthCost": 650,
+          "annualCost": 7800
+        },
+        {
+          "sku": "FP1088",
+          "tier": "Professional",
+          "rangeStart": 21,
+          "rangeEnd": 50,
+          "perMonthCost": 1625,
+          "annualCost": 19500
+        },
+        {
+          "sku": "FP1089",
+          "tier": "Advanced",
+          "rangeStart": 51,
+          "rangeEnd": 100,
+          "perMonthCost": 3250,
+          "annualCost": 39000
+        },
+        {
+          "sku": "FP1090",
+          "tier": "Enterprise",
+          "rangeStart": 101,
+          "rangeEnd": 200,
+          "perMonthCost": 6500,
+          "annualCost": 78000
+        },
+        {
+          "sku": "FP1091",
+          "tier": "Enterprise 2",
+          "rangeStart": 201,
+          "rangeEnd": Infinity,
+          "perMonthCost": 9750,
+          "annualCost": 117000
+        }
+      ],
+      "monthly": [
+        {
+          "sku": "FP1092",
+          "tier": "Starter",
+          "rangeStart": 1,
+          "rangeEnd": 20,
+          "perMonthCost": 845,
+          "annualCost": 10140
+        },
+        {
+          "sku": "FP1093",
+          "tier": "Professional",
+          "rangeStart": 21,
+          "rangeEnd": 50,
+          "perMonthCost": 2112.5,
+          "annualCost": 25350
+        },
+        {
+          "sku": "FP1094",
+          "tier": "Advanced",
+          "rangeStart": 51,
+          "rangeEnd": 100,
+          "perMonthCost": 4225,
+          "annualCost": 50700
+        },
+        {
+          "sku": "FP1095",
+          "tier": "Enterprise",
+          "rangeStart": 101,
+          "rangeEnd": 200,
+          "perMonthCost": 8450,
+          "annualCost": 101400
+        },
+        {
+          "sku": "FP1096",
+          "tier": "Enterprise 2",
+          "rangeStart": 201,
+          "rangeEnd": Infinity,
+          "perMonthCost": 12675,
+          "annualCost": 152100
+        }
+      ]
+    },
+    "wms": {
+      "name": "WMS",
+      "pricingType": "custom",
+      "annual": [
+        {
+          "sku": "WMS1001",
+          "tier": "Base (1 Warehouse)",
+          "rangeStart": 1,
+          "rangeEnd": 1,
+          "perMonthCost": 1000,
+          "annualCost": 12000
+        },
+        {
+          "sku": "WMS1002",
+          "tier": "Multi-Warehouse",
+          "rangeStart": 2,
+          "rangeEnd": Infinity,
+          "perMonthCost": 1000,
+          "annualCost": 12000,
+          "note": "Base $12,000 + $6,000 per additional warehouse"
+        }
+      ],
+      "monthly": []
+    }
+  }
+}
+
