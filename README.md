@@ -1,6 +1,6 @@
 # 🚀 FreightPOP Legacy Pricer - Quote Builder
 
-**Version:** 2.0.0 "Granite"  
+**Version:** 2.1.0 "Marble"  
 **Released:** November 5, 2025  
 **Status:** ✅ Stable Production
 
@@ -27,14 +27,25 @@ The FreightPOP Legacy Pricer is a sophisticated quote building tool that allows 
 - Generate professional quotes for customers
 - Export quotes as PNG images
 
-### ✨ What's New in v2.0.0 "Granite"
+### ✨ What's New in v2.1.0 "Marble"
 
+- 💾 **CSV-Based Pricing** - All pricing loaded from CSV file
+- 📁 **Complete Database** - 108 SKUs across all products
+- ⚡ **Zero Code Updates** - Edit CSV → Deploy → Done
+- 🔄 **Auto Fallback** - Uses hardcoded SKUs if CSV fails
+- 🚀 **Fast Loading** - Optimized CSV parsing
+
+👉 **See full release notes:** [CSV_IMPLEMENTATION_SUMMARY.md](./CSV_IMPLEMENTATION_SUMMARY.md)
+
+### Previous Releases
+
+**v2.0.0 "Granite"** (November 5, 2025)
 - 📦 **9 Granular Pricing Models** - Better organization and categorization
 - 🔍 **Advanced Filtering & Search** - Find products instantly
 - 💾 **CSV Import/Export** - Manage pricing in Excel/Sheets
 - 🏷️ **Version Tracking** - Track changes across releases
 
-👉 **See full release notes:** [RELEASE_NOTES_v2.0.0.md](./RELEASE_NOTES_v2.0.0.md)
+👉 **See release notes:** [RELEASE_NOTES_v2.0.0.md](./RELEASE_NOTES_v2.0.0.md)
 
 ### Built With
 

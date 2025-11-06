@@ -1,4 +1,15 @@
-// skus.js
+/**
+ * SKU Definitions
+ * 
+ * ⚠️ NOTE: These are FALLBACK SKUs only!
+ * The primary pricing source is: public/pricing.json
+ * 
+ * These hardcoded SKUs are only used if:
+ * 1. The JSON file fails to load
+ * 2. The app is being developed/tested offline
+ * 
+ * To update pricing: Edit public/pricing.json
+ */
 
 // ---------------------- FREIGHT SKUs ----------------------
 export const freightAnnualSKUs = [
@@ -783,4 +794,32 @@ export const dockSchedulingMonthlySKUs = [
     annualCost: 20215,
   },
 ];
+
+// ---------------------- WMS SKUs ----------------------
+// WMS (Warehouse Management System) - Annual Only
+export const wmsAnnualSKUs = [
+  {
+    sku: 'WMS1001',
+    tier: 'Base (1 Warehouse)',
+    warehouses: 1,
+    perMonthCost: 1000,
+    annualCost: 12000,
+    rangeStart: 1,
+    rangeEnd: 1,
+  },
+  {
+    sku: 'WMS1002',
+    tier: 'Multi-Warehouse',
+    warehousesIncluded: 1,
+    additionalWarehouseCost: 6000,
+    perMonthCost: 1000, // base
+    annualCost: 12000, // base
+    rangeStart: 2,
+    rangeEnd: Infinity,
+  },
+];
+
+// No monthly SKUs for WMS (Annual only)
+export const wmsMonthlySKUs = [];
+
 

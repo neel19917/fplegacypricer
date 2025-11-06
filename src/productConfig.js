@@ -32,6 +32,8 @@ import {
   fleetRouteOptimizationMonthlySKUs,
   dockSchedulingAnnualSKUs,
   dockSchedulingMonthlySKUs,
+  wmsAnnualSKUs,
+  wmsMonthlySKUs,
 } from './skus';
 
 /**
@@ -154,6 +156,15 @@ export const pricingModels = {
     inputType: 'tiers',
     color: '#14b8a6',
     order: 9,
+  },
+  wmsBased: {
+    id: 'wmsBased',
+    name: 'WMS - Warehouse Based',
+    description: 'Warehouse Management System priced per warehouse',
+    icon: '🏭',
+    inputType: 'warehouses',
+    color: '#f97316',
+    order: 10,
   },
 };
 
@@ -443,6 +454,27 @@ export const productConfig = [
     includeInMinimum: true,
     canOverride: true,
     order: 11,
+  },
+  {
+    id: 'wms',
+    name: 'WMS',
+    category: 'modules',
+    pricingModel: 'wmsBased',
+    pricingType: 'volume',
+    description: (_, billing) =>
+      billing === 'annual'
+        ? '$12,000 first warehouse + $6,000 per additional'
+        : 'Annual Only',
+    tierDetails: () => 'Annual only - $12,000 first + $6,000 each additional',
+    skus: {
+      annual: [],
+      monthly: [],
+    },
+    defaultVolume: 0,
+    volumeLabel: 'Number of Warehouses',
+    annualOnly: true,
+    includeInMinimum: true,
+    order: 12,
   },
 ];
 
