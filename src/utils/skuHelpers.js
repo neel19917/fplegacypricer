@@ -4,45 +4,96 @@
 
 /**
  * Find the appropriate SKU based on volume and billing
- * @param {object} product - The product configuration object
+ * @param {array} skuArray - The SKU array to search (from skuData, not product.skus)
  * @param {number} volume - The volume/count
- * @param {string} billing - 'annual' or 'monthly'
- * @returns {string} The selected SKU or empty string
+ * @param {string} productId - Product ID for logging purposes
+ * @returns {string} The selected SKU or 'CUSTOM_PRICING' if volume doesn't match any tier
  */
-export const findSKUForProduct = (product, volume, billing) => {
-  if (!product.skus || volume < 1) return '';
-  
-  const skuArray = billing === 'annual' ? product.skus.annual : product.skus.monthly;
-  if (!skuArray || skuArray.length === 0) return '';
+export const findSKUForProduct = (skuArray, volume, productId = '') => {
+  if (!skuArray || skuArray.length === 0 || volume < 1) return '';
   
   let selected;
+  let minTier, maxTier;
   
-  // Check if SKUs have rangeStart/rangeEnd or range[] array
+  // Check if SKUs have range[] array or rangeStart/rangeEnd
   const firstSKU = skuArray[0];
-  if (firstSKU.rangeStart !== undefined && firstSKU.rangeEnd !== undefined) {
-    // Products with rangeStart/rangeEnd (freight, parcel, locations, ocean, support, dock)
-    selected = skuArray.find(
-      plan => volume >= plan.rangeStart && volume <= plan.rangeEnd
-    );
-  } else if (firstSKU.range && Array.isArray(firstSKU.range)) {
-    // Products with range array (auditing, FRM)
+  
+  // PRIORITY 1: Check for range array first (auditing, FRM use this format)
+  if (firstSKU.range && Array.isArray(firstSKU.range)) {
     selected = skuArray.find(
       plan => plan.range && volume >= plan.range[0] && volume <= plan.range[1]
     );
+    
+    // Get min and max tier ranges for validation
+    minTier = firstSKU.range[0];
+    maxTier = skuArray[skuArray.length - 1].range[1];
+    
+    // If no match found, volume doesn't match any tier
+    if (!selected) {
+      if (volume < minTier) {
+        console.warn(`Volume ${volume} is below minimum tier ${minTier} for product ${productId}`);
+        return 'CUSTOM_PRICING';
+      } else if (volume > maxTier) {
+        console.warn(`Volume ${volume} exceeds max tier ${maxTier} for product ${productId}`);
+        return 'CUSTOM_PRICING';
+      } else {
+        // Volume falls between tiers (gap in tier ranges)
+        console.warn(`Volume ${volume} doesn't match any tier range for product ${productId}`);
+        return 'CUSTOM_PRICING';
+      }
+    }
+  } 
+  // PRIORITY 2: Check for rangeStart/rangeEnd (freight, parcel, locations, ocean, support, dock)
+  else if (firstSKU.rangeStart !== undefined && firstSKU.rangeEnd !== undefined) {
+    selected = skuArray.find(
+      plan => volume >= plan.rangeStart && volume <= plan.rangeEnd
+    );
+    
+    // Get min and max tier ranges for validation
+    minTier = firstSKU.rangeStart;
+    maxTier = skuArray[skuArray.length - 1].rangeEnd;
+    
+    // If no match found, volume doesn't match any tier
+    if (!selected) {
+      if (volume < minTier) {
+        console.warn(`Volume ${volume} is below minimum tier ${minTier} for product ${productId}`);
+        return 'CUSTOM_PRICING';
+      } else if (volume > maxTier) {
+        console.warn(`Volume ${volume} exceeds max tier ${maxTier} for product ${productId}`);
+        return 'CUSTOM_PRICING';
+      } else {
+        // Volume falls between tiers (gap in tier ranges)
+        console.warn(`Volume ${volume} doesn't match any tier range for product ${productId}`);
+        return 'CUSTOM_PRICING';
+      }
+    }
   }
   
-  // Fallback to highest tier if volume exceeds all ranges
-  return selected ? selected.sku : skuArray[skuArray.length - 1].sku;
+  // Return selected SKU (volume matches a tier)
+  return selected ? selected.sku : '';
 };
 
 /**
  * Get a pricing plan by SKU
  * @param {array} skuArray - Array of SKU objects
  * @param {string} sku - The SKU to find
- * @returns {object|null} The plan object or null
+ * @returns {object|null} The plan object, custom pricing object, or null
  */
 export const getPlanBySKU = (skuArray, sku) => {
   if (!skuArray || !sku) return null;
+  
+  // Handle custom pricing SKU
+  if (sku === 'CUSTOM_PRICING') {
+    return {
+      sku: 'CUSTOM_PRICING',
+      tier: 'Custom Pricing Required',
+      isCustomPricing: true,
+      annualCost: 0,
+      monthlyCost: 0,
+      perMonthCost: 0,
+    };
+  }
+  
   return skuArray.find(p => p.sku === sku) || null;
 };
 
@@ -55,6 +106,31 @@ export const getPlanBySKU = (skuArray, sku) => {
 export const getSKUArrayByBilling = (product, billing) => {
   if (!product.skus) return [];
   return billing === 'annual' ? product.skus.annual : product.skus.monthly;
+};
+
+/**
+ * Check if a volume exceeds the maximum tier for a product
+ * @param {object} product - The product configuration
+ * @param {number} volume - The volume to check
+ * @param {string} billing - 'annual' or 'monthly'
+ * @returns {boolean} True if volume exceeds max tier
+ */
+export const isVolumeAboveMaxTier = (product, volume, billing) => {
+  if (!product.skus || volume < 1) return false;
+  
+  const skuArray = billing === 'annual' ? product.skus.annual : product.skus.monthly;
+  if (!skuArray || skuArray.length === 0) return false;
+  
+  const highestTier = skuArray[skuArray.length - 1];
+  
+  // Check rangeEnd or range[1]
+  if (highestTier.rangeEnd !== undefined) {
+    return volume > highestTier.rangeEnd;
+  } else if (highestTier.range && Array.isArray(highestTier.range)) {
+    return volume > highestTier.range[1];
+  }
+  
+  return false;
 };
 
 /**

@@ -822,4 +822,84 @@ export const wmsAnnualSKUs = [
 // No monthly SKUs for WMS (Annual only)
 export const wmsMonthlySKUs = [];
 
+// ---------------------- AI AGENT SKUs ----------------------
+// FreightPOP AI Agent - Token-based pricing (Annual only)
+export const aiAgentAnnualSKUs = [
+  {
+    sku: 'AI-AGENT-001',
+    tier: 'Tier 1',
+    shipmentsIncluded: 250,
+    rangeStart: 0,
+    rangeEnd: 250,
+    annualCost: 3000,
+    tokensIncluded: 50000000,
+  },
+  {
+    sku: 'AI-AGENT-002',
+    tier: 'Tier 2',
+    shipmentsIncluded: 500,
+    rangeStart: 251,
+    rangeEnd: 500,
+    annualCost: 6000,
+    tokensIncluded: 100000000,
+  },
+  {
+    sku: 'AI-AGENT-003',
+    tier: 'Tier 3',
+    shipmentsIncluded: 1000,
+    rangeStart: 501,
+    rangeEnd: 1000,
+    annualCost: 12000,
+    tokensIncluded: 200000000,
+  },
+  {
+    sku: 'AI-AGENT-004',
+    tier: 'Tier 4',
+    shipmentsIncluded: 1500,
+    rangeStart: 1001,
+    rangeEnd: 1500,
+    annualCost: 18000,
+    tokensIncluded: 300000000,
+  },
+  {
+    sku: 'AI-AGENT-005',
+    tier: 'Tier 5',
+    shipmentsIncluded: 2000,
+    rangeStart: 1501,
+    rangeEnd: 2000,
+    annualCost: 24000,
+    tokensIncluded: 400000000,
+  },
+  {
+    sku: 'AI-AGENT-006',
+    tier: 'Tier 6',
+    shipmentsIncluded: 3000,
+    rangeStart: 2001,
+    rangeEnd: 3000,
+    annualCost: 36000,
+    tokensIncluded: 600000000,
+  },
+  {
+    sku: 'AI-AGENT-007',
+    tier: 'Tier 7',
+    shipmentsIncluded: 4000,
+    rangeStart: 3001,
+    rangeEnd: 4000,
+    annualCost: 48000,
+    tokensIncluded: 800000000,
+  },
+  {
+    sku: 'AI-AGENT-008',
+    tier: 'Tier 8',
+    shipmentsIncluded: 5000,
+    rangeStart: 4001,
+    rangeEnd: 5000,
+    annualCost: 60000,
+    tokensIncluded: 1000000000,
+  },
+];
+
+// No monthly SKUs for AI Agent (Annual only)
+export const aiAgentMonthlySKUs = [];
+
 

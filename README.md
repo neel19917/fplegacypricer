@@ -1,7 +1,7 @@
 # 🚀 FreightPOP Legacy Pricer - Quote Builder
 
-**Version:** 2.1.0 "Marble"  
-**Released:** November 5, 2025  
+**Version:** 2.3.6 "Opal"  
+**Released:** November 6, 2025  
 **Status:** ✅ Stable Production
 
 A professional quote builder application for FreightPOP's transportation management system products and services.
@@ -27,15 +27,27 @@ The FreightPOP Legacy Pricer is a sophisticated quote building tool that allows 
 - Generate professional quotes for customers
 - Export quotes as PNG images
 
-### ✨ What's New in v2.1.0 "Marble"
+### ✨ What's New in v2.3.6 "Opal"
 
-- 💾 **CSV-Based Pricing** - All pricing loaded from CSV file
-- 📁 **Complete Database** - 108 SKUs across all products
-- ⚡ **Zero Code Updates** - Edit CSV → Deploy → Done
-- 🔄 **Auto Fallback** - Uses hardcoded SKUs if CSV fails
-- 🚀 **Fast Loading** - Optimized CSV parsing
+- 🐛 **Critical Fix** - Parcel tiers now correctly pull from pricing.json
+- 🔴 **Auto Tier Validation** - Volumes exceeding tier limits automatically highlight in red
+- ⚠️ **Error Detection** - Detects volumes below minimum, above maximum, or between tier gaps
+- 💰 **Custom Pricing Alerts** - Clear "Custom Pricing Required" messages for sales team
+- 📊 **Enhanced Logging** - Better debug information for troubleshooting
 
-👉 **See full release notes:** [CSV_IMPLEMENTATION_SUMMARY.md](./CSV_IMPLEMENTATION_SUMMARY.md)
+👉 **See full release notes:** [RELEASE_NOTES_v2.3.6.md](./RELEASE_NOTES_v2.3.6.md)
+
+### Previous Releases
+
+**v2.3.5 "Opal"** (November 6, 2025)
+- Added custom pricing detection for volumes exceeding max tiers
+- Red-highlighted rows and visual indicators
+- Fixed pricing display issues for multiple products
+
+**v2.2.0 "Marble"** (November 6, 2025)
+- Migrated pricing storage from CSV to JSON
+- Structured pricing data with better organization
+- Native JSON parsing for faster load times
 
 ### Previous Releases
 

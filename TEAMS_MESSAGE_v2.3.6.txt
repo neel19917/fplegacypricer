@@ -1,0 +1,52 @@
+🚀 **FreightPOP Legacy Pricer - Version 2.3.6 "Opal" Released!**
+
+Hi Sales Team! 👋
+
+We've just released an important update to the Legacy Pricer with critical bug fixes and new features to help you identify when custom pricing is needed.
+
+**🐛 Critical Bug Fix:**
+✅ Fixed an issue where Parcel tiers weren't pulling correctly from the pricing file. All products now correctly use the latest pricing data.
+
+**✨ New Feature - Automatic Tier Validation:**
+The system now automatically detects when shipment volumes exceed tier limits and highlights them in **RED** with clear error messages. This helps you quickly identify when you need to contact sales for custom pricing.
+
+**What You'll See:**
+🔴 Product rows highlighted in red when volumes exceed tier limits
+⚠️ Clear error message: "Volume exceeds tier limits - Custom Pricing Required"
+💰 Cost columns show "Request Quote" instead of pricing
+📝 Helpful tooltips explaining the issue
+
+**Products Affected:**
+• Core TMS - Freight
+• Core TMS - Parcel
+• Ocean Tracking
+• Locations
+• Support Package
+• Auditing Module
+• Fleet Route Optimization
+• Dock Scheduling
+
+**How It Works:**
+The system automatically detects three scenarios:
+1. Volume below minimum tier
+2. Volume above maximum tier
+3. Volume between tier gaps (no matching tier)
+
+All scenarios trigger red highlighting and custom pricing alerts.
+
+**What This Means for You:**
+✅ No more guessing if a volume needs custom pricing
+✅ Clear visual indicators make it obvious when to escalate
+✅ Consistent error handling across all products
+✅ Faster quote generation with fewer errors
+
+**Questions or Issues?**
+If you notice any problems or have questions, please reach out to the development team or open an issue on GitHub.
+
+Thanks for your continued feedback! 🙏
+
+---
+**Version:** 2.3.6 "Opal"
+**Release Date:** November 6, 2025
+**Full Release Notes:** See RELEASE_NOTES_v2.3.6.md in the repository
+
