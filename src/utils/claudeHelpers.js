@@ -60,7 +60,7 @@ Products to look for:
 - Ocean Tracking
 - Locations
 - Support Package
-- Auditing Module
+- Auditing Module (also includes "EDI" and "auditing" - these are part of the Auditing Module product)
 - Fleet Route Optimization
 - Dock Scheduling
 - Vendor Portals
@@ -71,9 +71,25 @@ For each product found, extract:
 1. Product name (match to one of the products above)
 2. SKU code (format: FP####, AI-AGENT-###, or WMS####)
 3. Pricing tier (e.g., "Starter", "Pro", "Enterprise 1", etc.)
-4. Volume/shipments count (number)
+4. Volume/count (number) - IMPORTANT: The volume type depends on the product:
+   - For Freight, Parcel, Ocean Tracking: Extract number of shipments/month
+   - For Auditing Module: Extract number of CARRIERS (this is critical - look for "carriers", "carrier count", etc.)
+   - For Locations: Extract number of locations
+   - For Support Package: Extract hours/month
+   - For Fleet Route Optimization: Extract number of stops
+   - For Dock Scheduling: Extract number of docks
+   - For Vendor Portals: Extract number of portals
+   - For WMS: Extract number of warehouses
+   - For AI Agent: Extract total shipment volume (Freight + Parcel + Ocean)
 5. Customer price (what the customer is paying - annual or monthly amount)
+   - If only a total/grand total is shown (not per-product prices), set customerPrice to 0 for individual products
 6. Billing frequency ("annual" or "monthly")
+
+IMPORTANT - Total Price Extraction:
+- Look for a "Total", "Grand Total", "Total Cost", or similar aggregate price in the screenshot
+- This is the total amount the customer is paying for ALL products combined
+- Extract this as "totalPrice" in the root of the JSON object
+- If individual product prices are shown, use those. If only a total is shown, use totalPrice and set individual customerPrice to 0
 
 Return a JSON object with this structure:
 {
@@ -88,15 +104,19 @@ Return a JSON object with this structure:
       "billingFrequency": "annual"
     }
   ],
-  "billingFrequency": "annual"
+  "billingFrequency": "annual",
+  "totalPrice": 20000
 }
 
 Important:
 - Only include products that are clearly visible in the screenshot
 - If SKU is not visible, leave it as empty string ""
 - If tier is not visible, leave it as empty string ""
-- Customer price should be the actual amount the customer is paying (after any discounts/markups)
-- Volume should be the shipment/volume count for that product
+- If individual product prices are shown, use those for customerPrice
+- If only a total/grand total is shown, extract it as totalPrice and set individual customerPrice to 0
+- "EDI" and "auditing" should be mapped to "Auditing Module" (productId: "auditing")
+- For Auditing Module: Extract the NUMBER OF CARRIERS (not shipments) - look for text like "X carriers", "carrier count: X", etc.
+- Volume should match the product type (shipments for Freight/Parcel/Ocean, carriers for Auditing, etc.)
 - If billing frequency is not clear, default to "annual"
 - Return ONLY valid JSON, no additional text or markdown formatting`;
 
@@ -156,6 +176,7 @@ Important:
       'Support Package': 'supportPackage',
       'Auditing Module': 'auditing',
       'Auditing': 'auditing',
+      'EDI': 'auditing', // EDI is part of Auditing Module
       'Fleet Route Optimization': 'fleetRouteOptimization',
       'Fleet Route': 'fleetRouteOptimization',
       'Dock Scheduling': 'dockScheduling',
@@ -182,6 +203,7 @@ Important:
     return {
       products: normalizedProducts,
       billingFrequency: parsed.billingFrequency || 'annual',
+      totalPrice: parsed.totalPrice ? Number(parsed.totalPrice) : null,
     };
   } catch (error) {
     if (error instanceof SyntaxError) {

@@ -11,9 +11,10 @@ import { getPlanBySKU, findSKUForProduct } from './skuHelpers';
  * @param {Array} parsedProducts - Array of parsed products from Claude
  * @param {Object} skuData - SKU data loaded from pricing.json
  * @param {string} subBilling - Current billing frequency ('annual' or 'monthly')
- * @returns {Array} Array of products with margin analysis
+ * @param {number|null} totalPrice - Total customer price from screenshot (if available)
+ * @returns {Object} Object with products array and totalPrice
  */
-export function calculateMargins(parsedProducts, skuData, subBilling) {
+export function calculateMargins(parsedProducts, skuData, subBilling, totalPrice = null) {
   // Map product IDs to SKU data keys
   const productToSKUDataMap = {
     freight: 'Freight',
@@ -29,7 +30,8 @@ export function calculateMargins(parsedProducts, skuData, subBilling) {
     aiAgent: 'AIAgent', // Note: AI Agent may need special handling
   };
 
-  return parsedProducts.map((parsedProduct) => {
+  // Calculate margins for each product
+  const productsWithMargins = parsedProducts.map((parsedProduct) => {
     const { productId, sku, volume, customerPrice, billingFrequency } = parsedProduct;
     
     // Use billing frequency from screenshot, or fall back to current setting
@@ -184,6 +186,37 @@ export function calculateMargins(parsedProducts, skuData, subBilling) {
       error: null,
     };
   });
+
+  // If totalPrice is provided, use it for total margin calculation
+  // Set individual customer prices and margins to null when only total is available
+  let normalizedTotalPrice = totalPrice;
+  if (totalPrice) {
+    // Normalize total price to match billing frequency
+    const effectiveBilling = parsedProducts[0]?.billingFrequency || subBilling;
+    if (effectiveBilling === 'annual' && totalPrice < 1000) {
+      // Likely monthly total, convert to annual
+      normalizedTotalPrice = totalPrice * 12;
+    } else if (effectiveBilling === 'monthly' && totalPrice > 10000) {
+      // Likely annual total, convert to monthly
+      normalizedTotalPrice = totalPrice / 12;
+    }
+
+    // If totalPrice exists and individual customer prices are 0 or very small,
+    // set them to null to indicate they should not be displayed individually
+    // Also set individual margins to null since we can't calculate them without individual prices
+    productsWithMargins.forEach((product) => {
+      if (product.customerPrice === 0 || product.customerPrice < 100) {
+        product.customerPrice = null;
+        product.margin = null;
+        product.marginPercent = null;
+      }
+    });
+  }
+
+  return {
+    products: productsWithMargins,
+    totalPrice: normalizedTotalPrice,
+  };
 }
 
 /**

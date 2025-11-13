@@ -46,9 +46,17 @@ const ScreenshotParseModal = ({
 
   if (!isOpen) return null;
 
-  const totalMargin = parsedData?.products?.reduce((sum, p) => sum + (p.margin || 0), 0) || 0;
-  const totalCustomerPrice = parsedData?.products?.reduce((sum, p) => sum + (p.customerPrice || 0), 0) || 0;
   const totalOurCost = parsedData?.products?.reduce((sum, p) => sum + (p.ourCost || 0), 0) || 0;
+  
+  // Use totalPrice if available (aggregate cost), otherwise sum individual prices
+  const totalCustomerPrice = parsedData?.totalPrice 
+    ? parsedData.totalPrice 
+    : parsedData?.products?.reduce((sum, p) => sum + (p.customerPrice || 0), 0) || 0;
+  
+  // Calculate total margin: if totalPrice exists, use (totalPrice - totalOurCost), otherwise sum individual margins
+  const totalMargin = parsedData?.totalPrice 
+    ? parsedData.totalPrice - totalOurCost 
+    : parsedData?.products?.reduce((sum, p) => sum + (p.margin || 0), 0) || 0;
 
   return (
     <div
@@ -232,7 +240,7 @@ const ScreenshotParseModal = ({
                 </thead>
                 <tbody>
                   {parsedData.products.map((product, index) => {
-                    const isNegativeMargin = product.margin < 0;
+                    const isNegativeMargin = product.margin !== null && product.margin !== undefined && product.margin < 0;
                     return (
                       <tr
                         key={index}
@@ -259,27 +267,37 @@ const ScreenshotParseModal = ({
                           ${product.ourCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td style={{ padding: '12px', textAlign: 'right' }}>
-                          ${product.customerPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {product.customerPrice !== null && product.customerPrice !== undefined
+                            ? `$${product.customerPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : 'N/A'}
                         </td>
                         <td
                           style={{
                             padding: '12px',
                             textAlign: 'right',
-                            color: isNegativeMargin ? '#dc2626' : '#059669',
+                            color: product.margin !== null && product.margin !== undefined 
+                              ? (isNegativeMargin ? '#dc2626' : '#059669')
+                              : '#666',
                             fontWeight: '600',
                           }}
                         >
-                          ${product.margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {product.margin !== null && product.margin !== undefined
+                            ? `$${product.margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : 'N/A'}
                         </td>
                         <td
                           style={{
                             padding: '12px',
                             textAlign: 'right',
-                            color: isNegativeMargin ? '#dc2626' : '#059669',
+                            color: product.marginPercent !== null && product.marginPercent !== undefined
+                              ? (isNegativeMargin ? '#dc2626' : '#059669')
+                              : '#666',
                             fontWeight: '600',
                           }}
                         >
-                          {product.marginPercent.toFixed(1)}%
+                          {product.marginPercent !== null && product.marginPercent !== undefined
+                            ? `${product.marginPercent.toFixed(1)}%`
+                            : 'N/A'}
                         </td>
                       </tr>
                     );
