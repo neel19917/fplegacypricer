@@ -52,14 +52,14 @@ export async function parseScreenshotWithClaude(imageFile) {
   const mimeType = getImageMimeType(imageFile);
 
   // Create the prompt
-  const prompt = `You are analyzing a FreightPOP quote document screenshot. Extract all product information and return it as JSON.
+  const prompt = `You are analyzing a FreightPOP quote document screenshot. Extract all SUBSCRIPTION product information and return it as JSON.
 
 Products to look for:
-- Core TMS - Freight (or "Freight")
+- Core TMS - Freight (or "Freight", "LTL & FTL shipments")
 - Core TMS - Parcel (or "Parcel")
 - Ocean Tracking
 - Locations
-- Support Package
+- Support Package (recurring subscription only - NOT one-time onboarding/training)
 - Auditing Module (also includes "EDI" and "auditing" - these are part of the Auditing Module product)
 - Fleet Route Optimization
 - Dock Scheduling
@@ -67,7 +67,15 @@ Products to look for:
 - WMS
 - FreightPOP AI Agent
 
-For each product found, extract:
+IGNORE these one-time costs (do NOT extract as products):
+- Onboarding & Training
+- NetSuite Integration Setup
+- Any setup fees
+- Any development costs
+- Any one-time charges
+- Anything in "SETUP & DEVELOPMENT" section
+
+For each SUBSCRIPTION product found, extract:
 1. Product name (match to one of the products above)
 2. SKU code (format: FP####, AI-AGENT-###, or WMS####)
 3. Pricing tier (e.g., "Starter", "Pro", "Enterprise 1", etc.)
@@ -75,21 +83,34 @@ For each product found, extract:
    - For Freight, Parcel, Ocean Tracking: Extract number of shipments/month
    - For Auditing Module: Extract number of CARRIERS (this is critical - look for "carriers", "carrier count", etc.)
    - For Locations: Extract number of locations
-   - For Support Package: Extract hours/month
+   - For Support Package: Extract hours/month (ONLY if it's a recurring subscription, NOT one-time onboarding)
    - For Fleet Route Optimization: Extract number of stops
    - For Dock Scheduling: Extract number of docks
    - For Vendor Portals: Extract number of portals
    - For WMS: Extract number of warehouses
    - For AI Agent: Extract total shipment volume (Freight + Parcel + Ocean)
 5. Customer price (what the customer is paying - annual or monthly amount)
-   - If only a total/grand total is shown (not per-product prices), set customerPrice to 0 for individual products
+   - Extract from the SUBTOTAL column in the SUBSCRIPTION section (the amount AFTER discount is applied)
+   - IMPORTANT: If products are bundled (e.g., "Multi-Mode Plan"), extract the bundled SUBTOTAL price
+   - If individual product prices are shown in SUBTOTAL column, use those
+   - If only a bundled total is shown, extract it as totalPrice and set individual customerPrice to 0
+   - Do NOT extract prices from "SETUP & DEVELOPMENT" section
+   - Do NOT extract pre-discount prices - only the SUBTOTAL after discount
 6. Billing frequency ("annual" or "monthly")
 
+IMPORTANT - Bundled Plans:
+- If you see a bundled plan (e.g., "Multi-Mode Plan", "Suite Plan") that includes multiple products:
+  - Extract the volumes for each product mentioned in the bundle description
+  - Extract the bundled SUBTOTAL price as totalPrice
+  - Set individual customerPrice to 0 for each product in the bundle
+  - The totalPrice should be the annual or monthly amount shown for the bundle
+
 IMPORTANT - Total Price Extraction:
-- Look for a "Total", "Grand Total", "Total Cost", or similar aggregate price in the screenshot
-- This is the total amount the customer is paying for ALL products combined
+- Look for the SUBSCRIPTION section total/subtotal (NOT including setup/development costs)
+- This is the recurring amount the customer pays for subscription products
 - Extract this as "totalPrice" in the root of the JSON object
-- If individual product prices are shown, use those. If only a total is shown, use totalPrice and set individual customerPrice to 0
+- If individual product prices are shown in SUBTOTAL column, use those
+- If only a bundled total is shown, use totalPrice and set individual customerPrice to 0
 
 Return a JSON object with this structure:
 {
@@ -109,14 +130,16 @@ Return a JSON object with this structure:
 }
 
 Important:
-- Only include products that are clearly visible in the screenshot
+- ONLY extract SUBSCRIPTION products from the SUBSCRIPTION section
+- Do NOT extract one-time costs from SETUP & DEVELOPMENT section as products
 - If SKU is not visible, leave it as empty string ""
 - If tier is not visible, leave it as empty string ""
-- If individual product prices are shown, use those for customerPrice
-- If only a total/grand total is shown, extract it as totalPrice and set individual customerPrice to 0
+- Extract customer price from SUBTOTAL column (after discount), NOT from monthly cost or one-time cost columns
+- For bundled plans: Extract volumes for each product, but use the bundled SUBTOTAL as totalPrice
 - "EDI" and "auditing" should be mapped to "Auditing Module" (productId: "auditing")
-- For Auditing Module: Extract the NUMBER OF CARRIERS (not shipments) - look for text like "X carriers", "carrier count: X", etc.
+- For Auditing Module: Extract the NUMBER OF CARRIERS (not shipments) - look for text like "X carriers", "carrier count: X", "up to X non-parcel carriers", etc.
 - Volume should match the product type (shipments for Freight/Parcel/Ocean, carriers for Auditing, etc.)
+- If a bundled plan shows "Payment billed annually at $X", use that amount as totalPrice
 - If billing frequency is not clear, default to "annual"
 - Return ONLY valid JSON, no additional text or markdown formatting`;
 
