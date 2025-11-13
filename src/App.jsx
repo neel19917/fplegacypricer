@@ -968,12 +968,13 @@ const App = () => {
       // Parse screenshot with Claude
       const parsed = await parseScreenshotWithClaude(file);
 
-      // Calculate margins
-      const productsWithMargins = calculateMargins(parsed.products, skuData, subBilling);
+      // Calculate margins (now returns object with products and totalPrice)
+      const marginResult = calculateMargins(parsed.products, skuData, subBilling, parsed.totalPrice);
 
       setScreenshotData({
         ...parsed,
-        products: productsWithMargins,
+        products: marginResult.products,
+        totalPrice: marginResult.totalPrice,
       });
     } catch (error) {
       console.error('Error parsing screenshot:', error);
@@ -1016,7 +1017,7 @@ const App = () => {
         return; // Skip products with errors
       }
 
-      // Set volume
+      // Set volume (for Auditing Module, this is the number of carriers)
       if (product.volume > 0) {
         setProductValue(product.productId, 'volume', product.volume);
       }
@@ -1027,7 +1028,8 @@ const App = () => {
       }
 
       // Calculate and set markup if customer price differs from our cost
-      if (product.ourCost > 0 && product.customerPrice > 0) {
+      // Skip if customerPrice is null (when totalPrice is used instead)
+      if (product.ourCost > 0 && product.customerPrice !== null && product.customerPrice !== undefined && product.customerPrice > 0) {
         const requiredMarkup = calculateRequiredMarkup(product.ourCost, product.customerPrice);
         if (Math.abs(requiredMarkup) > 0.01) {
           // Only set markup if there's a meaningful difference
