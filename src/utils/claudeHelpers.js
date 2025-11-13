@@ -101,11 +101,13 @@ Important:
 - Return ONLY valid JSON, no additional text or markdown formatting`;
 
   try {
-    // Call proxy server directly (runs on port 3001)
-    // In development: http://localhost:3001/api/claude
-    // In production: use VITE_PROXY_URL or same origin
-    const proxyUrl = import.meta.env.VITE_PROXY_URL || 'http://localhost:3001';
-    const apiEndpoint = `${proxyUrl}/api/claude`;
+    // Determine API endpoint based on environment
+    // In development: use local proxy server (http://localhost:3001/api/claude)
+    // In production (Netlify): use Netlify Function (/api/claude -> /.netlify/functions/claude)
+    const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
+    const apiEndpoint = isDevelopment
+      ? (import.meta.env.VITE_PROXY_URL || 'http://localhost:3001') + '/api/claude'
+      : '/api/claude'; // Netlify redirects this to /.netlify/functions/claude
     const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {

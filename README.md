@@ -163,6 +163,30 @@ npm run build
 npm run preview
 ```
 
+### Deploy to Netlify
+
+1. **Connect your repository to Netlify**
+   - Go to [Netlify Dashboard](https://app.netlify.com)
+   - Add new site from Git
+   - Connect your GitHub repository
+
+2. **Configure build settings**
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - The `netlify.toml` file is already configured
+
+3. **Set environment variables in Netlify**
+   - Go to Site settings → Environment variables
+   - Add the following:
+     - `ANTHROPIC_API_KEY` - Your Anthropic API key (required)
+     - `CLAUDE_MODEL` - Optional, defaults to `claude-3-5-sonnet-20240620`
+
+4. **Deploy**
+   - Netlify will automatically deploy on push to your connected branch
+   - The Netlify Function (`netlify/functions/claude.js`) will handle API requests server-side
+
+**Note:** The screenshot parsing feature requires the `ANTHROPIC_API_KEY` environment variable to be set in Netlify. Without it, the feature will show an error when used.
+
 ---
 
 ## 📦 Product Structure
