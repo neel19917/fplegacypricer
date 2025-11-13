@@ -3,9 +3,12 @@ import html2canvas from 'html2canvas';
 import { productConfig, pricingModels, getPricingModelsWithProducts } from './productConfig';
 import { APP_VERSION } from './version';
 import ProductCheckbox from './components/ProductCheckbox';
+import ScreenshotParseModal from './components/ScreenshotParseModal';
 import {
   loadDefaultPricing,
 } from './utils/jsonHelpers';
+import { parseScreenshotWithClaude } from './utils/claudeHelpers';
+import { calculateMargins, calculateRequiredMarkup } from './utils/marginAnalysis';
 import {
   freightAnnualSKUs,
   freightMonthlySKUs,
@@ -458,6 +461,13 @@ const App = () => {
     Object.keys(pricingModels)
   );
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Screenshot parsing state
+  const [showScreenshotModal, setShowScreenshotModal] = useState(false);
+  const [screenshotData, setScreenshotData] = useState(null);
+  const [isParsingScreenshot, setIsParsingScreenshot] = useState(false);
+  const [screenshotError, setScreenshotError] = useState(null);
+  const fileInputRef = useRef(null);
 
   // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
   const {
@@ -930,6 +940,113 @@ const App = () => {
     setOneTimeMarkup(0);
     setOneTimeCosts([]);
     setSubBilling('annual');
+  };
+
+  // === Process Screenshot File ===
+  const processScreenshotFile = async (file) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setScreenshotError('Please upload an image file (PNG, JPG, etc.)');
+      setShowScreenshotModal(true);
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setScreenshotError('File size must be less than 10MB');
+      setShowScreenshotModal(true);
+      return;
+    }
+
+    setIsParsingScreenshot(true);
+    setScreenshotError(null);
+    setShowScreenshotModal(true);
+
+    try {
+      // Parse screenshot with Claude
+      const parsed = await parseScreenshotWithClaude(file);
+
+      // Calculate margins
+      const productsWithMargins = calculateMargins(parsed.products, skuData, subBilling);
+
+      setScreenshotData({
+        ...parsed,
+        products: productsWithMargins,
+      });
+    } catch (error) {
+      console.error('Error parsing screenshot:', error);
+      setScreenshotError(error.message || 'Failed to parse screenshot. Please try again.');
+      setScreenshotData(null);
+    } finally {
+      setIsParsingScreenshot(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // === Screenshot Upload Handler ===
+  const handleScreenshotUpload = async (event) => {
+    const file = event.target.files[0];
+    await processScreenshotFile(file);
+  };
+
+  // === Handle Paste ===
+  const handlePaste = async (file) => {
+    await processScreenshotFile(file);
+  };
+
+  // === Apply Screenshot Data ===
+  const applyScreenshotData = (data) => {
+    if (!data || !data.products || data.products.length === 0) {
+      return;
+    }
+
+    // Update billing frequency if different
+    if (data.billingFrequency && data.billingFrequency !== subBilling) {
+      setSubBilling(data.billingFrequency);
+    }
+
+    // Apply each product
+    data.products.forEach((product) => {
+      if (!product.productId || product.error) {
+        return; // Skip products with errors
+      }
+
+      // Set volume
+      if (product.volume > 0) {
+        setProductValue(product.productId, 'volume', product.volume);
+      }
+
+      // Set SKU if found
+      if (product.sku) {
+        setProductValue(product.productId, 'sku', product.sku);
+      }
+
+      // Calculate and set markup if customer price differs from our cost
+      if (product.ourCost > 0 && product.customerPrice > 0) {
+        const requiredMarkup = calculateRequiredMarkup(product.ourCost, product.customerPrice);
+        if (Math.abs(requiredMarkup) > 0.01) {
+          // Only set markup if there's a meaningful difference
+          setProductValue(product.productId, 'markup', requiredMarkup);
+        }
+      }
+    });
+
+    // Close modal
+    setShowScreenshotModal(false);
+    setScreenshotData(null);
+    setScreenshotError(null);
+  };
+
+  // === Retry Screenshot Parsing ===
+  const handleRetryScreenshot = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const topSpacerHeight = '90px';
@@ -3081,6 +3198,29 @@ const App = () => {
         >
           🔄 Reset All
         </button>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleScreenshotUpload}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            padding: '10px 20px',
+            background: '#10b981',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          📷 Parse Screenshot
+        </button>
         <button
           onClick={() => setShowCustomerView(!showCustomerView)}
           style={{
@@ -3098,6 +3238,22 @@ const App = () => {
           {showCustomerView ? '📋 Show Detailed' : '👤 Customer View'}
         </button>
       </div>
+
+      {/* Screenshot Parse Modal */}
+      <ScreenshotParseModal
+        isOpen={showScreenshotModal}
+        onClose={() => {
+          setShowScreenshotModal(false);
+          setScreenshotData(null);
+          setScreenshotError(null);
+        }}
+        parsedData={screenshotData}
+        isLoading={isParsingScreenshot}
+        error={screenshotError}
+        onApply={applyScreenshotData}
+        onRetry={handleRetryScreenshot}
+        onPaste={handlePaste}
+      />
     </>
   );
 };

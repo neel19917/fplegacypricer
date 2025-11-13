@@ -34,6 +34,7 @@ The FreightPOP Legacy Pricer is a sophisticated quote building tool that allows 
 - ⚠️ **Error Detection** - Detects volumes below minimum, above maximum, or between tier gaps
 - 💰 **Custom Pricing Alerts** - Clear "Custom Pricing Required" messages for sales team
 - 📊 **Enhanced Logging** - Better debug information for troubleshooting
+- 📷 **Screenshot Parsing** - Upload quote screenshots and automatically extract product data, SKUs, volumes, and pricing using Claude AI
 
 👉 **See full release notes:** [RELEASE_NOTES_v2.3.6.md](./RELEASE_NOTES_v2.3.6.md)
 
@@ -111,6 +112,7 @@ The FreightPOP Legacy Pricer is a sophisticated quote building tool that allows 
 - **Reset functionality** - Clear all inputs and start over
 - **URL parameters** - Load saved quotes via URL
 - **Custom pricing warnings** - Alerts for management approval
+- **Screenshot Parsing** - Upload quote document screenshots and automatically extract product information, SKUs, volumes, and customer pricing using Claude AI. View margin analysis before applying changes.
 
 ---
 
@@ -119,6 +121,9 @@ The FreightPOP Legacy Pricer is a sophisticated quote building tool that allows 
 ### Prerequisites
 
 - Node.js 16+ and npm
+- Anthropic Claude API key (for screenshot parsing feature)
+  - Get your API key from: https://console.anthropic.com/
+  - Add it to `.env` file as `ANTHROPIC_API_KEY` (server-side only, not exposed to browser)
 
 ### Installation
 
@@ -134,14 +139,21 @@ git checkout beta
 npm install
 ```
 
-3. **Start development server**
+3. **Set up environment variables**
+```bash
+cp .env.example .env
+# Edit .env and add your ANTHROPIC_API_KEY
+```
+
+4. **Start development server**
 ```bash
 npm run dev
 ```
+This will start both the Vite dev server (port 3000) and the proxy server (port 3001) concurrently.
 
-4. **Open browser**
+5. **Open browser**
 ```
-http://localhost:5173
+http://localhost:3000
 ```
 
 ### Build for Production
