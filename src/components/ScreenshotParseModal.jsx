@@ -234,8 +234,8 @@ const ScreenshotParseModal = ({
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Volume</th>
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Our Cost</th>
                     <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Customer Price</th>
-                    <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Margin</th>
-                    <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Margin %</th>
+                    <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Positive/Negative</th>
+                    <th style={{ padding: '12px', textAlign: 'right', fontWeight: '600', color: '#ffffff' }}>Positive/Negative %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -254,6 +254,11 @@ const ScreenshotParseModal = ({
                           {product.error && (
                             <div style={{ fontSize: '12px', color: '#dc2626', marginTop: '4px' }}>
                               {product.error}
+                            </div>
+                          )}
+                          {product.isDiscountedBelowSticker && (
+                            <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '4px', fontWeight: '600' }}>
+                              ⚠️ Discounted below sticker - Contractual uplift required
                             </div>
                           )}
                         </td>

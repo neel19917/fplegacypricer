@@ -60,6 +60,7 @@ export function calculateMargins(parsedProducts, skuData, subBilling, totalPrice
         }
         const margin = normalizedCustomerPrice - ourCost;
         const marginPercent = ourCost > 0 ? ((margin / ourCost) * 100) : (normalizedCustomerPrice > 0 ? 100 : 0);
+        const isDiscountedBelowSticker = normalizedCustomerPrice > 0 && normalizedCustomerPrice < ourCost;
         return {
           ...parsedProduct,
           ourCost,
@@ -68,6 +69,7 @@ export function calculateMargins(parsedProducts, skuData, subBilling, totalPrice
           marginPercent,
           plan: { tier: `Tier ${tiers.indexOf(tier) + 1}` },
           error: null,
+          isDiscountedBelowSticker,
         };
       } else {
         return {
@@ -175,6 +177,9 @@ export function calculateMargins(parsedProducts, skuData, subBilling, totalPrice
     const marginPercent = ourCost > 0 
       ? ((margin / ourCost) * 100) 
       : (normalizedCustomerPrice > 0 ? 100 : 0);
+    
+    // Check if customer was discounted below sticker (our cost)
+    const isDiscountedBelowSticker = normalizedCustomerPrice > 0 && normalizedCustomerPrice < ourCost;
 
     return {
       ...parsedProduct,
@@ -184,6 +189,7 @@ export function calculateMargins(parsedProducts, skuData, subBilling, totalPrice
       marginPercent,
       plan,
       error: null,
+      isDiscountedBelowSticker,
     };
   });
 

@@ -1030,10 +1030,19 @@ const App = () => {
       // Calculate and set markup if customer price differs from our cost
       // Skip if customerPrice is null (when totalPrice is used instead)
       if (product.ourCost > 0 && product.customerPrice !== null && product.customerPrice !== undefined && product.customerPrice > 0) {
-        const requiredMarkup = calculateRequiredMarkup(product.ourCost, product.customerPrice);
-        if (Math.abs(requiredMarkup) > 0.01) {
-          // Only set markup if there's a meaningful difference
+        // Check if customer was discounted below sticker (our cost)
+        if (product.isDiscountedBelowSticker) {
+          // Customer price is below our cost - this requires contractual uplift
+          // Set a negative markup to indicate discount below sticker
+          const requiredMarkup = calculateRequiredMarkup(product.ourCost, product.customerPrice);
           setProductValue(product.productId, 'markup', requiredMarkup);
+          console.warn(`⚠️ ${product.productName}: Customer price ($${product.customerPrice.toFixed(2)}) is below sticker ($${product.ourCost.toFixed(2)}) - Contractual uplift required`);
+        } else {
+          const requiredMarkup = calculateRequiredMarkup(product.ourCost, product.customerPrice);
+          if (Math.abs(requiredMarkup) > 0.01) {
+            // Only set markup if there's a meaningful difference
+            setProductValue(product.productId, 'markup', requiredMarkup);
+          }
         }
       }
     });
