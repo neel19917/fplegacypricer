@@ -498,6 +498,11 @@ export const productConfig = [
         ? 'AI tokens based on total shipment volume (Freight + Parcel + Ocean)'
         : 'Annual Only',
     tierDetails: (volume) => {
+      // Check if volume exceeds max tier
+      if (volume > 5000) {
+        return 'Custom Pricing Required';
+      }
+      
       // Find the matching tier based on volume
       const tiers = [
         { max: 250, cost: '$3,000', tokens: '50M' },

@@ -7,6 +7,7 @@ import ScreenshotParseModal from './components/ScreenshotParseModal';
 import {
   loadDefaultPricing,
 } from './utils/jsonHelpers';
+import { safeGetSession, safeSetSession, safeRemoveSession } from './utils/storage';
 import { parseScreenshotWithClaude } from './utils/claudeHelpers';
 import { calculateMargins, calculateRequiredMarkup } from './utils/marginAnalysis';
 import {
@@ -338,16 +339,41 @@ const App = () => {
   const [isLoadingPricing, setIsLoadingPricing] = useState(true);
 
   // === AUTHENTICATION STATE ===
+  // Note: Uses sessionStorage for per-tab isolation - multiple users can login simultaneously
+  // in different browser tabs without interfering with each other. Each tab maintains
+  // independent authentication state. Volumes are stored in localStorage (separate key)
+  // so there's no conflict between auth state and user data.
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const MASTER_PASSWORD = import.meta.env.VITE_MASTER_PASSWORD || 'default-password-set-in-env';
+  const AUTH_KEY = 'freightpop-authenticated';
 
-  // Check if already authenticated (from sessionStorage)
+  // Warn if using default password (security check)
   useEffect(() => {
-    const authStatus = sessionStorage.getItem('freightpop-authenticated');
+    if (MASTER_PASSWORD === 'default-password-set-in-env') {
+      console.warn('[Auth] ⚠️ WARNING: Using default password! Set VITE_MASTER_PASSWORD in .env file for production.');
+    } else {
+      console.log('[Auth] ✅ Master password configured from environment variable');
+    }
+  }, []);
+
+  // Check if already authenticated (from sessionStorage) - with fallback to in-memory
+  useEffect(() => {
+    const authStatus = safeGetSession(AUTH_KEY);
     if (authStatus === 'true') {
       setIsAuthenticated(true);
+      console.log('[Auth] ✅ Restored authentication from sessionStorage');
+    } else {
+      // Check if sessionStorage is available
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.getItem('test');
+          console.log('[Auth] ℹ️ SessionStorage is available');
+        } catch (e) {
+          console.warn('[Auth] ⚠️ SessionStorage may be disabled:', e.name);
+        }
+      }
     }
   }, []);
   
@@ -373,20 +399,44 @@ const App = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (loginPassword === MASTER_PASSWORD) {
+    
+    // Trim whitespace from password input
+    const trimmedPassword = loginPassword.trim();
+    
+    // Log authentication attempt (without logging the actual password)
+    console.log('[Auth] 🔐 Login attempt:', {
+      passwordLength: trimmedPassword.length,
+      isDefaultPassword: MASTER_PASSWORD === 'default-password-set-in-env',
+      sessionStorageAvailable: typeof window !== 'undefined' && typeof sessionStorage !== 'undefined'
+    });
+    
+    // Compare passwords (case-sensitive)
+    if (trimmedPassword === MASTER_PASSWORD) {
       setIsAuthenticated(true);
-      sessionStorage.setItem('freightpop-authenticated', 'true');
+      
+      // Try to save to sessionStorage, but continue even if it fails
+      const saved = safeSetSession(AUTH_KEY, 'true');
+      if (saved) {
+        console.log('[Auth] ✅ Login successful - authentication saved to sessionStorage');
+      } else {
+        console.warn('[Auth] ⚠️ Login successful but could not save to sessionStorage - using in-memory state only');
+        // Continue with in-memory authentication state
+      }
+      
       setLoginError('');
       setLoginPassword('');
     } else {
+      console.warn('[Auth] ❌ Login failed - invalid password');
       setLoginError('Invalid password. Please try again.');
       setLoginPassword('');
     }
   };
 
   const handleLogout = () => {
+    console.log('[Auth] 🚪 Logging out');
     setIsAuthenticated(false);
-    sessionStorage.removeItem('freightpop-authenticated');
+    safeRemoveSession(AUTH_KEY);
+    console.log('[Auth] ✅ Logout complete - authentication cleared');
   };
 
   // === Load URL Parameters on Mount ===
@@ -468,6 +518,7 @@ const App = () => {
   const [isParsingScreenshot, setIsParsingScreenshot] = useState(false);
   const [screenshotError, setScreenshotError] = useState(null);
   const fileInputRef = useRef(null);
+  const [aiAgentCustomPricingAlertShown, setAiAgentCustomPricingAlertShown] = useState(false);
 
   // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
   const {
@@ -590,6 +641,17 @@ const App = () => {
     (aiAgentIncludesFreight ? freightVolume : 0) +
     (aiAgentIncludesParcel ? parcelVolume : 0) +
     (aiAgentIncludesOcean ? oceanTrackingVolume : 0);
+
+  // Alert user when AI Agent volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (subBilling === 'annual' && aiAgentTotalVolume > 5000 && !aiAgentCustomPricingAlertShown) {
+      alert('⚠️ Volume Exceeds Maximum Tier\n\nAI Agent volume exceeds the maximum standard tier (5,000 shipments). Custom pricing is required. Please contact sales for a custom quote.');
+      setAiAgentCustomPricingAlertShown(true);
+    } else if (aiAgentTotalVolume <= 5000) {
+      // Reset alert flag when volume drops below threshold
+      setAiAgentCustomPricingAlertShown(false);
+    }
+  }, [aiAgentTotalVolume, subBilling, aiAgentCustomPricingAlertShown]);
 
   // Backward-compatible setters (temporary during refactor)
   const setFreightVolume = (val) => setProductValue('freight', 'volume', val);
@@ -854,6 +916,9 @@ const App = () => {
     return tier ? tier.cost : 0;
   })();
   const aiAgentAnnualCost = aiAgentSubscriptionCost * (1 + aiAgentMarkup / 100);
+  
+  // Check if AI Agent volume exceeds max tier (requires custom pricing)
+  const aiAgentIsCustomPricing = subBilling === 'annual' && aiAgentTotalVolume > 5000;
   
   // Get token allocation for AI Agent
   const aiAgentTokens = (() => {
@@ -1868,6 +1933,10 @@ const App = () => {
                       planDetails: (() => {
                         if (aiAgentTotalVolume === 0 || subBilling !== 'annual') return 'Annual Only';
                         
+                        if (aiAgentIsCustomPricing) {
+                          return 'Custom Pricing Required';
+                        }
+                        
                         // Find tier range based on volume
                         const tierRanges = [
                           { min: 0, max: 250, tokens: '50M' },
@@ -1886,11 +1955,14 @@ const App = () => {
                         return `${tier.tokens} tokens (${tier.min}-${tier.max} shipments)`;
                       })(),
                       tierDetails: aiAgentTotalVolume > 0 && subBilling === 'annual'
-                        ? `Token-based pricing`
+                        ? aiAgentIsCustomPricing
+                          ? `Volume of ${aiAgentTotalVolume.toLocaleString()} exceeds tier limits. Please contact sales.`
+                          : `Token-based pricing`
                         : '',
                       lineMarkup: aiAgentMarkup,
                       hideIfZero: true,
                       isEnabled: aiAgentTotalVolume > 0,
+                      isCustomPricing: aiAgentIsCustomPricing,
                     },
                   ];
 
@@ -2674,6 +2746,10 @@ const App = () => {
                           if (aiAgentTotalVolume === 0) return 'Select products to calculate tokens';
                           
                           // Find tier range based on volume
+                          if (aiAgentIsCustomPricing) {
+                            return '❗ Volume exceeds tier limits - Custom Pricing Required';
+                          }
+                          
                           const tierRanges = [
                             { min: 0, max: 250, tokens: '50M', cost: '$3,000' },
                             { min: 251, max: 500, tokens: '100M', cost: '$6,000' },
@@ -2690,6 +2766,7 @@ const App = () => {
                           
                           return `${tier.min}-${tier.max} Shipments Incl: ${tier.tokens} tokens`;
                         })(),
+                        isCustomPricing: aiAgentIsCustomPricing,
                         tierOptions: [],
                         volumeCount: aiAgentTotalVolume,
                         onVolumeChange: null, // Read-only, calculated from other products

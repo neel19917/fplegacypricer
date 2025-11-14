@@ -169,3 +169,78 @@ export function encodeVolumes(data) {
   }
 }
 
+/**
+ * Safely get an item from sessionStorage
+ * @param {string} key - The storage key
+ * @returns {string|null} The stored value or null if unavailable
+ */
+export function safeGetSession(key) {
+  // Guard against SSR (server-side rendering)
+  if (typeof window === 'undefined') {
+    console.warn('[storage] safeGetSession: window is undefined (SSR environment)');
+    return null;
+  }
+
+  try {
+    return sessionStorage.getItem(key);
+  } catch (error) {
+    // Handle various storage errors
+    if (error.name === 'QuotaExceededError') {
+      console.warn(`[storage] safeGetSession: Quota exceeded for key "${key}"`);
+    } else if (error.name === 'SecurityError') {
+      console.warn(`[storage] safeGetSession: Security error (storage may be disabled) for key "${key}"`);
+    } else {
+      console.warn(`[storage] safeGetSession: Error accessing sessionStorage for key "${key}":`, error);
+    }
+    return null;
+  }
+}
+
+/**
+ * Safely set an item in sessionStorage
+ * @param {string} key - The storage key
+ * @param {string} value - The value to store
+ * @returns {boolean} True if successful, false otherwise
+ */
+export function safeSetSession(key, value) {
+  // Guard against SSR
+  if (typeof window === 'undefined') {
+    console.warn('[storage] safeSetSession: window is undefined (SSR environment)');
+    return false;
+  }
+
+  try {
+    sessionStorage.setItem(key, value);
+    return true;
+  } catch (error) {
+    // Handle various storage errors
+    if (error.name === 'QuotaExceededError') {
+      console.warn(`[storage] safeSetSession: Quota exceeded for key "${key}". Storage may be full.`);
+    } else if (error.name === 'SecurityError') {
+      console.warn(`[storage] safeSetSession: Security error (storage may be disabled) for key "${key}"`);
+    } else {
+      console.warn(`[storage] safeSetSession: Error writing to sessionStorage for key "${key}":`, error);
+    }
+    return false;
+  }
+}
+
+/**
+ * Safely remove an item from sessionStorage
+ * @param {string} key - The storage key
+ * @returns {boolean} True if successful, false otherwise
+ */
+export function safeRemoveSession(key) {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    sessionStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    console.warn(`[storage] safeRemoveSession: Error removing key "${key}":`, error);
+    return false;
+  }
+}
+
