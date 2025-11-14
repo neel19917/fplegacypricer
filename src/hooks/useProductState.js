@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { productConfig } from '../productConfig';
+import { safeGet, safeSet, decodeVolumes, encodeVolumes, VOLUMES_KEY } from '../utils/storage';
 
 /**
  * Custom hook for managing product state across the application
@@ -52,7 +53,74 @@ export const useProductState = () => {
     return state;
   };
 
-  const [products, setProducts] = useState(initializeProductState);
+  // Load from storage BEFORE initializing defaults
+  const loadFromStorage = () => {
+    const stored = safeGet(VOLUMES_KEY);
+    if (stored) {
+      const decoded = decodeVolumes(stored);
+      if (decoded && decoded.products) {
+        // Merge stored products with defaults (stored takes precedence)
+        const defaults = initializeProductState();
+        const merged = { ...defaults };
+        
+        // Merge each product, preserving stored values where they exist
+        Object.keys(decoded.products).forEach(productId => {
+          if (merged[productId]) {
+            merged[productId] = {
+              ...merged[productId],
+              ...decoded.products[productId]
+            };
+          }
+        });
+        
+        console.log('[useProductState] Loaded volumes from storage');
+        return merged;
+      } else {
+        console.warn('[useProductState] Failed to decode stored volumes, falling back to defaults');
+      }
+    } else {
+      console.log('[useProductState] No stored volumes found, using defaults');
+    }
+    
+    // Fallback to defaults
+    return initializeProductState();
+  };
+
+  const [products, setProducts] = useState(loadFromStorage);
+  
+  // Debounce timer ref for saving to storage
+  const saveTimeoutRef = useRef(null);
+  
+  // Save to storage whenever products state changes (debounced)
+  useEffect(() => {
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 300ms of inactivity
+    saveTimeoutRef.current = setTimeout(() => {
+      const dataToSave = {
+        products: products
+      };
+      
+      const encoded = encodeVolumes(dataToSave);
+      const success = safeSet(VOLUMES_KEY, encoded);
+      
+      if (success) {
+        console.log('[useProductState] Saved volumes to storage');
+      } else {
+        console.warn('[useProductState] Failed to save volumes to storage (continuing with in-memory state)');
+      }
+    }, 300);
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [products]);
 
   /**
    * Get a specific value from a product's state
@@ -156,7 +224,12 @@ export const useProductState = () => {
    * Reset all products to initial state
    */
   const resetAllProducts = () => {
-    setProducts(initializeProductState());
+    const defaultState = initializeProductState();
+    setProducts(defaultState);
+    // Clear storage when resetting
+    const encoded = encodeVolumes({ products: defaultState });
+    safeSet(VOLUMES_KEY, encoded);
+    console.log('[useProductState] Reset all products and cleared storage');
   };
 
   /**

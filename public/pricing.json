@@ -1141,6 +1141,16 @@
           "rangeEnd": 5000,
           "annualCost": 60000,
           "tokensIncluded": 1000000000
+        },
+        {
+          "sku": "AI-AGENT-009",
+          "tier": "Custom Pricing Required",
+          "shipmentsIncluded": 0,
+          "rangeStart": 5001,
+          "rangeEnd": 999999,
+          "annualCost": 0,
+          "tokensIncluded": 0,
+          "isCustomPricing": true
         }
       ],
       "monthly": []
