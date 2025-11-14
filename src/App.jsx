@@ -519,6 +519,14 @@ const App = () => {
   const [screenshotError, setScreenshotError] = useState(null);
   const fileInputRef = useRef(null);
   const [aiAgentCustomPricingAlertShown, setAiAgentCustomPricingAlertShown] = useState(false);
+  const [freightCustomPricingAlertShown, setFreightCustomPricingAlertShown] = useState(false);
+  const [parcelCustomPricingAlertShown, setParcelCustomPricingAlertShown] = useState(false);
+  const [oceanTrackingCustomPricingAlertShown, setOceanTrackingCustomPricingAlertShown] = useState(false);
+  const [locationsCustomPricingAlertShown, setLocationsCustomPricingAlertShown] = useState(false);
+  const [supportPackageCustomPricingAlertShown, setSupportPackageCustomPricingAlertShown] = useState(false);
+  const [auditingCustomPricingAlertShown, setAuditingCustomPricingAlertShown] = useState(false);
+  const [fleetRouteCustomPricingAlertShown, setFleetRouteCustomPricingAlertShown] = useState(false);
+  const [dockSchedulingCustomPricingAlertShown, setDockSchedulingCustomPricingAlertShown] = useState(false);
 
   // === PRODUCT STATE MANAGEMENT (NEW HOOK) ===
   const {
@@ -645,13 +653,14 @@ const App = () => {
   // Alert user when AI Agent volume exceeds max tier (custom pricing required)
   useEffect(() => {
     if (subBilling === 'annual' && aiAgentTotalVolume > 5000 && !aiAgentCustomPricingAlertShown) {
-      alert('⚠️ Volume Exceeds Maximum Tier\n\nAI Agent volume exceeds the maximum standard tier (5,000 shipments). Custom pricing is required. Please contact sales for a custom quote.');
+      alert('⚠️ Volume Exceeds Maximum Tier\n\nAI Agent volume exceeds the maximum standard tier (5,000 shipments). Custom pricing is required. Please contact management for a custom quote.');
       setAiAgentCustomPricingAlertShown(true);
     } else if (aiAgentTotalVolume <= 5000) {
       // Reset alert flag when volume drops below threshold
       setAiAgentCustomPricingAlertShown(false);
     }
   }, [aiAgentTotalVolume, subBilling, aiAgentCustomPricingAlertShown]);
+
 
   // Backward-compatible setters (temporary during refactor)
   const setFreightVolume = (val) => setProductValue('freight', 'volume', val);
@@ -820,6 +829,94 @@ const App = () => {
     subBilling === 'annual' ? skuData.DockScheduling.annual : skuData.DockScheduling.monthly,
     dockSchedulingSKU
   );
+
+  // Alert user when Freight volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (freightPlan && freightPlan.isCustomPricing && !freightCustomPricingAlertShown && freightVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nCore TMS – Freight volume (${freightVolume.toLocaleString()} shipments) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setFreightCustomPricingAlertShown(true);
+    } else if (!freightPlan || !freightPlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setFreightCustomPricingAlertShown(false);
+    }
+  }, [freightPlan, freightVolume, freightCustomPricingAlertShown]);
+
+  // Alert user when Parcel volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (parcelPlan && parcelPlan.isCustomPricing && !parcelCustomPricingAlertShown && parcelVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nCore TMS – Parcel volume (${parcelVolume.toLocaleString()} shipments) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setParcelCustomPricingAlertShown(true);
+    } else if (!parcelPlan || !parcelPlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setParcelCustomPricingAlertShown(false);
+    }
+  }, [parcelPlan, parcelVolume, parcelCustomPricingAlertShown]);
+
+  // Alert user when Ocean Tracking volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (oceanTrackingPlan && oceanTrackingPlan.isCustomPricing && !oceanTrackingCustomPricingAlertShown && oceanTrackingVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nOcean Tracking volume (${oceanTrackingVolume.toLocaleString()} shipments) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setOceanTrackingCustomPricingAlertShown(true);
+    } else if (!oceanTrackingPlan || !oceanTrackingPlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setOceanTrackingCustomPricingAlertShown(false);
+    }
+  }, [oceanTrackingPlan, oceanTrackingVolume, oceanTrackingCustomPricingAlertShown]);
+
+  // Alert user when Locations volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (locationsPlan && locationsPlan.isCustomPricing && !locationsCustomPricingAlertShown && locationsVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nLocations volume (${locationsVolume.toLocaleString()} locations) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setLocationsCustomPricingAlertShown(true);
+    } else if (!locationsPlan || !locationsPlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setLocationsCustomPricingAlertShown(false);
+    }
+  }, [locationsPlan, locationsVolume, locationsCustomPricingAlertShown]);
+
+  // Alert user when Support Package volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (supportPackagePlan && supportPackagePlan.isCustomPricing && !supportPackageCustomPricingAlertShown && supportPackageVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nSupport Package volume (${supportPackageVolume.toLocaleString()} hours) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setSupportPackageCustomPricingAlertShown(true);
+    } else if (!supportPackagePlan || !supportPackagePlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setSupportPackageCustomPricingAlertShown(false);
+    }
+  }, [supportPackagePlan, supportPackageVolume, supportPackageCustomPricingAlertShown]);
+
+  // Alert user when Auditing Module volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (auditingPlan && auditingPlan.isCustomPricing && !auditingCustomPricingAlertShown && auditingVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nAuditing Module volume (${auditingVolume.toLocaleString()} carriers) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setAuditingCustomPricingAlertShown(true);
+    } else if (!auditingPlan || !auditingPlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setAuditingCustomPricingAlertShown(false);
+    }
+  }, [auditingPlan, auditingVolume, auditingCustomPricingAlertShown]);
+
+  // Alert user when Fleet Route Optimization volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (fleetRoutePlan && fleetRoutePlan.isCustomPricing && !fleetRouteCustomPricingAlertShown && fleetRouteVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nFleet Route Optimization volume (${fleetRouteVolume.toLocaleString()} stops) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setFleetRouteCustomPricingAlertShown(true);
+    } else if (!fleetRoutePlan || !fleetRoutePlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setFleetRouteCustomPricingAlertShown(false);
+    }
+  }, [fleetRoutePlan, fleetRouteVolume, fleetRouteCustomPricingAlertShown]);
+
+  // Alert user when Dock Scheduling volume exceeds max tier (custom pricing required)
+  useEffect(() => {
+    if (dockSchedulingPlan && dockSchedulingPlan.isCustomPricing && !dockSchedulingCustomPricingAlertShown && dockSchedulingVolume > 0) {
+      alert(`⚠️ Volume Exceeds Maximum Tier\n\nDock Scheduling volume (${dockSchedulingVolume.toLocaleString()} docks) exceeds the maximum standard tier. Custom pricing is required. Please contact management for a custom quote.`);
+      setDockSchedulingCustomPricingAlertShown(true);
+    } else if (!dockSchedulingPlan || !dockSchedulingPlan.isCustomPricing) {
+      // Reset alert flag when volume is within tier limits
+      setDockSchedulingCustomPricingAlertShown(false);
+    }
+  }, [dockSchedulingPlan, dockSchedulingVolume, dockSchedulingCustomPricingAlertShown]);
 
   // Define customPricingPresent to be used in the detailed quote summary
   const customPricingPresent = [
