@@ -1,0 +1,318 @@
+Product,Billing,SKU,Tier,RangeStart,RangeEnd,PerMonthCost,AnnualCost,ShipmentsIncluded,CostPerShipment,IsCustomPricing
+Core TMS – Freight,Annual,FP1001,Starter,1,100,830,9960,100,8.3,No
+Core TMS – Freight,Annual,FP1002,Pro,101,250,1438,17256,250,5.75,No
+Core TMS – Freight,Annual,FP1003,Pro+,251,450,1890,22680,450,4.2,No
+Core TMS – Freight,Annual,FP1004,Enterprise 1,451,750,2520,30240,750,3.36,No
+Core TMS – Freight,Annual,FP1005,Enterprise 2,751,1250,3500,42000,1250,2.8,No
+Core TMS – Freight,Annual,FP1006,Enterprise 3,1251,2000,4771,57252,2000,2.39,No
+Core TMS – Freight,Annual,FP1007,Enterprise 4,2001,3000,6237,74844,3000,2.08,No
+Core TMS – Freight,Annual,FP1008,Enterprise 5,3001,4500,8253,99036,4500,1.83,No
+Core TMS – Freight,Annual,FP1009,Enterprise 6,4501,6500,8736,104832,6500,1.34,No
+Core TMS – Freight,Annual,FP1010,Enterprise 7,6501,999999,10338,124056,10000,1.03,No
+Core TMS – Freight,Monthly,FP1019,Starter,1,100,1079,12948,100,10.79,No
+Core TMS – Freight,Monthly,FP1020,Pro,101,250,1869,22428,250,7.48,No
+Core TMS – Freight,Monthly,FP1021,Pro+,251,450,2457,29484,450,5.46,No
+Core TMS – Freight,Monthly,FP1022,Enterprise 1,451,750,3250,39000,750,4.33,No
+Core TMS – Freight,Monthly,FP1023,Enterprise 2,751,1250,4550,54600,1250,3.64,No
+Core TMS – Freight,Monthly,FP1024,Enterprise 3,1251,2000,6203,74436,2000,3.1,No
+Core TMS – Freight,Monthly,FP1025,Enterprise 4,2001,3000,8108,97296,3000,2.7,No
+Core TMS – Freight,Monthly,FP1026,Enterprise 5,3001,4500,10729,128748,4500,2.38,No
+Core TMS – Freight,Monthly,FP1027,Enterprise 6,4501,6500,11357,136284,6500,1.75,No
+Core TMS – Freight,Monthly,FP1028,Enterprise 7,6501,999999,13440,161280,10000,1.34,No
+Core TMS – Parcel,Annual,FP1011,Starter,1,1000,100,1200,1000,0.1,No
+Core TMS – Parcel,Annual,FP1012,Pro,1001,2000,180,2160,2000,0.09,No
+Core TMS – Parcel,Annual,FP1013,Pro+,2001,5000,400,4800,5000,0.08,No
+Core TMS – Parcel,Annual,FP1014,Enterprise 1,5001,10000,700,8400,10000,0.07,No
+Core TMS – Parcel,Annual,FP1015,Enterprise 2,10001,15000,900,10800,15000,0.06,No
+Core TMS – Parcel,Annual,FP1016,Enterprise 3,15001,25000,1250,15000,25000,0.05,No
+Core TMS – Parcel,Annual,FP1017,Enterprise 4,25001,50000,2000,24000,50000,0.04,No
+Core TMS – Parcel,Annual,FP1018,Enterprise 5,50001,999999,3000,36000,100000,0.03,No
+Core TMS – Parcel,Monthly,FP1029,Starter,1,1000,130,1560,1000,0.13,No
+Core TMS – Parcel,Monthly,FP1030,Pro,1001,2000,234,2808,2000,0.12,No
+Core TMS – Parcel,Monthly,FP1031,Pro+,2001,5000,520,6240,5000,0.1,No
+Core TMS – Parcel,Monthly,FP1032,Enterprise 1,5001,10000,910,10920,10000,0.09,No
+Core TMS – Parcel,Monthly,FP1033,Enterprise 2,10001,15000,1170,14040,15000,0.08,No
+Core TMS – Parcel,Monthly,FP1034,Enterprise 3,15001,25000,1625,19500,25000,0.07,No
+Core TMS – Parcel,Monthly,FP1035,Enterprise 4,25001,50000,2580,30960,50000,0.05,No
+Core TMS – Parcel,Monthly,FP1036,Enterprise 5,50001,999999,4080,48960,100000,0.04,No
+Ocean Tracking,Annual,FP1082,Starter,1,50,175,2100,50,3.5,No
+Ocean Tracking,Annual,FP1083,Pro,51,100,325,3900,100,3.25,No
+Ocean Tracking,Annual,FP1084,Pro+,101,250,750,9000,250,3,No
+Ocean Tracking,Annual,FP1085,Enterprise 1,251,450,1238,14856,450,2.75,No
+Ocean Tracking,Annual,FP1086,Enterprise 2,451,750,1875,22500,750,2.5,No
+Ocean Tracking,Annual,FP1107,Enterprise 3,751,1250,1813,21756,1250,1.45,No
+Ocean Tracking,Annual,FP1108,Enterprise 4,1251,2000,4000,48000,2000,2,No
+Ocean Tracking,Annual,FP1109,Enterprise 5,2001,3000,5250,63000,3000,1.75,No
+Ocean Tracking,Annual,FP1110,Enterprise 6,3001,4500,6750,81000,4500,1.5,No
+Ocean Tracking,Annual,FP1111,Enterprise 7,4501,6500,9750,117000,6500,1.5,No
+Ocean Tracking,Annual,FP1112,Enterprise 8,6501,999999,15000,180000,10000,1.5,No
+Ocean Tracking,Monthly,FP1040,Starter,1,50,228,2736,50,4.56,No
+Ocean Tracking,Monthly,FP1041,Pro,51,100,423,5076,100,4.23,No
+Ocean Tracking,Monthly,FP1042,Pro+,101,250,975,11700,250,3.9,No
+Ocean Tracking,Monthly,FP1043,Enterprise 1,251,450,1609,19308,450,3.58,No
+Ocean Tracking,Monthly,FP1044,Enterprise 2,451,750,2438,29256,750,3.25,No
+Ocean Tracking,Monthly,FP1045,Enterprise 3,751,1250,3656,43872,1250,2.92,No
+Ocean Tracking,Monthly,FP1046,Enterprise 4,1251,2000,5200,62400,2000,2.6,No
+Ocean Tracking,Monthly,FP1047,Enterprise 5,2001,3000,6825,81900,3000,2.28,No
+Ocean Tracking,Monthly,FP1048,Enterprise 6,3001,4500,8775,105300,4500,1.95,No
+Ocean Tracking,Monthly,FP1049,Enterprise 7,4501,6500,12675,152100,6500,1.95,No
+Ocean Tracking,Monthly,FP1050,Enterprise 8,6501,999999,19500,234000,10000,1.95,No
+Locations,Annual,FP1051,Starter,1,3,,,,,No
+Locations,Annual,FP1052,Basic,4,8,2083.33,25000,,,No
+Locations,Annual,FP1053,Professional,9,15,3333.33,40000,,,No
+Locations,Annual,FP1054,Advanced,16,25,4166.67,50000,,,No
+Locations,Annual,FP1055,Enterprise,25,999999,5416.67,65000,,,No
+Locations,Monthly,FP1072,Starter,1,3,,,,,No
+Locations,Monthly,FP1073,Basic,4,8,2708.33,32500,,,No
+Locations,Monthly,FP1074,Professional,9,15,4333.33,52000,,,No
+Locations,Monthly,FP1075,Advanced,16,25,5416.67,65000,,,No
+Locations,Monthly,FP1076,Enterprise,25,999999,7041.67,84500,,,No
+Dock Scheduling,Annual,FP1056,Basic,1,5,291.67,3500,,,No
+Dock Scheduling,Annual,FP1057,Professional,6,25,612.5,7350,,,No
+Dock Scheduling,Annual,FP1058,Advanced,26,50,979.17,11750,,,No
+Dock Scheduling,Annual,FP1059,Enterprise,51,100,1295.83,15550,,,No
+Dock Scheduling,Annual,FP1065,Custom Pricing Needed,101,999999,1295.83,15550,,,No
+Dock Scheduling,Monthly,FP1077,Basic,1,5,379.17,4550,,,No
+Dock Scheduling,Monthly,FP1078,Professional,6,25,796.25,9555,,,No
+Dock Scheduling,Monthly,FP1079,Advanced,26,50,1272.92,15275,,,No
+Dock Scheduling,Monthly,FP1080,Enterprise,51,100,1684.58,20215,,,No
+Dock Scheduling,Monthly,FP1081,Custom Pricing Needed,101,999999,1684.58,20215,,,No
+Auditing Module,Annual,FP1060,Basic,1,5,250,3000,,,No
+Auditing Module,Annual,FP1061,Professional,6,10,500,6000,,,No
+Auditing Module,Annual,FP1062,Advanced,11,20,750,9000,,,No
+Auditing Module,Annual,FP1063,Enterprise,21,999999,833.33,10000,,,No
+Auditing Module,Monthly,FP1066,Basic,1,5,250,3000,,,No
+Auditing Module,Monthly,FP1067,Professional,6,10,500,6000,,,No
+Auditing Module,Monthly,FP1068,Advanced,11,20,750,9000,,,No
+Auditing Module,Monthly,FP1069,Enterprise,21,999999,833.33,10000,,,No
+Vendor Portals,Annual,FP1064,Per Portal,1,999999,20,240,,20,No
+Vendor Portals,Monthly,FP1070,Per Portal,1,999999,20,240,,20,No
+Support Package,Annual,FP1097,Basic,,3,500,6000,,,No
+Support Package,Annual,FP1098,Pro,4,6,1000,12000,,,No
+Support Package,Annual,FP1099,Premier,7,10,1500,18000,,,No
+Support Package,Annual,FP1100,Enterprise,10,999999,2000,24000,,,No
+Support Package,Monthly,FP1101,Basic,,3,650,7800,,,No
+Support Package,Monthly,FP1102,Pro,4,6,1300,15600,,,No
+Support Package,Monthly,FP1103,Premier,7,10,1950,23400,,,No
+Support Package,Monthly,FP1104,Enterprise,10,999999,2600,31200,,,No
+Fleet Route Optimization,Annual,FP1113,500 Stops,1,500,125,1500,,,No
+Fleet Route Optimization,Annual,FP1114,1K Stops,501,1000,250,3000,,,No
+Fleet Route Optimization,Annual,FP1115,1.5K Stops,1001,1500,345,4140,,,No
+Fleet Route Optimization,Annual,FP1116,2K Stops,1501,2000,440,5280,,,No
+Fleet Route Optimization,Annual,FP1117,2.5K Stops,2001,2500,525,6300,,,No
+Fleet Route Optimization,Annual,FP1118,3K Stops,2501,3000,600,7200,,,No
+Fleet Route Optimization,Annual,FP1119,3.5K Stops,3001,3500,665,7980,,,No
+Fleet Route Optimization,Annual,FP1120,4K Stops,3501,4000,720,8640,,,No
+Fleet Route Optimization,Annual,FP1121,4.5K Stops,4001,4500,788,9456,,,No
+Fleet Route Optimization,Annual,FP1122,5K Stops,4501,5000,850,10200,,,No
+Fleet Route Optimization,Annual,FP1123,6K Stops,5001,6000,990,11880,,,No
+Fleet Route Optimization,Annual,FP1124,7K Stops,6001,7000,1120,13440,,,No
+Fleet Route Optimization,Annual,FP1125,8K Stops,7001,8000,1240,14880,,,No
+Fleet Route Optimization,Annual,FP1126,9K Stops,8001,9000,1305,15660,,,No
+Fleet Route Optimization,Annual,FP1127,10K Stops,9001,10000,1400,16800,,,No
+Fleet Route Optimization,Annual,FP1128,11K Stops,10001,11000,1485,17820,,,No
+Fleet Route Optimization,Annual,FP1129,12K Stops,11001,12000,1560,18720,,,No
+Fleet Route Optimization,Annual,FP1130,13K Stops,12001,13000,1625,19500,,,No
+Fleet Route Optimization,Annual,FP1131,14K Stops,13001,14000,1680,20160,,,No
+Fleet Route Optimization,Annual,FP1132,15K Stops,14001,15000,1800,21600,,,No
+Fleet Route Optimization,Annual,FP1133,16K Stops,15001,16000,1920,23040,,,No
+Fleet Route Optimization,Annual,FP1134,17K Stops,16001,17000,2040,24480,,,No
+Fleet Route Optimization,Annual,FP1135,18K Stops,17001,18000,2160,25920,,,No
+Fleet Route Optimization,Annual,FP1136,19K Stops,18001,19000,2280,27360,,,No
+Fleet Route Optimization,Annual,FP1137,20K Stops,19001,20000,2400,28800,,,No
+Fleet Route Optimization,Annual,FP1138,21K Stops,20001,21000,2520,30240,,,No
+Fleet Route Optimization,Annual,FP1139,22K Stops,21001,22000,2640,31680,,,No
+Fleet Route Optimization,Annual,FP1140,23K Stops,22001,23000,2760,33120,,,No
+Fleet Route Optimization,Annual,FP1141,24K Stops,23001,24000,2880,34560,,,No
+Fleet Route Optimization,Annual,FP1142,25K Stops,24001,25000,3000,36000,,,No
+Fleet Route Optimization,Annual,FP1143,26K Stops,25001,26000,3120,37440,,,No
+Fleet Route Optimization,Annual,FP1144,27K Stops,26001,27000,3240,38880,,,No
+Fleet Route Optimization,Annual,FP1145,28K Stops,27001,28000,3360,40320,,,No
+Fleet Route Optimization,Annual,FP1146,29K Stops,28001,29000,3480,41760,,,No
+Fleet Route Optimization,Annual,FP1147,30K Stops,29001,30000,3600,43200,,,No
+Fleet Route Optimization,Annual,FP1148,31K Stops,30001,31000,3720,44640,,,No
+Fleet Route Optimization,Annual,FP1149,32K Stops,31001,32000,3840,46080,,,No
+Fleet Route Optimization,Annual,FP1150,33K Stops,32001,33000,3960,47520,,,No
+Fleet Route Optimization,Annual,FP1151,34K Stops,33001,34000,4080,48960,,,No
+Fleet Route Optimization,Annual,FP1152,35K Stops,34001,35000,4200,50400,,,No
+Fleet Route Optimization,Annual,FP1153,36K Stops,35001,36000,4320,51840,,,No
+Fleet Route Optimization,Annual,FP1154,37K Stops,36001,37000,4440,53280,,,No
+Fleet Route Optimization,Annual,FP1155,38K Stops,37001,38000,4560,54720,,,No
+Fleet Route Optimization,Annual,FP1156,39K Stops,38001,39000,4680,56160,,,No
+Fleet Route Optimization,Annual,FP1157,40K Stops,39001,40000,4800,57600,,,No
+Fleet Route Optimization,Annual,FP1158,41K Stops,40001,41000,4920,59040,,,No
+Fleet Route Optimization,Annual,FP1159,42K Stops,41001,42000,5040,60480,,,No
+Fleet Route Optimization,Annual,FP1160,43K Stops,42001,43000,5160,61920,,,No
+Fleet Route Optimization,Annual,FP1161,44K Stops,43001,44000,5280,63360,,,No
+Fleet Route Optimization,Annual,FP1162,45K Stops,44001,45000,5400,64800,,,No
+Fleet Route Optimization,Annual,FP1163,46K Stops,45001,46000,5520,66240,,,No
+Fleet Route Optimization,Annual,FP1164,47K Stops,46001,47000,5640,67680,,,No
+Fleet Route Optimization,Annual,FP1165,48K Stops,47001,48000,5760,69120,,,No
+Fleet Route Optimization,Annual,FP1166,49K Stops,48001,49000,5880,70560,,,No
+Fleet Route Optimization,Annual,FP1167,50K Stops,49001,50000,6000,72000,,,No
+Fleet Route Optimization,Annual,FP1168,51K Stops,50001,51000,6120,73440,,,No
+Fleet Route Optimization,Annual,FP1169,52K Stops,51001,52000,6240,74880,,,No
+Fleet Route Optimization,Annual,FP1170,53K Stops,52001,53000,6360,76320,,,No
+Fleet Route Optimization,Annual,FP1171,54K Stops,53001,54000,6480,77760,,,No
+Fleet Route Optimization,Annual,FP1172,55K Stops,54001,55000,6600,79200,,,No
+Fleet Route Optimization,Annual,FP1173,56K Stops,55001,56000,6720,80640,,,No
+Fleet Route Optimization,Annual,FP1174,57K Stops,56001,57000,6840,82080,,,No
+Fleet Route Optimization,Annual,FP1175,58K Stops,57001,58000,6960,83520,,,No
+Fleet Route Optimization,Annual,FP1176,59K Stops,58001,59000,7080,84960,,,No
+Fleet Route Optimization,Annual,FP1177,60K Stops,59001,60000,7200,86400,,,No
+Fleet Route Optimization,Annual,FP1178,61K Stops,60001,61000,7320,87840,,,No
+Fleet Route Optimization,Annual,FP1179,62K Stops,61001,62000,7440,89280,,,No
+Fleet Route Optimization,Annual,FP1180,63K Stops,62001,63000,7560,90720,,,No
+Fleet Route Optimization,Annual,FP1181,64K Stops,63001,64000,7680,92160,,,No
+Fleet Route Optimization,Annual,FP1182,65K Stops,64001,65000,7800,93600,,,No
+Fleet Route Optimization,Annual,FP1183,66K Stops,65001,66000,7920,95040,,,No
+Fleet Route Optimization,Annual,FP1184,67K Stops,66001,67000,8040,96480,,,No
+Fleet Route Optimization,Annual,FP1185,68K Stops,67001,68000,8160,97920,,,No
+Fleet Route Optimization,Annual,FP1186,69K Stops,68001,69000,8280,99360,,,No
+Fleet Route Optimization,Annual,FP1187,70K Stops,69001,70000,8400,100800,,,No
+Fleet Route Optimization,Annual,FP1188,71K Stops,70001,71000,8520,102240,,,No
+Fleet Route Optimization,Annual,FP1189,72K Stops,71001,72000,8640,103680,,,No
+Fleet Route Optimization,Annual,FP1190,73K Stops,72001,73000,8760,105120,,,No
+Fleet Route Optimization,Annual,FP1191,74K Stops,73001,74000,8880,106560,,,No
+Fleet Route Optimization,Annual,FP1192,75K Stops,74001,75000,9000,108000,,,No
+Fleet Route Optimization,Annual,FP1193,76K Stops,75001,76000,9120,109440,,,No
+Fleet Route Optimization,Annual,FP1194,77K Stops,76001,77000,9240,110880,,,No
+Fleet Route Optimization,Annual,FP1195,78K Stops,77001,78000,9360,112320,,,No
+Fleet Route Optimization,Annual,FP1196,79K Stops,78001,79000,9480,113760,,,No
+Fleet Route Optimization,Annual,FP1197,80K Stops,79001,80000,9600,115200,,,No
+Fleet Route Optimization,Annual,FP1198,81K Stops,80001,81000,9720,116640,,,No
+Fleet Route Optimization,Annual,FP1199,82K Stops,81001,82000,9840,118080,,,No
+Fleet Route Optimization,Annual,FP1200,83K Stops,82001,83000,9960,119520,,,No
+Fleet Route Optimization,Annual,FP1201,84K Stops,83001,84000,10080,120960,,,No
+Fleet Route Optimization,Annual,FP1202,85K Stops,84001,85000,10200,122400,,,No
+Fleet Route Optimization,Annual,FP1203,86K Stops,85001,86000,10320,123840,,,No
+Fleet Route Optimization,Annual,FP1204,87K Stops,86001,87000,10440,125280,,,No
+Fleet Route Optimization,Annual,FP1205,88K Stops,87001,88000,10560,126720,,,No
+Fleet Route Optimization,Annual,FP1206,89K Stops,88001,89000,10680,128160,,,No
+Fleet Route Optimization,Annual,FP1207,90K Stops,89001,90000,10800,129600,,,No
+Fleet Route Optimization,Annual,FP1208,91K Stops,90001,91000,10920,131040,,,No
+Fleet Route Optimization,Annual,FP1209,92K Stops,91001,92000,11040,132480,,,No
+Fleet Route Optimization,Annual,FP1210,93K Stops,92001,93000,11160,133920,,,No
+Fleet Route Optimization,Annual,FP1211,94K Stops,93001,94000,11280,135360,,,No
+Fleet Route Optimization,Annual,FP1212,95K Stops,94001,95000,11400,136800,,,No
+Fleet Route Optimization,Annual,FP1213,96K Stops,95001,96000,11520,138240,,,No
+Fleet Route Optimization,Annual,FP1214,97K Stops,96001,97000,11640,139680,,,No
+Fleet Route Optimization,Annual,FP1215,98K Stops,97001,98000,11760,141120,,,No
+Fleet Route Optimization,Annual,FP1216,99K Stops,98001,99000,11880,142560,,,No
+Fleet Route Optimization,Annual,FP1217,100K Stops,99001,999999,12000,144000,,,No
+Fleet Route Optimization,Monthly,FP1218,500 Stops,1,500,162.5,1950,,,No
+Fleet Route Optimization,Monthly,FP1219,1K Stops,501,1000,325,3900,,,No
+Fleet Route Optimization,Monthly,FP1220,1.5K Stops,1001,1500,448.5,5382,,,No
+Fleet Route Optimization,Monthly,FP1221,2K Stops,1501,2000,572,6864,,,No
+Fleet Route Optimization,Monthly,FP1222,2.5K Stops,2001,2500,682.5,8190,,,No
+Fleet Route Optimization,Monthly,FP1223,3K Stops,2501,3000,780,9360,,,No
+Fleet Route Optimization,Monthly,FP1224,3.5K Stops,3001,3500,864.5,10374,,,No
+Fleet Route Optimization,Monthly,FP1225,4K Stops,3501,4000,936,11232,,,No
+Fleet Route Optimization,Monthly,FP1226,4.5K Stops,4001,4500,1024.4,12292.8,,,No
+Fleet Route Optimization,Monthly,FP1227,5K Stops,4501,5000,1105,13260,,,No
+Fleet Route Optimization,Monthly,FP1228,6K Stops,5001,6000,1287,15444,,,No
+Fleet Route Optimization,Monthly,FP1229,7K Stops,6001,7000,1456,17472,,,No
+Fleet Route Optimization,Monthly,FP1230,8K Stops,7001,8000,1612,19344,,,No
+Fleet Route Optimization,Monthly,FP1231,9K Stops,8001,9000,1696.5,20358,,,No
+Fleet Route Optimization,Monthly,FP1232,10K Stops,9001,10000,1820,21840,,,No
+Fleet Route Optimization,Monthly,FP1233,11K Stops,10001,11000,1930.5,23166,,,No
+Fleet Route Optimization,Monthly,FP1234,12K Stops,11001,12000,2028,24336,,,No
+Fleet Route Optimization,Monthly,FP1235,13K Stops,12001,13000,2112.5,25350,,,No
+Fleet Route Optimization,Monthly,FP1236,14K Stops,13001,14000,2184,26208,,,No
+Fleet Route Optimization,Monthly,FP1237,15K Stops,14001,15000,2340,28080,,,No
+Fleet Route Optimization,Monthly,FP1238,16K Stops,15001,16000,2496,29952,,,No
+Fleet Route Optimization,Monthly,FP1239,17K Stops,16001,17000,2652,31824,,,No
+Fleet Route Optimization,Monthly,FP1240,18K Stops,17001,18000,2808,33696,,,No
+Fleet Route Optimization,Monthly,FP1241,19K Stops,18001,19000,2964,35568,,,No
+Fleet Route Optimization,Monthly,FP1242,20K Stops,19001,20000,3120,37440,,,No
+Fleet Route Optimization,Monthly,FP1243,21K Stops,20001,21000,3276,39312,,,No
+Fleet Route Optimization,Monthly,FP1244,22K Stops,21001,22000,3432,41184,,,No
+Fleet Route Optimization,Monthly,FP1245,23K Stops,22001,23000,3588,43056,,,No
+Fleet Route Optimization,Monthly,FP1246,24K Stops,23001,24000,3744,44928,,,No
+Fleet Route Optimization,Monthly,FP1247,25K Stops,24001,25000,3900,46800,,,No
+Fleet Route Optimization,Monthly,FP1248,26K Stops,25001,26000,4056,48672,,,No
+Fleet Route Optimization,Monthly,FP1249,27K Stops,26001,27000,4212,50544,,,No
+Fleet Route Optimization,Monthly,FP1250,28K Stops,27001,28000,4368,52416,,,No
+Fleet Route Optimization,Monthly,FP1251,29K Stops,28001,29000,4524,54288,,,No
+Fleet Route Optimization,Monthly,FP1252,30K Stops,29001,30000,4680,56160,,,No
+Fleet Route Optimization,Monthly,FP1253,31K Stops,30001,31000,4836,58032,,,No
+Fleet Route Optimization,Monthly,FP1254,32K Stops,31001,32000,4992,59904,,,No
+Fleet Route Optimization,Monthly,FP1255,33K Stops,32001,33000,5148,61776,,,No
+Fleet Route Optimization,Monthly,FP1256,34K Stops,33001,34000,5304,63648,,,No
+Fleet Route Optimization,Monthly,FP1257,35K Stops,34001,35000,5460,65520,,,No
+Fleet Route Optimization,Monthly,FP1258,36K Stops,35001,36000,5616,67392,,,No
+Fleet Route Optimization,Monthly,FP1259,37K Stops,36001,37000,5772,69264,,,No
+Fleet Route Optimization,Monthly,FP1260,38K Stops,37001,38000,5928,71136,,,No
+Fleet Route Optimization,Monthly,FP1261,39K Stops,38001,39000,6084,73008,,,No
+Fleet Route Optimization,Monthly,FP1262,40K Stops,39001,40000,6240,74880,,,No
+Fleet Route Optimization,Monthly,FP1263,41K Stops,40001,41000,6396,76752,,,No
+Fleet Route Optimization,Monthly,FP1264,42K Stops,41001,42000,6552,78624,,,No
+Fleet Route Optimization,Monthly,FP1265,43K Stops,42001,43000,6708,80496,,,No
+Fleet Route Optimization,Monthly,FP1266,44K Stops,43001,44000,6864,82368,,,No
+Fleet Route Optimization,Monthly,FP1267,45K Stops,44001,45000,7020,84240,,,No
+Fleet Route Optimization,Monthly,FP1268,46K Stops,45001,46000,7176,86112,,,No
+Fleet Route Optimization,Monthly,FP1269,47K Stops,46001,47000,7332,87984,,,No
+Fleet Route Optimization,Monthly,FP1270,48K Stops,47001,48000,7488,89856,,,No
+Fleet Route Optimization,Monthly,FP1271,49K Stops,48001,49000,7644,91728,,,No
+Fleet Route Optimization,Monthly,FP1272,50K Stops,49001,50000,7800,93600,,,No
+Fleet Route Optimization,Monthly,FP1273,51K Stops,50001,51000,7956,95472,,,No
+Fleet Route Optimization,Monthly,FP1274,52K Stops,51001,52000,8112,97344,,,No
+Fleet Route Optimization,Monthly,FP1275,53K Stops,52001,53000,8268,99216,,,No
+Fleet Route Optimization,Monthly,FP1276,54K Stops,53001,54000,8424,101088,,,No
+Fleet Route Optimization,Monthly,FP1277,55K Stops,54001,55000,8580,102960,,,No
+Fleet Route Optimization,Monthly,FP1278,56K Stops,55001,56000,8736,104832,,,No
+Fleet Route Optimization,Monthly,FP1279,57K Stops,56001,57000,8892,106704,,,No
+Fleet Route Optimization,Monthly,FP1280,58K Stops,57001,58000,9048,108576,,,No
+Fleet Route Optimization,Monthly,FP1281,59K Stops,58001,59000,9204,110448,,,No
+Fleet Route Optimization,Monthly,FP1282,60K Stops,59001,60000,9360,112320,,,No
+Fleet Route Optimization,Monthly,FP1283,61K Stops,60001,61000,9516,114192,,,No
+Fleet Route Optimization,Monthly,FP1284,62K Stops,61001,62000,9672,116064,,,No
+Fleet Route Optimization,Monthly,FP1285,63K Stops,62001,63000,9828,117936,,,No
+Fleet Route Optimization,Monthly,FP1286,64K Stops,63001,64000,9984,119808,,,No
+Fleet Route Optimization,Monthly,FP1287,65K Stops,64001,65000,10140,121680,,,No
+Fleet Route Optimization,Monthly,FP1288,66K Stops,65001,66000,10296,123552,,,No
+Fleet Route Optimization,Monthly,FP1289,67K Stops,66001,67000,10452,125424,,,No
+Fleet Route Optimization,Monthly,FP1290,68K Stops,67001,68000,10608,127296,,,No
+Fleet Route Optimization,Monthly,FP1291,69K Stops,68001,69000,10764,129168,,,No
+Fleet Route Optimization,Monthly,FP1292,70K Stops,69001,70000,10920,131040,,,No
+Fleet Route Optimization,Monthly,FP1293,71K Stops,70001,71000,11076,132912,,,No
+Fleet Route Optimization,Monthly,FP1294,72K Stops,71001,72000,11232,134784,,,No
+Fleet Route Optimization,Monthly,FP1295,73K Stops,72001,73000,11388,136656,,,No
+Fleet Route Optimization,Monthly,FP1296,74K Stops,73001,74000,11544,138528,,,No
+Fleet Route Optimization,Monthly,FP1297,75K Stops,74001,75000,11700,140400,,,No
+Fleet Route Optimization,Monthly,FP1298,76K Stops,75001,76000,11856,142272,,,No
+Fleet Route Optimization,Monthly,FP1299,77K Stops,76001,77000,12012,144144,,,No
+Fleet Route Optimization,Monthly,FP1300,78K Stops,77001,78000,12168,146016,,,No
+Fleet Route Optimization,Monthly,FP1301,79K Stops,78001,79000,12324,147888,,,No
+Fleet Route Optimization,Monthly,FP1302,80K Stops,79001,80000,12480,149760,,,No
+Fleet Route Optimization,Monthly,FP1303,81K Stops,80001,81000,12636,151632,,,No
+Fleet Route Optimization,Monthly,FP1304,82K Stops,81001,82000,12792,153504,,,No
+Fleet Route Optimization,Monthly,FP1305,83K Stops,82001,83000,12948,155376,,,No
+Fleet Route Optimization,Monthly,FP1306,84K Stops,83001,84000,13104,157248,,,No
+Fleet Route Optimization,Monthly,FP1307,85K Stops,84001,85000,13260,159120,,,No
+Fleet Route Optimization,Monthly,FP1308,86K Stops,85001,86000,13416,160992,,,No
+Fleet Route Optimization,Monthly,FP1309,87K Stops,86001,87000,13572,162864,,,No
+Fleet Route Optimization,Monthly,FP1310,88K Stops,87001,88000,13728,164736,,,No
+Fleet Route Optimization,Monthly,FP1311,89K Stops,88001,89000,13884,166608,,,No
+Fleet Route Optimization,Monthly,FP1312,90K Stops,89001,90000,14040,168480,,,No
+Fleet Route Optimization,Monthly,FP1313,91K Stops,90001,91000,14196,170352,,,No
+Fleet Route Optimization,Monthly,FP1314,92K Stops,91001,92000,14352,172224,,,No
+Fleet Route Optimization,Monthly,FP1315,93K Stops,92001,93000,14508,174096,,,No
+Fleet Route Optimization,Monthly,FP1316,94K Stops,93001,94000,14664,175968,,,No
+Fleet Route Optimization,Monthly,FP1317,95K Stops,94001,95000,14820,177840,,,No
+Fleet Route Optimization,Monthly,FP1318,96K Stops,95001,96000,14976,179712,,,No
+Fleet Route Optimization,Monthly,FP1319,97K Stops,96001,97000,15132,181584,,,No
+Fleet Route Optimization,Monthly,FP1320,98K Stops,97001,98000,15288,183456,,,No
+Fleet Route Optimization,Monthly,FP1321,99K Stops,98001,99000,15444,185328,,,No
+Fleet Route Optimization,Monthly,FP1322,100K Stops,99001,999999,15600,187200,,,No
+WMS,Annual,WMS1001,Base (1 Warehouse),1,1,1000,12000,,,No
+WMS,Annual,WMS1002,Multi-Warehouse,2,999999,1000,12000,,,No
+FreightPOP AI Agent,Annual,AI-AGENT-001,Tier 1,,250,,3000,250,,No
+FreightPOP AI Agent,Annual,AI-AGENT-002,Tier 2,251,500,,6000,500,,No
+FreightPOP AI Agent,Annual,AI-AGENT-003,Tier 3,501,1000,,12000,1000,,No
+FreightPOP AI Agent,Annual,AI-AGENT-004,Tier 4,1001,1500,,18000,1500,,No
+FreightPOP AI Agent,Annual,AI-AGENT-005,Tier 5,1501,2000,,24000,2000,,No
+FreightPOP AI Agent,Annual,AI-AGENT-006,Tier 6,2001,3000,,36000,3000,,No
+FreightPOP AI Agent,Annual,AI-AGENT-007,Tier 7,3001,4000,,48000,4000,,No
+FreightPOP AI Agent,Annual,AI-AGENT-008,Tier 8,4001,5000,,60000,5000,,No
+FreightPOP AI Agent,Annual,AI-AGENT-009,Custom Pricing Required,5001,999999,,,,,Yes

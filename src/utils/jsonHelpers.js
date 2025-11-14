@@ -1,12 +1,32 @@
 /**
  * JSON Helpers for Pricing Data
- * Loads pricing data from JSON file
+ * Loads pricing data from JSON file or Airtable
  */
 
+import { loadPricingFromAirtable, isAirtableConfigured } from './airtableHelpers';
+
 /**
- * Load default pricing from public/pricing.json on app initialization
+ * Load default pricing - tries Airtable first, then falls back to JSON
  */
 export async function loadDefaultPricing() {
+  // Try Airtable first if configured
+  if (isAirtableConfigured()) {
+    const airtableData = await loadPricingFromAirtable();
+    if (airtableData) {
+      console.log('✅ Using pricing from Airtable');
+      return airtableData;
+    }
+    console.log('⚠️ Airtable load failed, falling back to JSON...');
+  }
+
+  // Fall back to JSON
+  return loadPricingFromJSON();
+}
+
+/**
+ * Load pricing from public/pricing.json
+ */
+export async function loadPricingFromJSON() {
   try {
     const response = await fetch('/pricing.json');
     if (!response.ok) {
@@ -109,6 +129,9 @@ function convertJSONToSKU(jsonSku, pricingType) {
   } else if (pricingType === 'custom') {
     skuObj.warehouses = jsonSku.rangeStart;
   }
+  
+  // Add unitId (from JSON if present, otherwise default to 'shipments')
+  skuObj.unitId = jsonSku.unitId || 'shipments';
   
   return skuObj;
 }

@@ -156,7 +156,7 @@ const PricingModelBadge = ({ modelId }) => {
   );
 };
 
-const FixedHeader = ({ onLogout }) => (
+const FixedHeader = ({ onLogout, onRefreshPricing, isRefreshingPricing }) => (
   <div
     style={{
       position: 'fixed',
@@ -193,6 +193,40 @@ const FixedHeader = ({ onLogout }) => (
       <div style={{ fontSize: '13px', opacity: 0.8 }}>
         Professional Pricing Tool • Released {APP_VERSION.releaseDate}
       </div>
+      {onRefreshPricing && (
+        <button
+          onClick={onRefreshPricing}
+          disabled={isRefreshingPricing}
+          style={{
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: '500',
+            color: 'white',
+            background: isRefreshingPricing 
+              ? 'rgba(59, 130, 246, 0.5)' 
+              : 'rgba(59, 130, 246, 0.8)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: '6px',
+            cursor: isRefreshingPricing ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            opacity: isRefreshingPricing ? 0.7 : 1,
+          }}
+          onMouseOver={(e) => {
+            if (!isRefreshingPricing) {
+              e.target.style.background = 'rgba(59, 130, 246, 1)';
+              e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+            }
+          }}
+          onMouseOut={(e) => {
+            if (!isRefreshingPricing) {
+              e.target.style.background = 'rgba(59, 130, 246, 0.8)';
+              e.target.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+            }
+          }}
+        >
+          {isRefreshingPricing ? '🔄 Refreshing...' : '🔄 Refresh Pricing'}
+        </button>
+      )}
       {onLogout && (
         <button
           onClick={onLogout}
@@ -337,6 +371,7 @@ const App = () => {
     WMS: { annual: wmsAnnualSKUs, monthly: wmsMonthlySKUs },
   });
   const [isLoadingPricing, setIsLoadingPricing] = useState(true);
+  const [isRefreshingPricing, setIsRefreshingPricing] = useState(false);
 
   // === AUTHENTICATION STATE ===
   // Note: Uses sessionStorage for per-tab isolation - multiple users can login simultaneously
@@ -377,18 +412,17 @@ const App = () => {
     }
   }, []);
   
-  // Load pricing data from CSV on mount
+  // Load pricing data on mount (Airtable first, then JSON fallback)
   useEffect(() => {
     async function initializePricing() {
-      const csvData = await loadDefaultPricing();
+      const pricingData = await loadDefaultPricing();
       
-      if (csvData) {
-        // Replace with CSV data
-        setSKUData(csvData);
-        console.log('✅ Using pricing from CSV');
+      if (pricingData) {
+        // Replace with fetched data (from Airtable or JSON)
+        setSKUData(pricingData);
       } else {
         // Keep using hardcoded imports (already initialized)
-        console.log('⚠️ CSV load failed, using hardcoded SKUs');
+        console.log('⚠️ Pricing load failed, using hardcoded SKUs');
       }
       
       setIsLoadingPricing(false);
@@ -396,6 +430,96 @@ const App = () => {
     
     initializePricing();
   }, []);
+
+  // Background polling: Periodically fetch pricing from Airtable
+  useEffect(() => {
+    // Only poll if Airtable is configured
+    const apiKey = import.meta.env.VITE_AIRTABLE_API_KEY;
+    const baseId = import.meta.env.VITE_AIRTABLE_BASE_ID;
+    const tableId = import.meta.env.VITE_AIRTABLE_TABLE_ID;
+    const useAirtable = import.meta.env.VITE_USE_AIRTABLE !== 'false';
+    const pollInterval = parseInt(import.meta.env.VITE_AIRTABLE_POLL_INTERVAL || '5', 10) * 60 * 1000; // Convert minutes to milliseconds
+
+    const isConfigured = !!(apiKey && baseId && tableId && useAirtable && apiKey !== 'your_airtable_api_key_here');
+
+    if (!isConfigured) {
+      console.log('ℹ️ Airtable not configured, background polling disabled');
+      return;
+    }
+
+    console.log(`🔄 Background polling enabled: fetching pricing every ${pollInterval / 60000} minutes`);
+
+    // Import Airtable helper dynamically to avoid circular dependencies
+    let pollingInterval;
+    
+    const startPolling = async () => {
+      try {
+        const { loadPricingFromAirtable } = await import('./utils/airtableHelpers');
+        const airtableData = await loadPricingFromAirtable();
+        
+        if (airtableData) {
+          setSKUData(airtableData);
+          console.log('✅ Background update: Pricing refreshed from Airtable');
+        } else {
+          console.log('⚠️ Background update: Airtable fetch failed, keeping current pricing');
+        }
+      } catch (error) {
+        console.error('❌ Background polling error:', error);
+        // Don't update pricing on error, keep current data
+      }
+    };
+
+    // Start polling after initial delay (wait for app to fully load)
+    const initialDelay = setTimeout(() => {
+      startPolling();
+      // Then poll at regular intervals
+      pollingInterval = setInterval(startPolling, pollInterval);
+    }, 30000); // Wait 30 seconds before first poll
+
+    // Cleanup on unmount
+    return () => {
+      clearTimeout(initialDelay);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, []); // Empty deps - only run once on mount
+
+  // Manual pricing refresh handler
+  const handleRefreshPricing = async () => {
+    setIsRefreshingPricing(true);
+    try {
+      const { loadPricingFromAirtable, isAirtableConfigured } = await import('./utils/airtableHelpers');
+      
+      // Try Airtable first if configured
+      if (isAirtableConfigured()) {
+        const airtableData = await loadPricingFromAirtable();
+        if (airtableData) {
+          setSKUData(airtableData);
+          console.log('✅ Manual refresh: Pricing updated from Airtable');
+          alert('✅ Pricing refreshed successfully from Airtable!');
+          setIsRefreshingPricing(false);
+          return;
+        }
+      }
+      
+      // Fall back to JSON
+      const { loadPricingFromJSON } = await import('./utils/jsonHelpers');
+      const jsonData = await loadPricingFromJSON();
+      if (jsonData) {
+        setSKUData(jsonData);
+        console.log('✅ Manual refresh: Pricing updated from JSON');
+        alert('✅ Pricing refreshed successfully from JSON!');
+      } else {
+        alert('⚠️ Failed to refresh pricing. Using current data.');
+      }
+    } catch (error) {
+      console.error('❌ Manual refresh error:', error);
+      alert('❌ Error refreshing pricing: ' + error.message);
+    } finally {
+      setIsRefreshingPricing(false);
+    }
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -797,6 +921,15 @@ const App = () => {
   ]);
 
   // === LOOKUP PLANS ===
+  // Helper function to format tier display with unitId
+  const formatTierDisplay = (plan) => {
+    if (!plan) return 'N/A';
+    if (plan.isCustomPricing) return 'Custom Pricing Required';
+    const included = plan.shipmentsIncluded ?? plan.rangeEnd ?? 'N/A';
+    const unitId = plan.unitId || 'shipments'; // Default to 'shipments' if unitId not set
+    return `${plan.tier} (Include: up to ${included} ${unitId})`;
+  };
+
   const freightPlan = getPlanBySKU(
     subBilling === 'annual' ? skuData.Freight.annual : skuData.Freight.monthly,
     freightSKU
@@ -1390,7 +1523,11 @@ const App = () => {
   // === MAIN APP CONTENT ===
   return (
     <>
-      <FixedHeader onLogout={handleLogout} />
+      <FixedHeader 
+        onLogout={handleLogout} 
+        onRefreshPricing={handleRefreshPricing}
+        isRefreshingPricing={isRefreshingPricing}
+      />
       <div style={{ height: topSpacerHeight }} />
       <div
         ref={pageRef}
@@ -1420,17 +1557,20 @@ const App = () => {
                 ) {
                   let shipments = '';
                   if (freightVolume > 0 && freightPlan) {
-                    shipments += `Freight: ${freightPlan.shipmentsIncluded} shipments`;
+                    const unitId = freightPlan.unitId || 'shipments';
+                    shipments += `Freight: ${freightPlan.shipmentsIncluded ?? freightPlan.rangeEnd ?? 'N/A'} ${unitId}`;
                   }
                   if (parcelVolume > 0 && parcelPlan) {
+                    const unitId = parcelPlan.unitId || 'shipments';
                     shipments += shipments
-                      ? `; Parcel: ${parcelPlan.shipmentsIncluded} shipments`
-                      : `Parcel: ${parcelPlan.shipmentsIncluded} shipments`;
+                      ? `; Parcel: ${parcelPlan.shipmentsIncluded ?? parcelPlan.rangeEnd ?? 'N/A'} ${unitId}`
+                      : `Parcel: ${parcelPlan.shipmentsIncluded ?? parcelPlan.rangeEnd ?? 'N/A'} ${unitId}`;
                   }
                   if (oceanTrackingVolume > 0 && oceanTrackingPlan) {
+                    const unitId = oceanTrackingPlan.unitId || 'shipments';
                     shipments += shipments
-                      ? `; Ocean: ${oceanTrackingPlan.shipmentsIncluded} shipments`
-                      : `Ocean: ${oceanTrackingPlan.shipmentsIncluded} shipments`;
+                      ? `; Ocean: ${oceanTrackingPlan.shipmentsIncluded ?? oceanTrackingPlan.rangeEnd ?? 'N/A'} ${unitId}`
+                      : `Ocean: ${oceanTrackingPlan.shipmentsIncluded ?? oceanTrackingPlan.rangeEnd ?? 'N/A'} ${unitId}`;
                   }
                   customerQuoteItems.push({
                     label: 'Shipments Included',
@@ -1785,13 +1925,11 @@ const App = () => {
                       annualCost: freightAnnualCost,
                       planDetails: freightPlan && freightPlan.isCustomPricing
                         ? 'Custom Pricing Required'
-                        : freightPlan
-                        ? `${freightPlan.tier} (Incl: ${freightPlan.shipmentsIncluded})`
-                        : 'N/A',
+                        : formatTierDisplay(freightPlan),
                       tierDetails: freightPlan && freightPlan.isCustomPricing
                         ? `Volume of ${freightVolume} exceeds tier limits. Please contact sales.`
                         : freightPlan
-                        ? `Incl: ${freightPlan.shipmentsIncluded}, Over: $${freightPlan.costPerShipment}/shipment`
+                        ? `Include: up to ${freightPlan.shipmentsIncluded ?? freightPlan.rangeEnd ?? 'N/A'} ${freightPlan.unitId || 'shipments'}, Over: $${freightPlan.costPerShipment}/shipment`
                         : '',
                       lineMarkup: freightMarkup,
                       hideIfZero: true,
@@ -1804,13 +1942,11 @@ const App = () => {
                       annualCost: parcelAnnualCost,
                       planDetails: parcelPlan && parcelPlan.isCustomPricing
                         ? 'Custom Pricing Required'
-                        : parcelPlan
-                        ? `${parcelPlan.tier} (Incl: ${parcelPlan.shipmentsIncluded})`
-                        : 'N/A',
+                        : formatTierDisplay(parcelPlan),
                       tierDetails: parcelPlan && parcelPlan.isCustomPricing
                         ? `Volume of ${parcelVolume} exceeds max tier. Please contact sales.`
                         : parcelPlan
-                        ? `Incl: ${parcelPlan.shipmentsIncluded}, Over: $${parcelPlan.costPerShipment}/shipment`
+                        ? `Include: up to ${parcelPlan.shipmentsIncluded ?? parcelPlan.rangeEnd ?? 'N/A'} ${parcelPlan.unitId || 'shipments'}, Over: $${parcelPlan.costPerShipment}/shipment`
                         : '',
                       lineMarkup: parcelMarkup,
                       hideIfZero: true,
@@ -1823,13 +1959,11 @@ const App = () => {
                       annualCost: oceanTrackingAnnualCost,
                       planDetails: oceanTrackingPlan && oceanTrackingPlan.isCustomPricing
                         ? 'Custom Pricing Required'
-                        : oceanTrackingPlan
-                        ? `${oceanTrackingPlan.tier} (Incl: ${oceanTrackingPlan.shipmentsIncluded})`
-                        : 'N/A',
+                        : formatTierDisplay(oceanTrackingPlan),
                       tierDetails: oceanTrackingPlan && oceanTrackingPlan.isCustomPricing
                         ? `Volume of ${oceanTrackingVolume} exceeds tier limits. Please contact sales.`
                         : oceanTrackingPlan
-                        ? `Incl: ${oceanTrackingPlan.shipmentsIncluded}, Over: $${oceanTrackingPlan.costPerShipment}/shipment`
+                        ? `Include: up to ${oceanTrackingPlan.shipmentsIncluded ?? oceanTrackingPlan.rangeEnd ?? 'N/A'} ${oceanTrackingPlan.unitId || 'shipments'}, Over: $${oceanTrackingPlan.costPerShipment}/shipment`
                         : '',
                       lineMarkup: oceanTrackingMarkup,
                       hideIfZero: true,
@@ -2538,9 +2672,7 @@ const App = () => {
                         pricingModel: 'shipmentBased',
                         planDescription: freightPlan && freightPlan.isCustomPricing
                           ? '❗ Volume exceeds tier limits - Custom Pricing Required'
-                          : freightPlan
-                          ? `${freightPlan.tier} (Incl: ${freightPlan.shipmentsIncluded})`
-                          : 'N/A',
+                          : formatTierDisplay(freightPlan),
                         tierOptions:
                           subBilling === 'annual'
                             ? skuData.Freight.annual
@@ -2570,9 +2702,7 @@ const App = () => {
                         pricingModel: 'shipmentBased',
                         planDescription: parcelPlan && parcelPlan.isCustomPricing
                           ? '❗ Volume exceeds tier limits - Custom Pricing Required'
-                          : parcelPlan
-                          ? `${parcelPlan.tier} (Incl: ${parcelPlan.shipmentsIncluded})`
-                          : 'N/A',
+                          : formatTierDisplay(parcelPlan),
                         tierOptions:
                           subBilling === 'annual'
                             ? skuData.Parcel.annual
@@ -2594,9 +2724,7 @@ const App = () => {
                         pricingModel: 'shipmentBased',
                         planDescription: oceanTrackingPlan && oceanTrackingPlan.isCustomPricing
                           ? '❗ Volume exceeds tier limits - Custom Pricing Required'
-                          : oceanTrackingPlan
-                          ? `${oceanTrackingPlan.tier} (Incl: ${oceanTrackingPlan.shipmentsIncluded})`
-                          : 'N/A',
+                          : formatTierDisplay(oceanTrackingPlan),
                         tierOptions:
                           subBilling === 'annual'
                             ? skuData.Ocean.annual
