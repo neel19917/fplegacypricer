@@ -478,6 +478,20 @@ const App = () => {
     resetAllProducts,
   } = useProductState();
 
+  // Diagnostic: Log storage status on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const testKey = '__storage_test__';
+        localStorage.setItem(testKey, 'test');
+        localStorage.removeItem(testKey);
+        console.log('[App] localStorage is available and working');
+      } catch (e) {
+        console.warn('[App] localStorage is not available:', e.name, e.message);
+      }
+    }
+  }, []);
+
   // Backward-compatible getters (temporary during refactor)
   const freightVolume = getProductValue('freight', 'volume');
   const freightMarkup = getProductValue('freight', 'markup');
@@ -2368,8 +2382,16 @@ const App = () => {
                           setFreightOverride(true);
                         },
                         volumeCount: freightVolume,
-                        onVolumeChange: e =>
-                          setFreightVolume(Number(e.target.value) || 0),
+                        onVolumeChange: e => {
+                          const newValue = Number(e.target.value) || 0;
+                          console.log('[Volume Input] Freight volume changed:', { 
+                            oldValue: freightVolume, 
+                            newValue, 
+                            inputValue: e.target.value,
+                            isDisabled: false
+                          });
+                          setFreightVolume(newValue);
+                        },
                         monthlyCost: freightAnnualCost / 12,
                         annualCost: freightAnnualCost,
                         isCustomPricing: freightPlan && freightPlan.isCustomPricing,
@@ -2807,7 +2829,21 @@ const App = () => {
                                       <input
                                         type='number'
                                         value={row.volumeCount}
-                                        onChange={e => row.onVolumeChange(e)}
+                                        onChange={e => {
+                                          // Diagnostic logging for volume input changes
+                                          if (row.onVolumeChange) {
+                                            console.log(`[Volume Input] ${row.productType} volume changed:`, {
+                                              productType: row.productType,
+                                              oldValue: row.volumeCount,
+                                              newValue: e.target.value,
+                                              isDisabled: false,
+                                              hasOnChange: !!row.onVolumeChange
+                                            });
+                                            row.onVolumeChange(e);
+                                          } else {
+                                            console.warn(`[Volume Input] ${row.productType} has no onChange handler - input is read-only`);
+                                          }
+                                        }}
                                         style={inputStyle}
                                         disabled={row.onVolumeChange === null}
                                       />
@@ -2896,8 +2932,23 @@ const App = () => {
                             <input
                               type='number'
                               value={row.volumeCount}
-                              onChange={e => row.onVolumeChange(e)}
+                              onChange={e => {
+                                // Diagnostic logging for volume input changes
+                                if (row.onVolumeChange) {
+                                  console.log(`[Volume Input] ${row.productType} volume changed:`, {
+                                    productType: row.productType,
+                                    oldValue: row.volumeCount,
+                                    newValue: e.target.value,
+                                    isDisabled: false,
+                                    hasOnChange: !!row.onVolumeChange
+                                  });
+                                  row.onVolumeChange(e);
+                                } else {
+                                  console.warn(`[Volume Input] ${row.productType} has no onChange handler - input is read-only`);
+                                }
+                              }}
                               style={row.isCustomPricing ? customPricingInputStyle : inputStyle}
+                              disabled={row.onVolumeChange === null}
                             />
                           )}
                         </td>
