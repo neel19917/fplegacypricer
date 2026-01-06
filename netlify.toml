@@ -4,6 +4,9 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  # Configure secrets scanner to allow public Supabase values
+  # These are intentionally public and safe to expose in compiled code
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_ALLOWED_DOMAIN,VITE_AIRTABLE_POLL_INTERVAL"
 
 [[redirects]]
   from = "/api/claude"
