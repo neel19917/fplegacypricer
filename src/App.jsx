@@ -1,12 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { productConfig, pricingModels, getPricingModelsWithProducts } from './productConfig';
 import { APP_VERSION } from './version';
 import ProductCheckbox from './components/ProductCheckbox';
 import ScreenshotParseModal from './components/ScreenshotParseModal';
 import LoginScreen from './components/LoginScreen';
+import QuoteDashboard from './components/QuoteDashboard';
+import ShareQuoteModal from './components/ShareQuoteModal';
+import ApprovalView from './components/ApprovalView';
+import SKUAdminPanel from './components/SKUAdminPanel';
 import { useSupabaseAuth } from './hooks/useSupabaseAuth';
+import { useSupabasePricing } from './hooks/useSupabasePricing';
+import { useQuotes, isValidHubSpotUrl } from './hooks/useQuotes';
 import { isSupabaseConfigured } from './supabaseConfig';
+import { fetchUserProfileByEmail, isSuperAdmin } from './utils/permissions';
 import {
   loadDefaultPricing,
 } from './utils/jsonHelpers';
@@ -159,7 +166,7 @@ const PricingModelBadge = ({ modelId }) => {
   );
 };
 
-const FixedHeader = ({ onLogout, user }) => (
+const FixedHeader = ({ onLogout, user, onOpenDashboard, onOpenAdmin, showAdminButton, hasUnsavedChanges, saveStatus }) => (
   <div
     style={{
       position: 'fixed',
@@ -192,7 +199,90 @@ const FixedHeader = ({ onLogout, user }) => (
         v{APP_VERSION.version} • {APP_VERSION.releaseName}
       </span>
     </h1>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Quote Dashboard Button */}
+      {onOpenDashboard && (
+        <button
+          onClick={onOpenDashboard}
+          style={{
+            padding: '8px 14px',
+            fontSize: '13px',
+            fontWeight: '500',
+            color: 'white',
+            background: '#10b981',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={(e) => e.target.style.background = '#059669'}
+          onMouseOut={(e) => e.target.style.background = '#10b981'}
+        >
+          📋 Quotes
+        </button>
+      )}
+      {/* Admin Panel Button (Super Admin only) */}
+      {showAdminButton && onOpenAdmin && (
+        <button
+          onClick={onOpenAdmin}
+          style={{
+            padding: '8px 14px',
+            fontSize: '13px',
+            fontWeight: '500',
+            color: 'white',
+            background: '#f59e0b',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={(e) => e.target.style.background = '#d97706'}
+          onMouseOut={(e) => e.target.style.background = '#f59e0b'}
+        >
+          ⚙️ Pricing
+        </button>
+      )}
+      {/* Save Status Indicator */}
+      <div style={{
+        padding: '6px 12px',
+        fontSize: '12px',
+        fontWeight: '500',
+        borderRadius: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        ...(saveStatus === 'saving' && {
+          color: '#fef3c7',
+          background: 'rgba(245, 158, 11, 0.3)',
+          border: '1px solid rgba(245, 158, 11, 0.5)',
+        }),
+        ...(saveStatus === 'saved' && !hasUnsavedChanges && {
+          color: '#d1fae5',
+          background: 'rgba(16, 185, 129, 0.3)',
+          border: '1px solid rgba(16, 185, 129, 0.5)',
+        }),
+        ...(hasUnsavedChanges && saveStatus !== 'saving' && {
+          color: '#fef3c7',
+          background: 'rgba(245, 158, 11, 0.3)',
+          border: '1px solid rgba(245, 158, 11, 0.5)',
+        }),
+        ...(!hasUnsavedChanges && saveStatus === 'idle' && {
+          color: 'rgba(255, 255, 255, 0.6)',
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }),
+      }}>
+        {saveStatus === 'saving' && '⏳ Saving...'}
+        {saveStatus === 'saved' && !hasUnsavedChanges && '✅ Saved'}
+        {hasUnsavedChanges && saveStatus !== 'saving' && '⚠️ Unsaved'}
+        {!hasUnsavedChanges && saveStatus === 'idle' && '💾 Ready'}
+      </div>
       {user && (
         <div style={{ 
           display: 'flex', 
@@ -376,25 +466,81 @@ const App = () => {
   const isAuthenticated = supabaseAuth.isAuthenticated;
   const currentUser = supabaseAuth.user;
   
-  // Load pricing data from CSV on mount
+  // === USER PROFILE & PERMISSIONS ===
+  const [userProfile, setUserProfile] = useState(null);
+  
+  // === MODAL STATE ===
+  const [showQuoteDashboard, setShowQuoteDashboard] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showSKUAdmin, setShowSKUAdmin] = useState(false);
+  const [currentQuoteId, setCurrentQuoteId] = useState(null);
+  const [currentQuoteNumber, setCurrentQuoteNumber] = useState(null);
+  
+  // === QUOTE SAVE STATE ===
+  const [hubspotDealUrl, setHubspotDealUrl] = useState('');
+  const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+  const [lastSaveTime, setLastSaveTime] = useState(null);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingNavigationAction, setPendingNavigationAction] = useState(null);
+  const autoSaveTimeoutRef = useRef(null);
+  const lastSavedDataRef = useRef(null);
+  
+  // === QUOTES HOOK ===
+  const { saveQuote, updateQuote } = useQuotes();
+  
+  // === SUPABASE PRICING HOOK ===
+  const { 
+    skuData: supabaseSkuData, 
+    isLoading: isSupabasePricingLoading, 
+    source: pricingSource,
+    reload: reloadPricing 
+  } = useSupabasePricing();
+  
+  // Load user profile when authenticated
+  useEffect(() => {
+    async function loadUserProfile() {
+      if (currentUser?.email) {
+        const profile = await fetchUserProfileByEmail(currentUser.email);
+        setUserProfile(profile);
+        console.log('[App] User profile loaded:', profile?.user_type || 'No profile');
+      }
+    }
+    loadUserProfile();
+  }, [currentUser?.email]);
+  
+  // Update SKU data when Supabase pricing loads
+  useEffect(() => {
+    if (supabaseSkuData) {
+      setSKUData(supabaseSkuData);
+      console.log(`✅ Using pricing from ${pricingSource || 'unknown source'}`);
+      setIsLoadingPricing(false);
+    }
+  }, [supabaseSkuData, pricingSource]);
+  
+  // Fallback: Load pricing data from JSON on mount if Supabase fails
   useEffect(() => {
     async function initializePricing() {
-      const csvData = await loadDefaultPricing();
+      // Wait a bit for Supabase to load
+      if (isSupabasePricingLoading) return;
       
-      if (csvData) {
-        // Replace with CSV data
-        setSKUData(csvData);
-        console.log('✅ Using pricing from CSV');
-      } else {
-        // Keep using hardcoded imports (already initialized)
-        console.log('⚠️ CSV load failed, using hardcoded SKUs');
+      // If Supabase didn't provide data, try JSON fallback
+      if (!supabaseSkuData) {
+        const csvData = await loadDefaultPricing();
+        
+        if (csvData) {
+          setSKUData(csvData);
+          console.log('✅ Using pricing from JSON fallback');
+        } else {
+          console.log('⚠️ Using hardcoded SKUs');
+        }
+        setIsLoadingPricing(false);
       }
-      
-      setIsLoadingPricing(false);
     }
     
     initializePricing();
-  }, []);
+  }, [isSupabasePricingLoading, supabaseSkuData]);
 
   const handleLogout = () => {
     console.log('[Auth] 🚪 Logging out');
@@ -498,6 +644,7 @@ const App = () => {
     setProductValue,
     setProductInput,
     resetAllProducts,
+    loadProducts,
   } = useProductState();
 
   // Diagnostic: Log storage status on mount
@@ -1031,13 +1178,30 @@ const App = () => {
   };
 
   // === Handle Reset ===
-  const handleReset = () => {
+  const performReset = () => {
     resetAllProducts();
     setGlobalMarkup(0);
     setMinSubscription(20000);
     setOneTimeMarkup(0);
     setOneTimeCosts([]);
     setSubBilling('annual');
+    setCompanyName('');
+    setHubspotDealUrl('');
+    setCurrentQuoteId(null);
+    setCurrentQuoteNumber(null);
+    setHasUnsavedChanges(false);
+    lastSavedDataRef.current = null;
+    setSaveStatus('idle');
+    setLastSaveTime(null);
+  };
+
+  const handleReset = () => {
+    if (hasUnsavedChanges) {
+      setPendingNavigationAction(() => performReset);
+      setShowUnsavedModal(true);
+    } else {
+      performReset();
+    }
   };
 
   // === Process Screenshot File ===
@@ -1160,6 +1324,221 @@ const App = () => {
 
   const topSpacerHeight = '90px';
 
+  // === HANDLER FOR LOADING QUOTES ===
+  // NOTE: All hooks must be defined before any early returns to follow React hooks rules
+  const handleLoadQuote = useCallback((quoteData) => {
+    console.log('[App] Loading quote:', quoteData.quoteNumber);
+    
+    // Set basic quote info
+    setCompanyName(quoteData.companyName || '');
+    setCurrentQuoteNumber(quoteData.quoteNumber);
+    setHubspotDealUrl(quoteData.hubspotDealUrl || '');
+    
+    // Set billing frequency
+    if (quoteData.billingFrequency) {
+      setSubBilling(quoteData.billingFrequency.toLowerCase() === 'monthly' ? 'monthly' : 'annual');
+    }
+    
+    // Restore product state from quote data
+    if (quoteData.pricingData) {
+      console.log('[App] Restoring quote pricing data:', quoteData.pricingData);
+      
+      // If products are stored in the quote, restore them
+      if (quoteData.pricingData.products) {
+        loadProducts(quoteData.pricingData.products);
+      }
+      
+      // Restore one-time costs if they exist
+      if (quoteData.pricingData.oneTimeCosts) {
+        setOneTimeCosts(quoteData.pricingData.oneTimeCosts);
+      }
+      
+      // Restore min subscription if stored
+      if (quoteData.pricingData.minSubscription) {
+        setMinSubscription(quoteData.pricingData.minSubscription);
+      }
+      
+      // Restore global markup if stored  
+      if (quoteData.pricingData.globalMarkup !== undefined) {
+        setGlobalMarkup(quoteData.pricingData.globalMarkup);
+      }
+    }
+    
+    // Reset save status after loading
+    setSaveStatus('idle');
+    setLastSaveTime(null);
+    
+    console.log('[App] Quote loaded successfully:', quoteData.quoteNumber);
+  }, [loadProducts]);
+
+  // === MANUAL SAVE QUOTE ===
+  const handleSaveQuote = useCallback(async () => {
+    // Validate required fields
+    if (!companyName.trim()) {
+      alert('Please enter a company name to save the quote');
+      return;
+    }
+    if (!hubspotDealUrl.trim()) {
+      alert('Please enter a HubSpot deal URL to save the quote');
+      return;
+    }
+    if (!isValidHubSpotUrl(hubspotDealUrl)) {
+      alert('Please enter a valid HubSpot deal URL');
+      return;
+    }
+
+    setSaveStatus('saving');
+
+    const quoteData = {
+      companyName: companyName.trim(),
+      hubspotDealUrl: hubspotDealUrl.trim(),
+      customerName: companyName.trim(),
+      customerEmail: '',
+      pricingData: {
+        billingFrequency: subBilling,
+        products: products,
+        totalRecurringCost: finalSubscriptionAnnual,
+        totalOnetimeCost: finalOneTimeCost,
+        oneTimeCosts: oneTimeCosts,
+        minSubscription: minSubscription,
+        globalMarkup: globalMarkup,
+      },
+      totalRecurringCost: finalSubscriptionAnnual,
+      totalOnetimeCost: finalOneTimeCost,
+      billingFrequency: subBilling === 'annual' ? 'Annual' : 'Monthly',
+      preparedBy: currentUser?.email || 'Unknown',
+    };
+
+    try {
+      let result;
+      if (currentQuoteId) {
+        // Update existing quote
+        result = await updateQuote(currentQuoteId, {
+          companyName: quoteData.companyName,
+          hubspotDealUrl: quoteData.hubspotDealUrl,
+          pricingData: quoteData.pricingData,
+          totalRecurringCost: quoteData.totalRecurringCost,
+          totalOnetimeCost: quoteData.totalOnetimeCost,
+          billingFrequency: quoteData.billingFrequency,
+        });
+      } else {
+        // Create new quote
+        result = await saveQuote(quoteData);
+        if (result.success && result.quote) {
+          setCurrentQuoteId(result.quote.id);
+          setCurrentQuoteNumber(result.quote.quote_number);
+        }
+      }
+
+      if (result.success) {
+        setSaveStatus('saved');
+        setLastSaveTime(new Date());
+        setHasUnsavedChanges(false);
+        // Store the full data state for comparison
+        lastSavedDataRef.current = JSON.stringify({
+          products,
+          oneTimeCosts,
+          minSubscription,
+          globalMarkup,
+          subBilling,
+          companyName,
+          hubspotDealUrl,
+        });
+        console.log('[App] Quote saved successfully');
+        
+        // Reset to idle after 3 seconds
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        setSaveStatus('error');
+        console.error('[App] Save failed:', result.error);
+        setTimeout(() => setSaveStatus('idle'), 5000);
+      }
+    } catch (err) {
+      setSaveStatus('error');
+      console.error('[App] Save error:', err);
+      setTimeout(() => setSaveStatus('idle'), 5000);
+    }
+  }, [companyName, hubspotDealUrl, subBilling, products, finalSubscriptionAnnual, finalOneTimeCost, oneTimeCosts, minSubscription, globalMarkup, currentUser, currentQuoteId, saveQuote, updateQuote]);
+
+  // === TRACK UNSAVED CHANGES ===
+  useEffect(() => {
+    // Check if data has changed from last saved state
+    const currentData = JSON.stringify({
+      products,
+      oneTimeCosts,
+      minSubscription,
+      globalMarkup,
+      subBilling,
+      companyName,
+      hubspotDealUrl,
+    });
+
+    // Only mark as unsaved if we have some data entered and it differs from saved
+    const hasData = companyName.trim() || hubspotDealUrl.trim() || 
+                    Object.values(products).some(p => p.volume > 0 || p.value === 'Yes');
+    
+    if (hasData && currentData !== lastSavedDataRef.current) {
+      setHasUnsavedChanges(true);
+    }
+  }, [products, oneTimeCosts, minSubscription, globalMarkup, subBilling, companyName, hubspotDealUrl]);
+
+  // === BROWSER BEFOREUNLOAD WARNING ===
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        // Modern browsers require returnValue to be set
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // === AUTO-SAVE EFFECT ===
+  useEffect(() => {
+    // Only auto-save if we have required fields and auto-save is enabled
+    if (!autoSaveEnabled || !companyName.trim() || !hubspotDealUrl.trim() || !isValidHubSpotUrl(hubspotDealUrl)) {
+      return;
+    }
+
+    // Check if data has actually changed
+    const currentData = JSON.stringify({
+      products,
+      oneTimeCosts,
+      minSubscription,
+      globalMarkup,
+      subBilling,
+    });
+
+    if (currentData === lastSavedDataRef.current) {
+      return; // No changes to save
+    }
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save (1 second after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      console.log('[App] Auto-saving quote...');
+      handleSaveQuote();
+    }, 1000);
+
+    // Cleanup
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [products, oneTimeCosts, minSubscription, globalMarkup, subBilling, companyName, hubspotDealUrl, autoSaveEnabled, handleSaveQuote]);
+
   // === LOGIN SCREEN ===
   // Show loading state while pricing data loads
   if (isLoadingPricing) {
@@ -1218,7 +1597,15 @@ const App = () => {
   // === MAIN APP CONTENT ===
   return (
     <>
-      <FixedHeader onLogout={handleLogout} user={currentUser} />
+      <FixedHeader 
+        onLogout={handleLogout} 
+        user={currentUser}
+        onOpenDashboard={() => setShowQuoteDashboard(true)}
+        onOpenAdmin={() => setShowSKUAdmin(true)}
+        showAdminButton={isSuperAdmin(userProfile)}
+        hasUnsavedChanges={hasUnsavedChanges}
+        saveStatus={saveStatus}
+      />
       <div style={{ height: topSpacerHeight }} />
       <div
         ref={pageRef}
@@ -3152,55 +3539,251 @@ const App = () => {
               </CardContent>
             </Card>
 
-            {/* Download Section */}
-            <Card>
+            {/* Quote Save & Download Section */}
+            <Card style={{ border: '2px solid #10b981' }}>
+              <CardHeader style={{ background: '#f0fdf4', padding: '16px 24px' }}>
+                <CardTitle style={{ fontSize: '18px', color: '#065f46' }}>
+                  💾 Save & Export Quote
+                </CardTitle>
+              </CardHeader>
               <CardContent>
-                <div style={{ textAlign: 'right' }}>
-                  <div
+                {/* Save Status Banner */}
+                {saveStatus !== 'idle' && (
+                  <div style={{
+                    padding: '10px 16px',
+                    marginBottom: '16px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '14px',
+                    ...(saveStatus === 'saving' && { background: '#fef3c7', color: '#92400e' }),
+                    ...(saveStatus === 'saved' && { background: '#d1fae5', color: '#065f46' }),
+                    ...(saveStatus === 'error' && { background: '#fee2e2', color: '#dc2626' }),
+                  }}>
+                    {saveStatus === 'saving' && '⏳ Saving...'}
+                    {saveStatus === 'saved' && `✅ Saved ${lastSaveTime ? `at ${lastSaveTime.toLocaleTimeString()}` : ''}`}
+                    {saveStatus === 'error' && '❌ Save failed - please try again'}
+                  </div>
+                )}
+
+                {/* Quote Number Display */}
+                {currentQuoteNumber && (
+                  <div style={{
+                    padding: '10px 16px',
+                    marginBottom: '16px',
+                    borderRadius: '6px',
+                    background: '#dbeafe',
+                    color: '#1e40af',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}>
+                    📋 Quote: <strong>{currentQuoteNumber}</strong>
+                  </div>
+                )}
+
+                {/* Form Fields */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                  gap: '16px',
+                  marginBottom: '16px',
+                }}>
+                  {/* Company Name */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '6px',
+                    }}>
+                      Company Name <span style={{ color: '#dc2626' }}>*</span>
+                    </label>
+                    <input
+                      type='text'
+                      value={companyName}
+                      onChange={e => setCompanyName(e.target.value)}
+                      placeholder="Enter company name"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  {/* HubSpot Deal URL */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '6px',
+                    }}>
+                      HubSpot Deal URL <span style={{ color: '#dc2626' }}>*</span>
+                    </label>
+                    <input
+                      type='url'
+                      value={hubspotDealUrl}
+                      onChange={e => setHubspotDealUrl(e.target.value)}
+                      placeholder="https://app.hubspot.com/contacts/.../deal/..."
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  {/* Rep Name */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '6px',
+                    }}>
+                      Rep Name
+                    </label>
+                    <input
+                      type='text'
+                      value={repName}
+                      onChange={e => setRepName(e.target.value)}
+                      placeholder="Your name"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      marginBottom: '6px',
+                    }}>
+                      Date
+                    </label>
+                    <input
+                      type='date'
+                      value={downloadDate}
+                      onChange={e => setDownloadDate(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Auto-save Toggle */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '16px',
+                  padding: '10px 16px',
+                  background: '#f9fafb',
+                  borderRadius: '6px',
+                }}>
+                  <input
+                    type="checkbox"
+                    id="autoSave"
+                    checked={autoSaveEnabled}
+                    onChange={e => setAutoSaveEnabled(e.target.checked)}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  <label htmlFor="autoSave" style={{ fontSize: '14px', color: '#374151' }}>
+                    Auto-save quote (saves 1 second after changes)
+                  </label>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}>
+                  <button
+                    onClick={handleSaveQuote}
+                    disabled={saveStatus === 'saving'}
                     style={{
+                      padding: '12px 24px',
+                      background: saveStatus === 'saving' ? '#9ca3af' : '#10b981',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px',
                       display: 'flex',
                       alignItems: 'center',
-                      marginBottom: '10px',
+                      gap: '8px',
                     }}
                   >
-                    <div style={{ marginRight: '20px' }}>
-                      <label style={{ marginRight: '10px' }}>
-                        Company Name:
-                      </label>
-                      <input
-                        type='text'
-                        value={companyName}
-                        onChange={e => setCompanyName(e.target.value)}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <label style={{ marginRight: '10px' }}>Rep Name:</label>
-                      <input
-                        type='text'
-                        value={repName}
-                        onChange={e => setRepName(e.target.value)}
-                        style={{ marginRight: '10px' }}
-                      />
-                      <label style={{ marginRight: '10px' }}>Date:</label>
-                      <input
-                        type='date'
-                        value={downloadDate}
-                        onChange={e => setDownloadDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                    {saveStatus === 'saving' ? '⏳ Saving...' : '💾 Save Quote'}
+                  </button>
+
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    disabled={!currentQuoteId}
+                    style={{
+                      padding: '12px 24px',
+                      background: currentQuoteId ? '#3b82f6' : '#9ca3af',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: currentQuoteId ? 'pointer' : 'not-allowed',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    🔗 Share for Approval
+                  </button>
+
                   <button
                     onClick={downloadPageAsPNG}
                     style={{
-                      padding: '10px',
-                      background: '#ff5722',
+                      padding: '12px 24px',
+                      background: '#f97316',
                       color: '#fff',
                       border: 'none',
-                      borderRadius: '5px',
+                      borderRadius: '6px',
                       cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
                     }}
                   >
-                    Download Entire Page as PNG
+                    📷 Download as PNG
                   </button>
                 </div>
               </CardContent>
@@ -3318,6 +3901,164 @@ const App = () => {
         onRetry={handleRetryScreenshot}
         onPaste={handlePaste}
       />
+
+      {/* Quote Dashboard Modal */}
+      <QuoteDashboard
+        isOpen={showQuoteDashboard}
+        onClose={() => setShowQuoteDashboard(false)}
+        onLoadQuote={handleLoadQuote}
+        currentPricingData={{
+          billingFrequency: subBilling,
+          products: products,
+          totalRecurringCost: finalSubscriptionAnnual,
+          totalOnetimeCost: finalOneTimeCost,
+        }}
+        currentUser={currentUser}
+        userProfile={userProfile}
+        companyName={companyName}
+        billingFrequency={subBilling}
+        totalRecurringCost={finalSubscriptionAnnual}
+        totalOnetimeCost={finalOneTimeCost}
+      />
+
+      {/* Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        quoteId={currentQuoteId}
+        quoteNumber={currentQuoteNumber}
+        companyName={companyName}
+        currentUser={currentUser}
+      />
+
+      {/* SKU Admin Panel (Super Admin only) */}
+      <SKUAdminPanel
+        isOpen={showSKUAdmin}
+        onClose={() => setShowSKUAdmin(false)}
+        userProfile={userProfile}
+        onPricingUpdate={reloadPricing}
+      />
+
+      {/* Unsaved Changes Modal */}
+      {showUnsavedModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000,
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: '450px',
+            padding: '24px',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+          }}>
+            <div style={{
+              fontSize: '48px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              ⚠️
+            </div>
+            <h3 style={{
+              fontSize: '20px',
+              fontWeight: '600',
+              textAlign: 'center',
+              margin: '0 0 12px 0',
+              color: '#111827',
+            }}>
+              Unsaved Changes
+            </h3>
+            <p style={{
+              fontSize: '14px',
+              color: '#6b7280',
+              textAlign: 'center',
+              margin: '0 0 24px 0',
+              lineHeight: 1.5,
+            }}>
+              You have unsaved changes. Would you like to save your quote before leaving?
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'center',
+            }}>
+              <button
+                onClick={async () => {
+                  await handleSaveQuote();
+                  setShowUnsavedModal(false);
+                  // Execute pending action after save
+                  if (pendingNavigationAction) {
+                    pendingNavigationAction();
+                    setPendingNavigationAction(null);
+                  }
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#10b981',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+              >
+                💾 Save & Continue
+              </button>
+              <button
+                onClick={() => {
+                  setHasUnsavedChanges(false);
+                  setShowUnsavedModal(false);
+                  // Execute pending action without saving
+                  if (pendingNavigationAction) {
+                    pendingNavigationAction();
+                    setPendingNavigationAction(null);
+                  }
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+              >
+                🗑️ Discard
+              </button>
+              <button
+                onClick={() => {
+                  setShowUnsavedModal(false);
+                  setPendingNavigationAction(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
