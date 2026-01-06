@@ -1003,22 +1003,9 @@ const App = () => {
     }
   }, [finalSubscriptionAnnual]);
 
-  // === Simulate CSV load for One-Time Costs ===
-  useEffect(() => {
-    const sampleOneTime = [
-      {
-        name: 'Setup Fee',
-        description: 'Implementation & Setup',
-        amount: 3000,
-      },
-      {
-        name: 'Integration',
-        description: 'Custom ERP Integration',
-        amount: 2000,
-      },
-    ];
-    setOneTimeCosts(sampleOneTime);
-  }, []);
+  // === One-Time Costs: Start with empty array (no defaults) ===
+  // Users can add their own costs using the "Add One-Time Cost" button
+  // (Default costs removed to prevent pre-filled values)
 
   // === DOWNLOAD PNG FUNCTION ===
   const downloadPageAsPNG = () => {
