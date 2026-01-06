@@ -246,6 +246,34 @@ export const useProductState = () => {
   };
 
   /**
+   * Load products state from a saved quote
+   * @param {object} savedProducts - The saved products state from a quote
+   */
+  const loadProducts = (savedProducts) => {
+    if (!savedProducts || typeof savedProducts !== 'object') {
+      console.warn('[useProductState] Invalid saved products data');
+      return;
+    }
+    
+    // Start with default state
+    const defaultState = initializeProductState();
+    const mergedState = { ...defaultState };
+    
+    // Merge saved state with defaults
+    Object.keys(savedProducts).forEach(productId => {
+      if (mergedState[productId]) {
+        mergedState[productId] = {
+          ...mergedState[productId],
+          ...savedProducts[productId]
+        };
+      }
+    });
+    
+    setProducts(mergedState);
+    console.log('[useProductState] Loaded products from quote');
+  };
+
+  /**
    * Get all products in a specific category
    * @param {string} categoryId - The category ID
    * @returns {array} Array of product IDs in that category
@@ -264,6 +292,7 @@ export const useProductState = () => {
     getProductConfig,
     getProductState,
     resetAllProducts,
+    loadProducts,
     getProductsByCategory,
   };
 };
