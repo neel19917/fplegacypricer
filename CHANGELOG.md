@@ -1,158 +1,187 @@
-# Changelog
+# FreightPOP Quote Builder - Changelog
 
-All notable changes to the FreightPOP Legacy Pricer will be documented in this file.
+## Version 2.0 - January 2026
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+### 🗄️ Database Integration (Supabase)
 
-## [2.3.6] - 2025-11-06
+- **SKU Management**: Migrated from hardcoded JSON files to Supabase `pricing_tiers` table for dynamic SKU storage and editing
+- **Quote Storage**: Added `quotes` table for saving and loading customer quotes with full state persistence
+- **User Authentication**: Integrated Supabase Auth with Microsoft OAuth support
+- **Role-Based Access Control**: Implemented user permissions via `user_profiles` table (`Super Admin`, `Admin`, `Sales`)
+- **Shareable Links**: Added `quote_access_tokens` table for generating authenticated approval links
 
-### Fixed
-- **Critical Bug Fix**: Parcel tiers now correctly pull from `pricing.json` instead of hardcoded SKUs
-- Fixed SKU auto-selection to use loaded JSON data (`skuData`) instead of hardcoded `product.skus`
-- Improved tier validation to detect volumes that don't match any tier range
+---
 
-### Enhanced
-- **Automatic Tier Validation**: All products now automatically highlight in red when volumes exceed tier limits
-- Enhanced detection for volumes below minimum, above maximum, or falling between tier gaps
-- Added custom pricing detection to Freight, Ocean Tracking, Support Package, and Fleet Route Optimization
-- Consistent error messaging across all products: "Volume exceeds tier limits - Custom Pricing Required"
-- Improved debug logging shows SKU array details for troubleshooting
+### 🔧 Bug Fixes
 
-### Changed
-- Updated `findSKUForProduct` function signature to accept SKU array directly instead of product config
-- SKU auto-selection now uses actual JSON pricing data loaded from `pricing.json`
-- All product rows and summary rows include `isCustomPricing` flag for consistent error handling
+#### Runtime Errors Fixed
+- **`ReferenceError: finalMonthlyCost is not defined`** - Corrected variable names in split view panel:
+  - `finalMonthlyCost` → `finalSubscriptionMonthly`
+  - `finalAnnualCost` → `finalSubscriptionAnnual`
+  - `effectiveFreightAnnualCost` → `freightAnnualCost`
+  - `effectiveParcelAnnualCost` → `parcelAnnualCost`
+  - `effectiveOceanAnnualCost` → `oceanTrackingAnnualCost`
+  - `vendorPortalUsers` → `vendorPortalCount`
+  - `locationsCount` → `locationsVolume`
+  - `billPayAnnualCost` → `billPayMonthlyCost` (for monthly display)
+  - Removed undefined `customerPortalAnnualCost` reference
 
-## [2.3.5] - 2025-11-06
+- **`Rendered more hooks than during the previous render`** - Moved `useCallback` hooks above conditional returns to comply with React's rules of hooks
 
-### Added
-- Custom pricing detection when volumes exceed highest available tier
-- Red-highlighted rows with "Request Quote" message in Product Configuration Table
-- "Custom Pricing Required" with detailed explanation in Quote Summary
-- Visual indicators: light red background (#fee2e2), red border (#dc2626), red text
-- Enhanced SKU selection logic to return "CUSTOM_PRICING" for exceeded volumes
-- Updated calculation functions to handle `isCustomPricing` flag
-- Debug logging to trace SKU auto-selection
+- **`billingFrequency is not defined`** - Fixed prop naming mismatch between `App.jsx` and `QuoteDashboard` component
 
-### Fixed
-- Pricing display issues for Core TMS Parcel, Locations, Auditing Module, and Dock Scheduling
-- Tooltips display helpful message: "Volume of X exceeds max tier Y. Please contact sales."
-- Input fields get red border when custom pricing is needed
+- **`column "billing_type" does not exist`** - Corrected Supabase SQL queries to use proper column names (`Billing_Frequency`, `monthly_priceforannualbilling`)
 
-## [2.3.4] - 2025-11-06
+---
 
-### Changed
-- Improved AI Agent display format for better clarity
-- Product Configuration now shows tier range: "251-500 Shipments Incl: 100M tokens"
-- Quote Summary (Plan Details) shows: "100M tokens (251-500 shipments)"
-- Replaced individual shipment count with tier range (e.g., "1,113 shipments" → "1001-1500 shipments")
-- More intuitive understanding of pricing tiers
-- Consistent tier range display across all views
+### 📊 SKU Data Updates (Supabase)
 
-## [2.3.3] - 2025-11-06
+#### Parcel SKUs
+- Updated all parcel tiers with correct pricing for annual, monthly, 2-year, and 3-year billing
 
-### Fixed
-- **Critical Bug**: AI Agent costs not appearing in quote summary ($0.00)
-- Root cause: Cost calculation checking `aiAgentEnabled` flag instead of `aiAgentTotalVolume`
-- Removed all `aiAgentEnabled` dependencies from cost calculations
-- AI Agent now automatically enabled when any checkbox is selected (volume > 0)
-- Quote summary correctly displays AI Agent costs and tokens
-- Customer quote items show token allocation
-- Detailed quote summary shows proper tier and pricing
+#### Freight SKUs
+- Fixed `Pro+` monthly price: $1,947 → $2,457
+- Fixed `Custom Pricing` tier annual/monthly prices
+- Corrected `Starter` range: 0-100 → 1-100
 
-### Tested
-- All functionality validated with 49 passing unit tests
+#### Ocean Container Tracking SKUs
+- Complete refresh of ocean tracking tiers with updated pricing structure
 
-## [2.3.2] - 2025-11-06
+#### AI Agent SKUs (New)
+- Added new `aiagent` product type with token-based tiers:
+  - 50M Tokens
+  - 100M Tokens
+  - 200M Tokens
+  - Custom Pricing
 
-### Fixed
-- **Critical Bug**: AI Agent checkbox interaction not working
-- Root cause: `useProductState` returning 0 instead of undefined for checkbox fields
-- Refactored state management to properly handle undefined/true/false states
+---
 
-### Added
-- Jest and React Testing Library testing infrastructure
-- Comprehensive unit test suite (49 tests, 100% passing)
-- Extracted reusable `ProductCheckbox` component
-- Debug logging for state tracking
+### ✨ New Features
 
-### Changed
-- Eliminated code duplication (reduced 180+ lines)
-- Improved code maintainability and testability
+#### Quote Management
+- **Save Quotes**: Persist quotes to Supabase with company name, HubSpot deal URL, and full product configuration
+- **Load Quotes**: Restore complete application state from saved quotes
+- **Auto-Save**: Automatic saving every 1 second with debouncing
+- **Save Status Indicator**: Header shows "Saved" / "Unsaved" status with last save timestamp
+- **Unsaved Changes Protection**: 
+  - Browser `beforeunload` warning
+  - In-app modal with Save/Discard options when navigating away
 
-## [2.3.1] - 2025-11-06
+#### Quote Dashboard
+- View all saved quotes with search and filtering
+- Load, edit, and delete quotes
+- Display company name, HubSpot link, and quote totals
 
-### Added
-- Manual product selection for AI Agent via checkboxes
-- Users can now choose which products (Freight, Parcel, Ocean) contribute to token calculation
-- Checkboxes disabled when product volume is 0
-- Dynamic plan description showing token allocation (e.g., "300M tokens | 1,500 shipments | Tier 4")
-- Enhanced tooltip showing selected products and calculations
-- Real-time volume and token updates as selections change
+#### Share Quote Modal
+- Generate authenticated shareable links for manager approval
+- Links require user authentication to access
 
-## [2.3.0] - 2025-11-06
+#### SKU Admin Panel
+- View and edit pricing tiers (Super Admin only)
+- Real-time updates to Supabase
 
-### Added
-- **FreightPOP AI Agent** product with token-based pricing
-- Token allocation based on total shipment volume (Freight + Parcel + Ocean)
-- 8 pricing tiers from $3,000 (50M tokens) to $60,000 (1B tokens)
-- Auto-calculated volume from enabled shipment products
-- Smart conditional logic: disabled until Freight, Parcel, or Ocean is enabled
-- Comprehensive tooltips showing token allocation and volume breakdown
-- Annual-only subscription
-- Fully integrated into quote summaries and product configuration
+#### Split View Layout
+- Toggle between single column and split view in header
+- Sticky Quote Summary panel on the right side
+- Reduces scrolling for easier quote building
 
-## [2.2.0] - 2025-11-06
+#### AI Agent Pricing
+- Changed from shipment-volume-based calculation to standalone dropdown
+- Select token tier directly (50M, 100M, 200M, Custom)
+- Removed dependency on Freight/Parcel/Ocean checkboxes
 
-### Changed
-- Migrated pricing storage from CSV to JSON
-- Structured pricing data with better organization
-- Native JSON parsing for faster load times
-- Type-safe number values (not strings)
-- Easier to maintain and update
-- Metadata support (version, lastUpdated)
+---
 
-## [2.1.2] - 2025-11-06
+### 🎨 UI/UX Improvements
 
-### Changed
-- Simplified WMS to standard volume-based input (same as other products)
-- Removed ERP integration dropdown - implementation fees added manually
-- Removed CSV import/export UI for simpler interface
-- Cleaner product configuration section
+#### Quote Summary Panel (Split View)
+- **Table Layout**: Proper table structure with aligned columns
+- **Tier Column**: Shows tier details for each product:
+  - Freight/Parcel/Ocean: "Incl: X" (shipments included)
+  - Locations: Number of locations
+  - Bill Pay: "$500 + $2/LTL + $0.50/Parcel"
+  - Vendor Portal: "$20/user/mo"
+  - AI Agent: Selected tier name
+- **Subtotal Row**: Shows raw total before minimum enforcement
+- **Minimum Subscription Row**: Highlighted yellow when under $20,000 minimum
+- **Under By Row**: Red warning showing difference needed to reach minimum
+- **Four Columns**: Product | Tier | Monthly | Annual
 
-## [2.1.1] - 2025-11-06
+#### Pricing Consistency
+- Fixed Bill Pay to display `billPayMonthlyCost` directly instead of calculating from annual
+- Aligned product names between summary panel and main table (Core TMS - Freight, Core TMS - Parcel)
 
-### Added
-- **WMS** product with warehouse-based pricing
-- Annual-only WMS subscription ($12,000 base + $6,000 per additional warehouse)
-- Implementation fee options: $5,000 (Standard ERP) or $6,000 (Non-Standard ERP)
-- Tooltips explaining ERP support (NetSuite, Acumatica, Syspro)
-- Integrated into all quote views and calculations
+---
 
-## [2.1.0] - 2025-11-05
+### 🧪 Testing
+- Added test cases for new hooks and components
+- Unit tests for `useQuotes`, `useSupabasePricing`, `useSupabaseAuth`
 
-### Added
-- CSV-based pricing system
-- Loads all pricing from `public/defaultPricing.csv`
-- Complete pricing database with all products
-- Fallback to hardcoded SKUs if CSV fails
-- Update pricing without code changes
+---
 
-## [2.0.0] - 2025-11-05
+### 📁 Files Modified
+- `src/App.jsx` - Main application component with all new features
+- `src/hooks/useProductState.js` - Product state management with load/save support
+- `src/hooks/useQuotes.js` - Quote CRUD operations
+- `src/hooks/useSupabasePricing.js` - SKU loading from Supabase
+- `src/hooks/useSupabaseAuth.js` - Authentication hook
+- `src/productConfig.js` - AI Agent pricing model updates
+- `src/utils/calculations.js` - Subscription total with minimum enforcement
+- `src/utils/permissions.js` - Role-based access control
+- `src/components/QuoteDashboard.jsx` - Quote management UI
+- `src/components/ShareQuoteModal.jsx` - Shareable link generation
+- `src/components/SKUAdminPanel.jsx` - SKU editing interface
+- `src/components/LoginScreen.jsx` - Microsoft OAuth login
 
-### Added
-- Expanded to 9 granular pricing models
-- Advanced filtering with search and model toggles
-- CSV import/export for bulk pricing updates
-- Improved UI organization and grouping
-- Better product categorization
+---
 
-## [1.0.0] - 2025-10-15
+### 🗃️ Database Schema (Supabase)
 
-### Added
-- Initial pricing calculator
-- Product configuration
-- Basic SKU management
-- PDF export functionality
+```sql
+-- pricing_tiers: SKU storage
+CREATE TABLE pricing_tiers (
+  id SERIAL PRIMARY KEY,
+  product_type TEXT,
+  tier_name TEXT,
+  start_range INT,
+  end_range INT,
+  monthly_priceforannualbilling DECIMAL,
+  monthly_priceformonthlybilling DECIMAL,
+  monthly_pricefor2yearbilling DECIMAL,
+  monthly_pricefor3yearbilling DECIMAL
+);
 
+-- quotes: Saved quotes
+CREATE TABLE quotes (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES auth.users,
+  company_name TEXT,
+  hubspot_deal_url TEXT,
+  quote_data JSONB,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+
+-- user_profiles: User roles
+CREATE TABLE user_profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users,
+  email TEXT,
+  user_type TEXT, -- 'Super Admin', 'Admin', 'Sales'
+  created_at TIMESTAMP
+);
+
+-- quote_access_tokens: Shareable links
+CREATE TABLE quote_access_tokens (
+  id UUID PRIMARY KEY,
+  quote_id UUID REFERENCES quotes,
+  token TEXT UNIQUE,
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP
+);
+```
+
+---
+
+### 🚀 Deployment
+- All changes pushed to `beta` branch
+- Repository: `https://github.com/neel19917/fplegacypricer.git`

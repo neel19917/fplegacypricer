@@ -166,7 +166,7 @@ const PricingModelBadge = ({ modelId }) => {
   );
 };
 
-const FixedHeader = ({ onLogout, user, onOpenDashboard, onOpenAdmin, showAdminButton, hasUnsavedChanges, saveStatus }) => (
+const FixedHeader = ({ onLogout, user, onOpenDashboard, onOpenAdmin, showAdminButton, hasUnsavedChanges, saveStatus, splitView, onToggleSplitView }) => (
   <div
     style={{
       position: 'fixed',
@@ -246,6 +246,35 @@ const FixedHeader = ({ onLogout, user, onOpenDashboard, onOpenAdmin, showAdminBu
           onMouseOut={(e) => e.target.style.background = '#f59e0b'}
         >
           ⚙️ Pricing
+        </button>
+      )}
+      {/* Split View Toggle */}
+      {onToggleSplitView && (
+        <button
+          onClick={onToggleSplitView}
+          style={{
+            padding: '8px 14px',
+            fontSize: '13px',
+            fontWeight: '500',
+            color: 'white',
+            background: splitView ? '#8b5cf6' : 'rgba(255, 255, 255, 0.1)',
+            border: splitView ? '1px solid #a78bfa' : '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s',
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = splitView ? '#7c3aed' : 'rgba(255, 255, 255, 0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = splitView ? '#8b5cf6' : 'rgba(255, 255, 255, 0.1)';
+          }}
+          title={splitView ? 'Switch to single column view' : 'Switch to split view (side-by-side)'}
+        >
+          {splitView ? '📑 Split' : '📄 Single'}
         </button>
       )}
       {/* Save Status Indicator */}
@@ -476,6 +505,13 @@ const App = () => {
   const [currentQuoteId, setCurrentQuoteId] = useState(null);
   const [currentQuoteNumber, setCurrentQuoteNumber] = useState(null);
   
+  // === LAYOUT STATE ===
+  const [splitView, setSplitView] = useState(() => {
+    // Load from localStorage, default to false
+    const saved = localStorage.getItem('freightpop_splitView');
+    return saved === 'true';
+  });
+  
   // === QUOTE SAVE STATE ===
   const [hubspotDealUrl, setHubspotDealUrl] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
@@ -527,15 +563,15 @@ const App = () => {
       
       // If Supabase didn't provide data, try JSON fallback
       if (!supabaseSkuData) {
-        const csvData = await loadDefaultPricing();
-        
-        if (csvData) {
-          setSKUData(csvData);
+      const csvData = await loadDefaultPricing();
+      
+      if (csvData) {
+        setSKUData(csvData);
           console.log('✅ Using pricing from JSON fallback');
-        } else {
+      } else {
           console.log('⚠️ Using hardcoded SKUs');
-        }
-        setIsLoadingPricing(false);
+      }
+      setIsLoadingPricing(false);
       }
     }
     
@@ -546,6 +582,15 @@ const App = () => {
     console.log('[Auth] 🚪 Logging out');
     supabaseAuth.signOut();
     console.log('[Auth] ✅ Logout complete');
+  };
+
+  // Toggle split view and persist to localStorage
+  const handleToggleSplitView = () => {
+    setSplitView(prev => {
+      const newValue = !prev;
+      localStorage.setItem('freightpop_splitView', String(newValue));
+      return newValue;
+    });
   };
 
   // === Load URL Parameters on Mount ===
@@ -627,7 +672,6 @@ const App = () => {
   const [isParsingScreenshot, setIsParsingScreenshot] = useState(false);
   const [screenshotError, setScreenshotError] = useState(null);
   const fileInputRef = useRef(null);
-  const [aiAgentCustomPricingAlertShown, setAiAgentCustomPricingAlertShown] = useState(false);
   const [freightCustomPricingAlertShown, setFreightCustomPricingAlertShown] = useState(false);
   const [parcelCustomPricingAlertShown, setParcelCustomPricingAlertShown] = useState(false);
   const [oceanTrackingCustomPricingAlertShown, setOceanTrackingCustomPricingAlertShown] = useState(false);
@@ -716,32 +760,27 @@ const App = () => {
   const wmsVolume = getProductValue('wms', 'volume');
   const wmsMarkup = getProductValue('wms', 'markup');
 
-  // AI Agent - Manual selection of which products to include
+  // AI Agent - Simple dropdown selection for token tier
   const aiAgentEnabled = getProductValue('aiAgent', 'enabled');
   const aiAgentMarkup = getProductValue('aiAgent', 'markup');
-  const aiAgentIncludesFreight = getProductValue('aiAgent', 'includesFreight') ?? false;
-  const aiAgentIncludesParcel = getProductValue('aiAgent', 'includesParcel') ?? false;
-  const aiAgentIncludesOcean = getProductValue('aiAgent', 'includesOcean') ?? false;
+  const aiAgentSelectedTier = getProductValue('aiAgent', 'selectedTier') ?? '';
   
-  // AUTO-CHECKING DISABLED: User must manually select which shipment types to include
-  // No automatic checkbox selection based on volumes
+  // AI Agent token tiers - simple dropdown selection
+  const aiAgentTiers = [
+    { id: '50m', name: '50M Tokens', tokens: 50000000, annualCost: 3000, monthlyCost: 250 },
+    { id: '100m', name: '100M Tokens', tokens: 100000000, annualCost: 6000, monthlyCost: 500 },
+    { id: '200m', name: '200M Tokens', tokens: 200000000, annualCost: 12000, monthlyCost: 1000 },
+    { id: '300m', name: '300M Tokens', tokens: 300000000, annualCost: 18000, monthlyCost: 1500 },
+    { id: '400m', name: '400M Tokens', tokens: 400000000, annualCost: 24000, monthlyCost: 2000 },
+    { id: '600m', name: '600M Tokens', tokens: 600000000, annualCost: 36000, monthlyCost: 3000 },
+    { id: '800m', name: '800M Tokens', tokens: 800000000, annualCost: 48000, monthlyCost: 4000 },
+    { id: '1b', name: '1B Tokens', tokens: 1000000000, annualCost: 60000, monthlyCost: 5000 },
+    { id: 'custom', name: 'Custom Pricing (1B+)', tokens: 0, annualCost: 0, monthlyCost: 0, isCustom: true },
+  ];
   
-  // Calculate total shipment volume based on checkbox selections
-  const aiAgentTotalVolume = 
-    (aiAgentIncludesFreight ? freightVolume : 0) +
-    (aiAgentIncludesParcel ? parcelVolume : 0) +
-    (aiAgentIncludesOcean ? oceanTrackingVolume : 0);
-
-  // Alert user when AI Agent volume exceeds max tier (custom pricing required)
-  useEffect(() => {
-    if (subBilling === 'annual' && aiAgentTotalVolume > 5000 && !aiAgentCustomPricingAlertShown) {
-      alert('⚠️ Volume Exceeds Maximum Tier\n\nAI Agent volume exceeds the maximum standard tier (5,000 shipments). Custom pricing is required. Please contact management for a custom quote.');
-      setAiAgentCustomPricingAlertShown(true);
-    } else if (aiAgentTotalVolume <= 5000) {
-      // Reset alert flag when volume drops below threshold
-      setAiAgentCustomPricingAlertShown(false);
-    }
-  }, [aiAgentTotalVolume, subBilling, aiAgentCustomPricingAlertShown]);
+  // Get selected tier details
+  const aiAgentCurrentTier = aiAgentTiers.find(t => t.id === aiAgentSelectedTier);
+  const aiAgentIsCustomPricing = aiAgentCurrentTier?.isCustom ?? false;
 
 
   // Backward-compatible setters (temporary during refactor)
@@ -1074,49 +1113,15 @@ const App = () => {
   })();
   const wmsAnnualCost = wmsSubscriptionCost * (1 + wmsMarkup / 100);
 
-  // AI Agent Costs - Annual only, tiered based on total shipments
+  // AI Agent Costs - Based on selected tier (annual only)
   const aiAgentSubscriptionCost = (() => {
-    // AI Agent is considered "enabled" if any checkbox is checked (volume > 0)
-    if (subBilling !== 'annual' || aiAgentTotalVolume === 0) return 0;
-    
-    // Tier matching based on total shipments
-    const tiers = [
-      { rangeStart: 0, rangeEnd: 250, cost: 3000 },
-      { rangeStart: 251, rangeEnd: 500, cost: 6000 },
-      { rangeStart: 501, rangeEnd: 1000, cost: 12000 },
-      { rangeStart: 1001, rangeEnd: 1500, cost: 18000 },
-      { rangeStart: 1501, rangeEnd: 2000, cost: 24000 },
-      { rangeStart: 2001, rangeEnd: 3000, cost: 36000 },
-      { rangeStart: 3001, rangeEnd: 4000, cost: 48000 },
-      { rangeStart: 4001, rangeEnd: 5000, cost: 60000 },
-    ];
-    
-    const tier = tiers.find(t => aiAgentTotalVolume >= t.rangeStart && aiAgentTotalVolume <= t.rangeEnd);
-    return tier ? tier.cost : 0;
+    if (subBilling !== 'annual' || !aiAgentSelectedTier || aiAgentIsCustomPricing) return 0;
+    return aiAgentCurrentTier?.annualCost ?? 0;
   })();
   const aiAgentAnnualCost = aiAgentSubscriptionCost * (1 + aiAgentMarkup / 100);
   
-  // Check if AI Agent volume exceeds max tier (requires custom pricing)
-  const aiAgentIsCustomPricing = subBilling === 'annual' && aiAgentTotalVolume > 5000;
-  
   // Get token allocation for AI Agent
-  const aiAgentTokens = (() => {
-    if (aiAgentTotalVolume === 0) return 0;
-    
-    const tiers = [
-      { rangeEnd: 250, tokens: 50000000 },
-      { rangeEnd: 500, tokens: 100000000 },
-      { rangeEnd: 1000, tokens: 200000000 },
-      { rangeEnd: 1500, tokens: 300000000 },
-      { rangeEnd: 2000, tokens: 400000000 },
-      { rangeEnd: 3000, tokens: 600000000 },
-      { rangeEnd: 4000, tokens: 800000000 },
-      { rangeEnd: 5000, tokens: 1000000000 },
-    ];
-    
-    const tier = tiers.find(t => aiAgentTotalVolume <= t.rangeEnd);
-    return tier ? tier.tokens : 0;
-  })();
+  const aiAgentTokens = aiAgentCurrentTier?.tokens ?? 0;
 
   const rawSubAnnualSubscription =
     effectiveCoreAnnualCost +
@@ -1605,15 +1610,17 @@ const App = () => {
         showAdminButton={isSuperAdmin(userProfile)}
         hasUnsavedChanges={hasUnsavedChanges}
         saveStatus={saveStatus}
+        splitView={splitView}
+        onToggleSplitView={handleToggleSplitView}
       />
       <div style={{ height: topSpacerHeight }} />
       <div
         ref={pageRef}
         style={{
           width: '100%',
-          maxWidth: '1400px',
+          maxWidth: splitView ? '100%' : '1400px',
           margin: '0 auto 20px',
-          padding: '20px',
+          padding: splitView ? '20px 20px 20px 20px' : '20px',
           boxSizing: 'border-box',
           minHeight: '100vh',
         }}
@@ -1706,10 +1713,10 @@ const App = () => {
                 }
 
                 // AI Agent
-                if (aiAgentTotalVolume > 0) {
+                if (aiAgentSelectedTier && !aiAgentIsCustomPricing) {
                   customerQuoteItems.push({
                     label: 'FreightPOP AI Agent',
-                    value: `${aiAgentTokens.toLocaleString()} tokens (${aiAgentTotalVolume.toLocaleString()} shipments)`,
+                    value: aiAgentCurrentTier?.name ?? 'N/A',
                   });
                 }
 
@@ -1847,9 +1854,16 @@ const App = () => {
             </CardContent>
           </Card>
         ) : (
-          <>
-            {/* Detailed Quote Summary Table */}
-            <Card style={{ border: '2px solid #cbd5e1' }}>
+          <div style={splitView ? {
+            display: 'grid',
+            gridTemplateColumns: '1fr 500px',
+            gap: '24px',
+            alignItems: 'start',
+          } : {}}>
+            {/* Main Content Column */}
+            <div>
+            {/* Detailed Quote Summary Table - Hidden in split view (shown in sticky panel instead) */}
+            <Card style={{ border: '2px solid #cbd5e1', display: splitView ? 'none' : 'block' }}>
               <CardHeader
                 style={{
                   background: '#1e293b',
@@ -2239,41 +2253,22 @@ const App = () => {
                     },
                     {
                       productName: 'FreightPOP AI Agent',
-                      volume: aiAgentTotalVolume,
+                      volume: aiAgentSelectedTier ? 1 : 0, // Use 1 to indicate selected, 0 for not selected
                       monthlyCost: aiAgentAnnualCost / 12,
                       annualCost: aiAgentAnnualCost,
                       planDetails: (() => {
-                        if (aiAgentTotalVolume === 0 || subBilling !== 'annual') return 'Annual Only';
-                        
-                        if (aiAgentIsCustomPricing) {
-                          return 'Custom Pricing Required';
-                        }
-                        
-                        // Find tier range based on volume
-                        const tierRanges = [
-                          { min: 0, max: 250, tokens: '50M' },
-                          { min: 251, max: 500, tokens: '100M' },
-                          { min: 501, max: 1000, tokens: '200M' },
-                          { min: 1001, max: 1500, tokens: '300M' },
-                          { min: 1501, max: 2000, tokens: '400M' },
-                          { min: 2001, max: 3000, tokens: '600M' },
-                          { min: 3001, max: 4000, tokens: '800M' },
-                          { min: 4001, max: 5000, tokens: '1B' },
-                        ];
-                        
-                        const tier = tierRanges.find(t => aiAgentTotalVolume >= t.min && aiAgentTotalVolume <= t.max);
-                        if (!tier) return 'N/A';
-                        
-                        return `${tier.tokens} tokens (${tier.min}-${tier.max} shipments)`;
+                        if (!aiAgentSelectedTier || subBilling !== 'annual') return 'Annual Only';
+                        if (aiAgentIsCustomPricing) return 'Custom Pricing Required';
+                        return aiAgentCurrentTier?.name ?? 'N/A';
                       })(),
-                      tierDetails: aiAgentTotalVolume > 0 && subBilling === 'annual'
+                      tierDetails: aiAgentSelectedTier && subBilling === 'annual'
                         ? aiAgentIsCustomPricing
-                          ? `Volume of ${aiAgentTotalVolume.toLocaleString()} exceeds tier limits. Please contact sales.`
-                          : `Token-based pricing`
+                          ? 'Contact sales for custom pricing'
+                          : `$${(aiAgentCurrentTier?.annualCost ?? 0).toLocaleString()}/year`
                         : '',
                       lineMarkup: aiAgentMarkup,
                       hideIfZero: true,
-                      isEnabled: aiAgentTotalVolume > 0,
+                      isEnabled: !!aiAgentSelectedTier,
                       isCustomPricing: aiAgentIsCustomPricing,
                     },
                   ];
@@ -3055,54 +3050,23 @@ const App = () => {
                         pricingModel: 'aiAgentBased',
                         planDescription: (() => {
                           if (subBilling !== 'annual') return 'Annual Only';
-                          if (aiAgentTotalVolume === 0) return 'Select products to calculate tokens';
-                          
-                          // Find tier range based on volume
-                          if (aiAgentIsCustomPricing) {
-                            return '❗ Volume exceeds tier limits - Custom Pricing Required';
-                          }
-                          
-                          const tierRanges = [
-                            { min: 0, max: 250, tokens: '50M', cost: '$3,000' },
-                            { min: 251, max: 500, tokens: '100M', cost: '$6,000' },
-                            { min: 501, max: 1000, tokens: '200M', cost: '$12,000' },
-                            { min: 1001, max: 1500, tokens: '300M', cost: '$18,000' },
-                            { min: 1501, max: 2000, tokens: '400M', cost: '$24,000' },
-                            { min: 2001, max: 3000, tokens: '600M', cost: '$36,000' },
-                            { min: 3001, max: 4000, tokens: '800M', cost: '$48,000' },
-                            { min: 4001, max: 5000, tokens: '1B', cost: '$60,000' },
-                          ];
-                          
-                          const tier = tierRanges.find(t => aiAgentTotalVolume >= t.min && aiAgentTotalVolume <= t.max);
-                          if (!tier) return 'Select products to calculate tokens';
-                          
-                          return `${tier.min}-${tier.max} Shipments Incl: ${tier.tokens} tokens`;
+                          if (!aiAgentSelectedTier) return 'Select token tier';
+                          if (aiAgentIsCustomPricing) return '❗ Custom Pricing Required';
+                          return `${aiAgentCurrentTier?.name ?? 'N/A'} - $${(aiAgentCurrentTier?.annualCost ?? 0).toLocaleString()}/year`;
                         })(),
                         isCustomPricing: aiAgentIsCustomPricing,
-                        tierOptions: [],
-                        volumeCount: aiAgentTotalVolume,
-                        onVolumeChange: null, // Read-only, calculated from other products
+                        tierOptions: aiAgentTiers,
+                        volumeCount: aiAgentSelectedTier ? 1 : 0,
+                        onVolumeChange: null,
                         monthlyCost: aiAgentAnnualCost / 12,
                         annualCost: aiAgentAnnualCost,
-                        tooltip: (() => {
-                          const selected = [];
-                          if (aiAgentIncludesFreight) selected.push(`Freight (${freightVolume.toLocaleString()})`);
-                          if (aiAgentIncludesParcel) selected.push(`Parcel (${parcelVolume.toLocaleString()})`);
-                          if (aiAgentIncludesOcean) selected.push(`Ocean (${oceanTrackingVolume.toLocaleString()})`);
-                          
-                          if (selected.length === 0) return '💡 Select products below to calculate token allocation';
-                          
-                          const formatTokens = (tokens) => {
-                            if (tokens >= 1000000000) return `${tokens / 1000000000}B`;
-                            return `${tokens / 1000000}M`;
-                          };
-                          
-                          return `💡 Selected: ${selected.join(' + ')} → Total: ${aiAgentTotalVolume.toLocaleString()} → ${formatTokens(aiAgentTokens)} tokens`;
-                        })(),
-                        isDisabled: freightVolume === 0 && parcelVolume === 0 && oceanTrackingVolume === 0,
-                        showCheckbox: true,
-                        isChecked: aiAgentTotalVolume > 0,
-                        onCheckboxChange: null, // No longer needed - checkboxes control this automatically
+                        tooltip: aiAgentSelectedTier 
+                          ? `💡 Selected: ${aiAgentCurrentTier?.name ?? 'N/A'}`
+                          : '💡 Select a token tier from the dropdown',
+                        isDisabled: subBilling !== 'annual',
+                        showCheckbox: false,
+                        isChecked: !!aiAgentSelectedTier,
+                        onCheckboxChange: null,
                       },
                     ];
                     
@@ -3172,48 +3136,19 @@ const App = () => {
                                         <option value='Yes'>Yes</option>
                                       </select>
                                     ) : row.productType === 'FreightPOP AI Agent' ? (
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px' }}>
-                                        <ProductCheckbox
-                                          checked={aiAgentIncludesFreight}
-                                          disabled={freightVolume === 0}
-                                          onChange={(checked) => setProductValue('aiAgent', 'includesFreight', checked)}
-                                          label="Freight"
-                                          volume={freightVolume}
-                                        />
-                                        
-                                        <ProductCheckbox
-                                          checked={aiAgentIncludesParcel}
-                                          disabled={parcelVolume === 0}
-                                          onChange={(checked) => setProductValue('aiAgent', 'includesParcel', checked)}
-                                          label="Parcel"
-                                          volume={parcelVolume}
-                                        />
-                                        
-                                        <ProductCheckbox
-                                          checked={aiAgentIncludesOcean}
-                                          disabled={oceanTrackingVolume === 0}
-                                          onChange={(checked) => setProductValue('aiAgent', 'includesOcean', checked)}
-                                          label="Ocean"
-                                          volume={oceanTrackingVolume}
-                                        />
-                                        
-                                        {aiAgentTotalVolume > 0 && (
-                                          <div style={{ 
-                                            marginTop: '8px', 
-                                            paddingTop: '8px', 
-                                            borderTop: '1px solid #e2e8f0',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            color: '#1e293b'
-                                          }}>
-                                            Total: {aiAgentTotalVolume.toLocaleString()} shipments → {
-                                              aiAgentTokens >= 1000000000 
-                                                ? `${aiAgentTokens / 1000000000}B` 
-                                                : `${aiAgentTokens / 1000000}M`
-                                            } tokens
-                                          </div>
-                                        )}
-                                      </div>
+                                      <select
+                                        value={aiAgentSelectedTier}
+                                        onChange={e => setProductValue('aiAgent', 'selectedTier', e.target.value)}
+                                        style={selectStyle}
+                                        disabled={subBilling !== 'annual'}
+                                      >
+                                        <option value="">Select Token Tier...</option>
+                                        {aiAgentTiers.map(tier => (
+                                          <option key={tier.id} value={tier.id}>
+                                            {tier.name} {tier.isCustom ? '' : `- $${tier.annualCost.toLocaleString()}/yr`}
+                                          </option>
+                                        ))}
+                                      </select>
                                     ) : (
                                       <input
                                         type='number'
@@ -3275,48 +3210,19 @@ const App = () => {
                               <option value='Yes'>Yes</option>
                             </select>
                           ) : row.productType === 'FreightPOP AI Agent' ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '8px' }}>
-                              <ProductCheckbox
-                                checked={aiAgentIncludesFreight}
-                                disabled={freightVolume === 0}
-                                onChange={(checked) => setProductValue('aiAgent', 'includesFreight', checked)}
-                                label="Freight"
-                                volume={freightVolume}
-                              />
-                              
-                              <ProductCheckbox
-                                checked={aiAgentIncludesParcel}
-                                disabled={parcelVolume === 0}
-                                onChange={(checked) => setProductValue('aiAgent', 'includesParcel', checked)}
-                                label="Parcel"
-                                volume={parcelVolume}
-                              />
-                              
-                              <ProductCheckbox
-                                checked={aiAgentIncludesOcean}
-                                disabled={oceanTrackingVolume === 0}
-                                onChange={(checked) => setProductValue('aiAgent', 'includesOcean', checked)}
-                                label="Ocean"
-                                volume={oceanTrackingVolume}
-                              />
-                              
-                              {aiAgentTotalVolume > 0 && (
-                                <div style={{ 
-                                  marginTop: '8px', 
-                                  paddingTop: '8px', 
-                                  borderTop: '1px solid #e2e8f0',
-                                  fontSize: '12px',
-                                  fontWeight: '600',
-                                  color: '#1e293b'
-                                }}>
-                                  Total: {aiAgentTotalVolume.toLocaleString()} shipments → {
-                                    aiAgentTokens >= 1000000000 
-                                      ? `${aiAgentTokens / 1000000000}B` 
-                                      : `${aiAgentTokens / 1000000}M`
-                                  } tokens
-                                </div>
-                              )}
-                            </div>
+                            <select
+                              value={aiAgentSelectedTier}
+                              onChange={e => setProductValue('aiAgent', 'selectedTier', e.target.value)}
+                              style={selectStyle}
+                              disabled={subBilling !== 'annual'}
+                            >
+                              <option value="">Select Token Tier...</option>
+                              {aiAgentTiers.map(tier => (
+                                <option key={tier.id} value={tier.id}>
+                                  {tier.name} {tier.isCustom ? '' : `- $${tier.annualCost.toLocaleString()}/yr`}
+                                </option>
+                              ))}
+                            </select>
                           ) : (
                             <input
                               type='number'
@@ -3553,8 +3459,8 @@ const App = () => {
                     padding: '10px 16px',
                     marginBottom: '16px',
                     borderRadius: '6px',
-                    display: 'flex',
-                    alignItems: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
                     gap: '8px',
                     fontSize: '14px',
                     ...(saveStatus === 'saving' && { background: '#fef3c7', color: '#92400e' }),
@@ -3601,11 +3507,11 @@ const App = () => {
                       marginBottom: '6px',
                     }}>
                       Company Name <span style={{ color: '#dc2626' }}>*</span>
-                    </label>
-                    <input
-                      type='text'
-                      value={companyName}
-                      onChange={e => setCompanyName(e.target.value)}
+                      </label>
+                      <input
+                        type='text'
+                        value={companyName}
+                        onChange={e => setCompanyName(e.target.value)}
                       placeholder="Enter company name"
                       style={{
                         width: '100%',
@@ -3615,8 +3521,8 @@ const App = () => {
                         fontSize: '14px',
                         boxSizing: 'border-box',
                       }}
-                    />
-                  </div>
+                      />
+                    </div>
 
                   {/* HubSpot Deal URL */}
                   <div>
@@ -3656,10 +3562,10 @@ const App = () => {
                     }}>
                       Rep Name
                     </label>
-                    <input
-                      type='text'
-                      value={repName}
-                      onChange={e => setRepName(e.target.value)}
+                      <input
+                        type='text'
+                        value={repName}
+                        onChange={e => setRepName(e.target.value)}
                       placeholder="Your name"
                       style={{
                         width: '100%',
@@ -3669,7 +3575,7 @@ const App = () => {
                         fontSize: '14px',
                         boxSizing: 'border-box',
                       }}
-                    />
+                      />
                   </div>
 
                   {/* Date */}
@@ -3683,10 +3589,10 @@ const App = () => {
                     }}>
                       Date
                     </label>
-                    <input
-                      type='date'
-                      value={downloadDate}
-                      onChange={e => setDownloadDate(e.target.value)}
+                      <input
+                        type='date'
+                        value={downloadDate}
+                        onChange={e => setDownloadDate(e.target.value)}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -3695,9 +3601,9 @@ const App = () => {
                         fontSize: '14px',
                         boxSizing: 'border-box',
                       }}
-                    />
+                      />
+                    </div>
                   </div>
-                </div>
 
                 {/* Auto-save Toggle */}
                 <div style={{
@@ -3788,7 +3694,254 @@ const App = () => {
                 </div>
               </CardContent>
             </Card>
-          </>
+            </div>
+            
+            {/* STICKY SUMMARY PANEL - Only shown in split view */}
+            {splitView && (
+              <div style={{
+                position: 'sticky',
+                top: '90px',
+                maxHeight: 'calc(100vh - 110px)',
+                overflowY: 'auto',
+                background: 'white',
+                borderRadius: '8px',
+                border: '2px solid #cbd5e1',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}>
+                <div style={{
+                  position: 'sticky',
+                  top: 0,
+                  background: '#1e293b',
+                  padding: '14px 20px',
+                  borderRadius: '6px 6px 0 0',
+                  zIndex: 10,
+                }}>
+                  <h3 style={{ margin: 0, color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                    📊 Quote Summary
+                  </h3>
+                </div>
+                <div style={{ padding: '16px' }}>
+                  {/* Billing Frequency */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#64748b', display: 'block', marginBottom: '6px' }}>
+                      Billing Frequency
+                    </label>
+                    <select
+                      value={subBilling}
+                      onChange={e => setSubBilling(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                      }}
+                    >
+                      <option value="annual">Annual</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="2year">2-Year</option>
+                      <option value="3year">3-Year</option>
+                    </select>
+                  </div>
+
+                  {/* Product Breakdown Table */}
+                  <div style={{ marginBottom: '12px', overflowX: 'auto' }}>
+                    <table style={{ 
+                      width: '100%', 
+                      borderCollapse: 'collapse', 
+                      fontSize: '11px',
+                    }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9' }}>
+                          <th style={{ 
+                            padding: '6px 8px', 
+                            textAlign: 'left', 
+                            fontWeight: '600', 
+                            color: '#475569',
+                            borderBottom: '2px solid #e2e8f0',
+                          }}>
+                            Product
+                          </th>
+                          <th style={{ 
+                            padding: '6px 8px', 
+                            textAlign: 'center', 
+                            fontWeight: '600', 
+                            color: '#475569',
+                            borderBottom: '2px solid #e2e8f0',
+                          }}>
+                            Tier
+                          </th>
+                          <th style={{ 
+                            padding: '6px 8px', 
+                            textAlign: 'right', 
+                            fontWeight: '600', 
+                            color: '#475569',
+                            borderBottom: '2px solid #e2e8f0',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            Monthly
+                          </th>
+                          <th style={{ 
+                            padding: '6px 8px', 
+                            textAlign: 'right', 
+                            fontWeight: '600', 
+                            color: '#475569',
+                            borderBottom: '2px solid #e2e8f0',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            Annual
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {freightVolume > 0 && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>🚛 Freight ({freightVolume})</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              {freightPlan?.isCustomPricing ? 'Custom' : freightPlan ? `Incl: ${freightPlan.shipmentsIncluded}` : '—'}
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(freightAnnualCost / 12)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(freightAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {parcelVolume > 0 && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>📦 Parcel ({parcelVolume})</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              {parcelPlan?.isCustomPricing ? 'Custom' : parcelPlan ? `Incl: ${parcelPlan.shipmentsIncluded}` : '—'}
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(parcelAnnualCost / 12)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(parcelAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {oceanTrackingVolume > 0 && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>🚢 Ocean ({oceanTrackingVolume})</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              {oceanTrackingPlan?.isCustomPricing ? 'Custom' : oceanTrackingPlan ? `Incl: ${oceanTrackingPlan.shipmentsIncluded}` : '—'}
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(oceanTrackingAnnualCost / 12)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(oceanTrackingAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {locationsVolume > 3 && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>📍 Locations ({locationsVolume})</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              {locationsVolume} locations
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(locationsAnnualCost / 12)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(locationsAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {billPayYesNo === 'Yes' && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>💳 Bill Pay</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              $500 + $2/LTL + $0.50/Parcel
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(billPayMonthlyCost)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(billPayAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {vendorPortalCount > 0 && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>🏪 Vendor ({vendorPortalCount})</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              $20/user/mo
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(vendorAnnualCost / 12)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(vendorAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {aiAgentSelectedTier && (
+                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                            <td style={{ padding: '6px 8px', color: '#334155' }}>🤖 AI Agent</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
+                              {aiAgentCurrentTier?.name ?? '—'}
+                            </td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(aiAgentAnnualCost / 12)}</td>
+                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(aiAgentAnnualCost)}</td>
+                          </tr>
+                        )}
+                        {/* Subtotal Row */}
+                        <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                          <td style={{ padding: '6px 8px', fontWeight: '600', color: '#475569' }} colSpan={2}>Subtotal</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '600', color: '#475569' }}>{formatCost(rawSubAnnualSubscription / 12)}</td>
+                          <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '600', color: '#475569' }}>{formatCost(rawSubAnnualSubscription)}</td>
+                        </tr>
+                        {/* Minimum Row - only if under minimum */}
+                        {neededToMinAnnual > 0 && (
+                          <>
+                            <tr style={{ background: '#fef3c7' }}>
+                              <td style={{ padding: '6px 8px', fontWeight: '600', color: '#92400e' }} colSpan={2}>Min Subscription</td>
+                              <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '600', color: '#92400e' }}>{formatCost(minSubscription / 12)}</td>
+                              <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '600', color: '#92400e' }}>{formatCost(minSubscription)}</td>
+                            </tr>
+                            <tr style={{ background: '#fee2e2' }}>
+                              <td style={{ padding: '6px 8px', fontWeight: '600', color: '#dc2626' }} colSpan={2}>⚠️ Under By</td>
+                              <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', color: '#dc2626' }}>{formatCost(neededToMinAnnual / 12)}</td>
+                              <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '700', color: '#dc2626' }}>{formatCost(neededToMinAnnual)}</td>
+                            </tr>
+                          </>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Final Total Stats */}
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr', 
+                    gap: '12px',
+                    marginBottom: '16px',
+                  }}>
+                    <div style={{
+                      padding: '12px',
+                      background: '#f0fdf4',
+                      borderRadius: '8px',
+                      border: '1px solid #86efac',
+                    }}>
+                      <div style={{ fontSize: '11px', color: '#166534', fontWeight: '600', marginBottom: '4px' }}>
+                        MONTHLY
+                      </div>
+                      <div style={{ fontSize: '18px', fontWeight: '700', color: '#15803d' }}>
+                        {formatCost(finalSubscriptionMonthly)}
+                      </div>
+                    </div>
+                    <div style={{
+                      padding: '12px',
+                      background: '#eff6ff',
+                      borderRadius: '8px',
+                      border: '1px solid #93c5fd',
+                    }}>
+                      <div style={{ fontSize: '11px', color: '#1e40af', fontWeight: '600', marginBottom: '4px' }}>
+                        ANNUAL
+                      </div>
+                      <div style={{ fontSize: '18px', fontWeight: '700', color: '#1d4ed8' }}>
+                        {formatCost(finalSubscriptionAnnual)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* One-Time Cost */}
+                  <div style={{
+                    padding: '12px',
+                    background: '#fef3c7',
+                    borderRadius: '8px',
+                    border: '1px solid #fcd34d',
+                  }}>
+                    <div style={{ fontSize: '11px', color: '#92400e', fontWeight: '600', marginBottom: '4px' }}>
+                      ONE-TIME SETUP
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#b45309' }}>
+                      {formatCost(finalOneTimeCost)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
