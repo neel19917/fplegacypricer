@@ -492,72 +492,40 @@ export const productConfig = [
     name: 'FreightPOP AI Agent',
     category: 'addons',
     pricingModel: 'aiAgentBased',
-    pricingType: 'tiered',
+    pricingType: 'dropdown',
     description: (_, billing) =>
       billing === 'annual'
-        ? 'AI tokens based on total shipment volume (Freight + Parcel + Ocean)'
+        ? 'AI token allocation - select tier from dropdown'
         : 'Annual Only',
-    tierDetails: (volume) => {
-      // Check if volume exceeds max tier
-      if (volume > 5000) {
-        return 'Custom Pricing Required';
-      }
-      
-      // Find the matching tier based on volume
-      const tiers = [
-        { max: 250, cost: '$3,000', tokens: '50M' },
-        { max: 500, cost: '$6,000', tokens: '100M' },
-        { max: 1000, cost: '$12,000', tokens: '200M' },
-        { max: 1500, cost: '$18,000', tokens: '300M' },
-        { max: 2000, cost: '$24,000', tokens: '400M' },
-        { max: 3000, cost: '$36,000', tokens: '600M' },
-        { max: 4000, cost: '$48,000', tokens: '800M' },
-        { max: 5000, cost: '$60,000', tokens: '1B' },
-      ];
-      const tier = tiers.find(t => volume <= t.max) || tiers[tiers.length - 1];
-      return `${tier.cost}/year → ${tier.tokens} tokens`;
+    tierDetails: (selectedTier) => {
+      if (!selectedTier) return 'Select a token tier';
+      return selectedTier;
     },
     skus: {
       annual: aiAgentAnnualSKUs,
       monthly: aiAgentMonthlySKUs,
     },
     defaultVolume: 0,
-    volumeLabel: 'Total Shipments (Auto-calculated)',
+    volumeLabel: 'Token Tier',
     annualOnly: true,
     includeInMinimum: true,
     order: 13,
-    calculation: (totalShipments, billing) => {
-      if (billing !== 'annual') return 0;
-      
-      // Find the matching tier
-      const tiers = [
-        { rangeStart: 0, rangeEnd: 250, cost: 3000 },
-        { rangeStart: 251, rangeEnd: 500, cost: 6000 },
-        { rangeStart: 501, rangeEnd: 1000, cost: 12000 },
-        { rangeStart: 1001, rangeEnd: 1500, cost: 18000 },
-        { rangeStart: 1501, rangeEnd: 2000, cost: 24000 },
-        { rangeStart: 2001, rangeEnd: 3000, cost: 36000 },
-        { rangeStart: 3001, rangeEnd: 4000, cost: 48000 },
-        { rangeStart: 4001, rangeEnd: 5000, cost: 60000 },
-      ];
-      
-      const tier = tiers.find(t => totalShipments >= t.rangeStart && totalShipments <= t.rangeEnd);
-      return tier ? tier.cost : 0;
-    },
-    getTokens: (totalShipments) => {
-      const tiers = [
-        { rangeEnd: 250, tokens: 50000000 },
-        { rangeEnd: 500, tokens: 100000000 },
-        { rangeEnd: 1000, tokens: 200000000 },
-        { rangeEnd: 1500, tokens: 300000000 },
-        { rangeEnd: 2000, tokens: 400000000 },
-        { rangeEnd: 3000, tokens: 600000000 },
-        { rangeEnd: 4000, tokens: 800000000 },
-        { rangeEnd: 5000, tokens: 1000000000 },
-      ];
-      
-      const tier = tiers.find(t => totalShipments <= t.rangeEnd);
-      return tier ? tier.tokens : 0;
+    // Token tiers for dropdown selection
+    tokenTiers: [
+      { id: '50m', name: '50M Tokens', tokens: 50000000, annualCost: 3000, monthlyCost: 250 },
+      { id: '100m', name: '100M Tokens', tokens: 100000000, annualCost: 6000, monthlyCost: 500 },
+      { id: '200m', name: '200M Tokens', tokens: 200000000, annualCost: 12000, monthlyCost: 1000 },
+      { id: '300m', name: '300M Tokens', tokens: 300000000, annualCost: 18000, monthlyCost: 1500 },
+      { id: '400m', name: '400M Tokens', tokens: 400000000, annualCost: 24000, monthlyCost: 2000 },
+      { id: '600m', name: '600M Tokens', tokens: 600000000, annualCost: 36000, monthlyCost: 3000 },
+      { id: '800m', name: '800M Tokens', tokens: 800000000, annualCost: 48000, monthlyCost: 4000 },
+      { id: '1b', name: '1B Tokens', tokens: 1000000000, annualCost: 60000, monthlyCost: 5000 },
+      { id: 'custom', name: 'Custom Pricing (1B+)', tokens: 0, annualCost: 0, monthlyCost: 0, isCustom: true },
+    ],
+    calculation: (selectedTierId, billing, tokenTiers) => {
+      if (billing !== 'annual' || !selectedTierId) return 0;
+      const tier = tokenTiers?.find(t => t.id === selectedTierId);
+      return tier ? tier.annualCost : 0;
     },
   },
 ];
