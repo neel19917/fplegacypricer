@@ -8,6 +8,16 @@
   # These are intentionally public and safe to expose in compiled code
   SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_ALLOWED_DOMAIN,VITE_AIRTABLE_POLL_INTERVAL"
 
+# Dev server configuration
+[dev]
+  # Project-specific port to avoid conflicts with other Netlify dev instances
+  # This project (LegacyPricer) uses port 3002
+  port = 3002
+  publish = "dist"
+  command = "npm run dev"
+  targetPort = 5173
+  framework = "#auto"
+
 [[redirects]]
   from = "/api/claude"
   to = "/.netlify/functions/claude"

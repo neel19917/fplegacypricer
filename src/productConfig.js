@@ -132,15 +132,7 @@ export const pricingModels = {
     color: '#f59e0b',
     order: 6,
   },
-  billPay: {
-    id: 'billPay',
-    name: 'Bill Pay',
-    description: 'Custom formula based on freight & parcel volume',
-    icon: '💳',
-    inputType: 'custom',
-    color: '#ec4899',
-    order: 7,
-  },
+  // billPay removed – not offered to customers
   infrastructureLocations: {
     id: 'infrastructureLocations',
     name: 'Infrastructure - Locations',
@@ -261,30 +253,7 @@ export const productConfig = [
   },
 
   // ==================== ADD-ONS ====================
-  {
-    id: 'billPay',
-    name: 'Bill Pay',
-    category: 'addons',
-    pricingModel: 'billPay',
-    pricingType: 'calculated',
-    description: (_, billing) =>
-      billing === 'annual'
-        ? '$500 base + $2/LTL-FTL + $0.50/Parcel'
-        : '$650 base + $2.6/LTL-FTL + $0.65/Parcel',
-    tierDetails: () => 'Calculated based on freight & parcel volume',
-    calculation: (freightVol, parcelVol, billing) => {
-      if (billing === 'annual') {
-        return 500 + 2 * freightVol + 0.5 * parcelVol;
-      } else {
-        return 650 + 2.6 * freightVol + 0.65 * parcelVol;
-      }
-    },
-    inputType: 'yesNo', // Special input type for yes/no selection
-    defaultValue: 'No',
-    dependsOn: ['freight', 'parcel'], // This product depends on freight and parcel volumes
-    includeInMinimum: true,
-    order: 4,
-  },
+  // Bill Pay removed – not offered to customers
   {
     id: 'vendorPortals',
     name: 'Vendor Portals',

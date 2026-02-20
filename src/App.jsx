@@ -1125,7 +1125,6 @@ const App = () => {
 
   const rawSubAnnualSubscription =
     effectiveCoreAnnualCost +
-    (billPayYesNo === 'Yes' ? billPayAnnualCost : 0) +
     vendorAnnualCost +
     auditingAnnualCost +
     fleetRouteEffectiveAnnual +
@@ -2112,23 +2111,6 @@ const App = () => {
                       hideIfZero: true,
                       isCustomPricing: supportPackagePlan && supportPackagePlan.isCustomPricing,
                     },
-                    ...(billPayYesNo === 'Yes'
-                      ? [
-                          {
-                            productName: 'Bill Pay',
-                            volume: billPayYesNo,
-                            monthlyCost: billPayMonthlyCost,
-                            annualCost: billPayAnnualCost,
-                            planDetails:
-                              subBilling === 'annual'
-                                ? '$500 base + $2/ LTL-FTL + $0.50/Parcel'
-                                : '$650 base + $2.6/ LTL-FTL + $0.65/Parcel',
-                            tierDetails: 'Billed if Yes',
-                            lineMarkup: billPayMarkup,
-                            hideIfZero: true,
-                          },
-                        ]
-                      : []),
                     {
                       productName: 'Vendor Portals',
                       volume: vendorPortalCount,
@@ -3832,16 +3814,6 @@ const App = () => {
                             </td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(locationsAnnualCost / 12)}</td>
                             <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(locationsAnnualCost)}</td>
-                          </tr>
-                        )}
-                        {billPayYesNo === 'Yes' && (
-                          <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                            <td style={{ padding: '6px 8px', color: '#334155' }}>💳 Bill Pay</td>
-                            <td style={{ padding: '6px 8px', textAlign: 'center', fontSize: '10px', color: '#64748b' }}>
-                              $500 + $2/LTL + $0.50/Parcel
-                            </td>
-                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(billPayMonthlyCost)}</td>
-                            <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: '500', color: '#334155' }}>{formatCost(billPayAnnualCost)}</td>
                           </tr>
                         )}
                         {vendorPortalCount > 0 && (

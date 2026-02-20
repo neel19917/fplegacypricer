@@ -6,7 +6,8 @@
     "dev": "concurrently --kill-others --names \"SERVER,VITE\" --prefix-colors \"blue,green\" --prefix \"[{name}]\" --timestamp-format \"HH:mm:ss\" \"node server.js\" \"vite\"",
     "server": "node server.js",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync-hubspot": "node scripts/sync-hubspot-products.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
