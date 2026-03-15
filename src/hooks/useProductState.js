@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { productConfig } from '../productConfig';
-import { safeGet, safeSet, decodeVolumes, encodeVolumes, VOLUMES_KEY } from '../utils/storage';
 
 /**
  * Custom hook for managing product state across the application
@@ -57,7 +56,6 @@ export const useProductState = () => {
   const loadFromStorage = () => {
     // DISABLED: Always start with clean defaults, don't load from storage
     // This ensures the form is empty on every page load
-    console.log('[useProductState] Starting with clean defaults (storage loading disabled)');
     return initializeProductState();
     
     /* ORIGINAL CODE - Commented out to disable persistence
@@ -94,46 +92,6 @@ export const useProductState = () => {
   };
 
   const [products, setProducts] = useState(loadFromStorage);
-  
-  // Debounce timer ref for saving to storage
-  const saveTimeoutRef = useRef(null);
-  
-  // DISABLED: Don't save to storage automatically
-  // Save to storage whenever products state changes (debounced)
-  useEffect(() => {
-    // Storage persistence disabled - form will always start fresh
-    console.log('[useProductState] Auto-save disabled - form will not persist between sessions');
-    
-    /* ORIGINAL CODE - Commented out to disable auto-save
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    // Set new timeout to save after 300ms of inactivity
-    saveTimeoutRef.current = setTimeout(() => {
-      const dataToSave = {
-        products: products
-      };
-      
-      const encoded = encodeVolumes(dataToSave);
-      const success = safeSet(VOLUMES_KEY, encoded);
-      
-      if (success) {
-        console.log('[useProductState] Saved volumes to storage');
-      } else {
-        console.warn('[useProductState] Failed to save volumes to storage (continuing with in-memory state)');
-      }
-    }, 300);
-    
-    // Cleanup timeout on unmount
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-    */
-  }, [products]);
 
   /**
    * Get a specific value from a product's state
@@ -164,10 +122,6 @@ export const useProductState = () => {
     // AI Agent checkbox fields - must return undefined if not set
     // This is critical for the auto-check logic in App.jsx
     if (field === 'includesFreight' || field === 'includesParcel' || field === 'includesOcean') {
-      // Debug logging (will be removed after validation)
-      if (productId === 'aiAgent') {
-        console.log(`[useProductState] getProductValue('${productId}', '${field}') = ${product[field]}`);
-      }
       return product[field]; // Returns undefined if not set, which is intentional
     }
     
@@ -182,11 +136,6 @@ export const useProductState = () => {
    * @param {*} value - The new value
    */
   const setProductValue = (productId, field, value) => {
-    // Debug logging for AI Agent checkbox changes (will be removed after validation)
-    if (productId === 'aiAgent' && (field === 'includesFreight' || field === 'includesParcel' || field === 'includesOcean')) {
-      console.log(`[useProductState] setProductValue('${productId}', '${field}', ${value})`);
-    }
-    
     setProducts(prev => ({
       ...prev,
       [productId]: {
@@ -239,10 +188,6 @@ export const useProductState = () => {
   const resetAllProducts = () => {
     const defaultState = initializeProductState();
     setProducts(defaultState);
-    // Clear storage when resetting
-    const encoded = encodeVolumes({ products: defaultState });
-    safeSet(VOLUMES_KEY, encoded);
-    console.log('[useProductState] Reset all products and cleared storage');
   };
 
   /**
@@ -270,7 +215,6 @@ export const useProductState = () => {
     });
     
     setProducts(mergedState);
-    console.log('[useProductState] Loaded products from quote');
   };
 
   /**

@@ -63,12 +63,12 @@ export const computeFixedCost = (plan, billing = 'annual') => {
   
   if (billing === 'annual') {
     const annualCost = plan.annualCost !== undefined
-      ? Number(plan.annualCost)
+      ? Number(plan.annualCost) || 0
       : Number(plan.cost || 0);
     return { monthlyCost: annualCost / 12, annualCost, isCustomPricing: false };
   } else {
     const monthlyCost = plan.perMonthCost !== undefined
-      ? Number(plan.perMonthCost)
+      ? Number(plan.perMonthCost) || 0
       : Number(plan.cost || 0) / 12;
     return { monthlyCost, annualCost: monthlyCost * 12, isCustomPricing: false };
   }
@@ -97,14 +97,16 @@ export const calculateBillPayCost = (yesNo, freightVolume, parcelVolume, billing
   if (yesNo !== 'Yes') {
     return { monthlyCost: 0, annualCost: 0 };
   }
-  
+
+  const freight = Number(freightVolume) || 0;
+  const parcel = Number(parcelVolume) || 0;
   let monthlyCost = 0;
-  
+
   if (billing === 'annual') {
-    const base = 500 + 2 * freightVolume + 0.5 * parcelVolume;
+    const base = 500 + 2 * freight + 0.5 * parcel;
     monthlyCost = applyMarkup(base, markup);
   } else {
-    const base = 650 + 2.6 * freightVolume + 0.65 * parcelVolume;
+    const base = 650 + 2.6 * freight + 0.65 * parcel;
     monthlyCost = applyMarkup(base, markup);
   }
   

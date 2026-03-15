@@ -152,6 +152,20 @@ exports.handler = async (event, context) => {
     }
 
     const data = await response.json();
+
+    if (!data.content || data.content.length === 0 || !data.content[0]?.text) {
+      return {
+        statusCode: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          error: 'Unexpected response format from Claude API: missing content',
+        }),
+      };
+    }
+
     const content = data.content[0].text;
 
     // Extract JSON from response (handle markdown code blocks)
