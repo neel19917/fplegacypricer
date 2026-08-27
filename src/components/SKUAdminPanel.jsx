@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePricingAdmin, PRODUCT_TYPE_MAP } from '../hooks/useSupabasePricing';
 import { isSuperAdmin } from '../utils/permissions';
+import DeckAdminPanel from './DeckAdminPanel';
 
 const styles = {
   overlay: {
@@ -232,6 +233,7 @@ export function SKUAdminPanel({ isOpen, onClose, userProfile, onPricingUpdate })
     monthly_priceformonthlybilling: 0,
   });
   const [successMessage, setSuccessMessage] = useState(null);
+  const [adminTab, setAdminTab] = useState('pricing'); // 'pricing' | 'deck'
 
   const {
     getAllTiers,
@@ -370,20 +372,35 @@ export function SKUAdminPanel({ isOpen, onClose, userProfile, onPricingUpdate })
 
   return (
     <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={e => e.stopPropagation()}>
+      <div style={adminTab === 'deck' ? { ...styles.modal, maxWidth: '1280px', width: '96%' } : styles.modal} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div style={styles.header}>
           <h2 style={styles.title}>
-            ⚙️ Pricing Administration
+            {adminTab === 'deck' ? '🎬 Sales Deck' : '⚙️ Pricing Administration'}
             <span style={{ ...styles.badge, backgroundColor: '#fef3c7', color: '#92400e' }}>
               Super Admin
             </span>
           </h2>
+          <div style={{ display: 'flex', gap: '6px', marginLeft: 'auto', marginRight: '16px' }}>
+            {[['pricing', '⚙️ Pricing'], ['deck', '🎬 Sales Deck']].map(([k, l]) => (
+              <button key={k} onClick={() => setAdminTab(k)} style={{ padding: '7px 14px', borderRadius: '6px', border: '1px solid ' + (adminTab === k ? '#3b82f6' : '#334155'), background: adminTab === k ? '#2563eb' : 'transparent', color: adminTab === k ? '#fff' : '#cbd5e1', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>{l}</button>
+            ))}
+          </div>
           <button style={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
+        {/* Sales Deck controls (Sales OS → deck-config-api) */}
+        {adminTab === 'deck' && hasAccess && <DeckAdminPanel />}
+        {adminTab === 'deck' && !hasAccess && (
+          <div style={styles.noAccess}>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🔒</div>
+            <div style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>Access Denied</div>
+            <div style={{ fontSize: '14px' }}>Only Super Admin users can edit the sales deck.</div>
+          </div>
+        )}
+
         {/* Check access */}
-        {!hasAccess ? (
+        {adminTab === 'deck' ? null : !hasAccess ? (
           <div style={styles.noAccess}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>🔒</div>
             <div style={{ fontSize: '20px', fontWeight: '600', marginBottom: '8px' }}>
