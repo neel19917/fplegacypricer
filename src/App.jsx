@@ -2288,7 +2288,6 @@ const App = () => {
                         <th style={tableThStyle}>MONTHLY COST</th>
                         <th style={tableThStyle}>ANNUAL COST</th>
                         <th style={tableThStyle}>PLAN DETAILS</th>
-                        <th style={tableThStyle}>TIER DETAILS</th>
                         <th style={tableThStyle}>LINE MARKUP (%)</th>
                       </tr>
                     </thead>
@@ -2324,7 +2323,6 @@ const App = () => {
                               <td style={{ ...tableTdStyle, ...(row.isCustomPricing ? customPricingTextStyle : {}) }}>
                                 {row.planDetails}
                               </td>
-                              <td style={tableTdStyle}>{row.tierDetails}</td>
                               <td style={tableTdStyle}>
                                 {editingAllMarkups ? (
                                   <input
@@ -2394,7 +2392,7 @@ const App = () => {
                             <td style={{ ...tableTdStyle, color: 'white', fontSize: '15px', fontWeight: '600' }}>
                               {formatCost(finalSubscriptionAnnual)}
                             </td>
-                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={2}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }}></td>
                             <td style={{ ...tableTdStyle, color: 'white' }}></td>
                           </tr>
                           {neededToMinAnnual > 0 && (
@@ -2408,7 +2406,7 @@ const App = () => {
                                   fontWeight: '600',
                                   fontSize: '13px',
                                 }}
-                                colSpan={7}
+                                colSpan={6}
                               >
                                 ⚠️ Below Minimum: Need{' '}
                                 {formatCost(neededToMinAnnual)} more annually (
@@ -2424,7 +2422,7 @@ const App = () => {
                             <td style={{ ...tableTdStyle, color: 'white' }}>
                               🏗️ One-Time Costs (with markup)
                             </td>
-                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={4}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={3}></td>
                             <td style={{ ...tableTdStyle, color: 'white' }}></td>
                             <td style={{ 
                               ...tableTdStyle, 
@@ -2448,7 +2446,7 @@ const App = () => {
                             }}>
                               🎯 GRAND TOTAL
                             </td>
-                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={4}></td>
+                            <td style={{ ...tableTdStyle, color: 'white' }} colSpan={3}></td>
                             <td style={{ ...tableTdStyle, color: 'white' }}></td>
                             <td style={{ 
                               ...tableTdStyle, 
